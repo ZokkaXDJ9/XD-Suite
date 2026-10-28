@@ -39,7 +39,7 @@ public sealed class PackageTransport : IDisposable
     public PackageTransport(HttpMessageHandler? handler = null)
     {
         client = new(handler ?? new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromMinutes(10) };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("XD-Suite/0.2.0");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("XD-Suite/0.2.1");
     }
     internal async Task<HttpResponseMessage> Get(Uri uri, CancellationToken token)
     {

@@ -1,4 +1,4 @@
-#define AppVersion "0.2.0"
+#define AppVersion "0.2.1"
 #define Root AddBackslash(SourcePath) + "..\"
 
 [Setup]
@@ -18,7 +18,7 @@ UninstallDisplayName={cm:BurnerName}
 UninstallDisplayIcon={app}\XDBurner.exe
 OutputDir={#Root}dist
 OutputBaseFilename=XD-Brenner-Setup-{#AppVersion}
-SetupIconFile={#Root}KlarBrand\Assets\XDBurner.ico
+SetupIconFile={#Root}XDBurner\Assets\XDBurner.ico
 Compression=lzma2/normal
 SolidCompression=yes
 WizardStyle=modern
@@ -27,7 +27,7 @@ SetupLogging=yes
 CloseApplications=yes
 RestartApplications=no
 AppMutex=Local\XDBurner.App,Local\KlarBrand.App
-VersionInfoVersion=0.2.0.0
+VersionInfoVersion=0.2.1.0
 VersionInfoDescription=XD Burner Installation
 VersionInfoProductName=XD Brenner / XD Burner
 VersionInfoCopyright=2026 XD Suite contributors

@@ -51,7 +51,7 @@ internal static class SelfTest
 
             string iso = Path.Combine(directory, "test.iso");
             var progress = new InlineProgress();
-            service.ExportIso(sources, "KLARBRAND_TEST", iso, progress, CancellationToken.None);
+            service.ExportIso(sources, "XD_BURNER_TEST", iso, progress, CancellationToken.None);
             byte[] image = File.ReadAllBytes(iso);
             Check(image.Length > 0 && image.Length % 2048 == 0, "ISO sector alignment");
             var files = ReadJoliet(image);

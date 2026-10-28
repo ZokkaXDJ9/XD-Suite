@@ -6,8 +6,8 @@ Kostenlose Windows-Programme, die ihren Zweck erfüllen: ohne Konto, Werbung, Tr
 
 Zwei **voneinander unabhängige Installer** für Windows 10/11 (64 Bit):
 
-- **`dist/XD-Brenner-Setup-0.2.0.exe`**: nur XD Brenner installieren. Die App heißt in der englischen Oberfläche **XD Burner**.
-- **`dist/XD-Suite-Setup-0.2.0.exe`**: den Launcher installieren. Weitere Programme werden erst auf Wunsch heruntergeladen und installiert.
+- **`dist/XD-Brenner-Setup-0.2.1.exe`**: nur XD Brenner installieren. Die App heißt in der englischen Oberfläche **XD Burner**.
+- **`dist/XD-Suite-Setup-0.2.1.exe`**: den Launcher installieren. Weitere Programme werden erst auf Wunsch heruntergeladen und installiert.
 
 Jeder Installer enthält die benötigte .NET-Laufzeit. Kein zusätzlicher Download zum Installieren der jeweiligen App, normalerweise keine Administratorrechte. Beide Setups bieten Deutsch und Englisch an.
 
@@ -42,7 +42,7 @@ Windows **IMAPI 2** erledigt die Brennoperationen. **NAudio 2.3.0** und Windows 
 
 Grenzen: nur CD-R/CD-RW; kein DVD/Blu-ray, Disc-Kopieren, Multisession, Packet Writing, Overburning, CD-Text, Gapless oder Kopierschutzumgehung. Audio verwendet Track-at-once mit ungefähr zwei Sekunden Pause und mindestens vier Sekunden pro Titel. Mehrkanalton wird abgewiesen. ISO-Export bis zur Kapazität einer üblichen 80-Minuten-CD; kein BIN/CUE oder reines UDF-/Audio-Abbild. Die Daten-Platzanzeige ist eine Schätzung; vor dem Schreiben wird das echte Image geprüft. Verknüpfungen und Cloud-Platzhalter bitte zuerst lokal kopieren. Für die vollständige Audiovorbereitung werden bei einer vollen CD etwa 850 MB temporärer Speicher benötigt. Zusammenstellungen werden noch nicht als Projektdatei gespeichert.
 
-Die frühere Arbeitsversion „KlarBrand“ wird über dieselbe Installationskennung aktualisiert. Ein vorhandener Installationsordner bleibt beim Upgrade erhalten; alte EXE und alte Verknüpfungen werden durch den neuen Namen ersetzt. Der Quellordner `KlarBrand/` bleibt aus Kompatibilität mit dem bestehenden Workspace bestehen; das Projekt und die EXE heißen `XDBurner`.
+Quellordner, Projekt und EXE heißen `XDBurner`. Ältere Arbeitsversionen werden über dieselbe Installationskennung aktualisiert; alte EXE und alte Verknüpfungen werden ersetzt. Ältere lokale Builds liegen ausschließlich unter `artifacts/legacy-builds/`; `dist/` enthält die aktuellen Setups.
 
 ## GitHub Releases und Katalog
 
@@ -54,7 +54,7 @@ https://github.com/ZokkaXDJ9/XD-Suite/releases/latest/download/catalog.json
 
 Unter **Downloadquelle** kann ein anderes öffentliches Repository als `Besitzer/Repository` eingestellt werden. Fehlt die Internetverbindung, bleibt der gebündelte oder zuletzt gültige Katalog erhalten; installierte Apps lassen sich weiterhin starten. Eine unveröffentlichte oder nicht erreichbare Quelle wird entsprechend angezeigt.
 
-Ein Release enthält `XD-Suite-Setup-0.2.0.exe`, `XD-Brenner-Setup-0.2.0.exe`, `catalog.json` und `SHA256SUMS.txt`. Das Manifest enthält pro Programm Sprachtexte, Version, HTTPS-Downloadadresse, Größe, SHA-256, EXE-Namen und Installationskennung. Es enthält keine frei ausführbaren Shell-Befehle oder Setup-Argumente. Pfade und Metadaten werden vor Verwendung geprüft. Weiterleitungen zu unverschlüsseltem HTTP werden abgewiesen.
+Ein Release enthält `XD-Suite-Setup-0.2.1.exe`, `XD-Brenner-Setup-0.2.1.exe`, `catalog.json` und `SHA256SUMS.txt`. Das Manifest enthält pro Programm Sprachtexte, Version, HTTPS-Downloadadresse, Größe, SHA-256, EXE-Namen und Installationskennung. Es enthält keine frei ausführbaren Shell-Befehle oder Setup-Argumente. Pfade und Metadaten werden vor Verwendung geprüft. Weiterleitungen zu unverschlüsseltem HTTP werden abgewiesen.
 
 `build-release.ps1` erstellt zuerst das Brenner-Setup, trägt dessen tatsächliche Größe und Prüfsumme in den Katalog ein und baut anschließend die Suite mit diesem Katalog. Öffentliche Veröffentlichung und Repository-Erstellung sind ein gesonderter Schritt.
 
@@ -78,7 +78,7 @@ Automatische Prüfungen verwenden echtes IMAPI für ISO-Erstellung, Unicode-/Ord
 
 ## Dateien und Daten
 
-- `KlarBrand/`: eigenständiges Projekt `XDBurner.csproj`.
+- `XDBurner/`: eigenständiges Projekt `XDBurner.csproj`.
 - `XDSuite/`: eigenständiger Launcher.
 - `XD.Common/`: gemeinsame Übersetzungen und lokale UI-Helfer, in jede App eingebunden.
 - `catalog/`: erweiterbarer, zweisprachiger Programmkatalog.

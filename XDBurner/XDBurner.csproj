@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets/XDBurner.ico</ApplicationIcon>
-    <Version>0.2.0</Version>
+    <Version>0.2.1</Version>
     <AssemblyName>XDBurner</AssemblyName>
     <Product>XD Brenner</Product>
     <Description>Einfach CDs brennen. Frei und ohne Umwege.</Description>

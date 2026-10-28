@@ -2,7 +2,7 @@
 
 Free, independent Windows apps. No account, advertising, trials, subscriptions or paid features. C# / WPF, MIT license.
 
-Install **XD-Brenner-Setup-0.2.0.exe** for the standalone burner, or **XD-Suite-Setup-0.2.0.exe** for the optional launcher. Both installers contain their own .NET runtime and normally require no administrator privileges. Both support German and English.
+Install **XD-Brenner-Setup-0.2.1.exe** for the standalone burner, or **XD-Suite-Setup-0.2.1.exe** for the optional launcher. Both installers contain their own .NET runtime and normally require no administrator privileges. Both support German and English.
 
 Use **Sprache / Language → English / Deutsch** in either app to switch language immediately. Your choice is saved and used by both apps at their next launch. Filenames and user-entered disc names are preserved. Native Windows file pickers also follow the operating-system language.
 
@@ -24,6 +24,6 @@ The build includes .NET 8.0.33; update the pinned runtime before future releases
 
 Tests cover real IMAPI ISO creation and content hashes, Unicode folders, MP3/WAV conversion, PCM layout, cancellation, protection of source files and existing ISO targets, bilingual live WPF text, untouched user data, download validation with injected HTTP responses, and real installation/uninstallation. **Physical recording, read-back verification on burned media and CD-RW erasure still require a real burner.** Test with CD-RW on the target machine first. A real GitHub download also requires a published release. Reports and previews are in `artifacts/`.
 
-The old working title KlarBrand is upgraded using the same installation identity. The source folder retains that name for compatibility with the existing workspace; the project and executable are named XDBurner.
+The source folder, project and executable are all named XDBurner. Older working versions are upgraded using the same installation identity. Older local builds are archived under `artifacts/legacy-builds/`; `dist/` contains the current installers.
 
 All apps run independently. Shared language preference: `%LOCALAPPDATA%\XD\language.txt`. Suite catalog, downloads and settings: `%LOCALAPPDATA%\XDSuite`. Burner logs: `%LOCALAPPDATA%\XDBurner\Logs`. Licenses: `LICENSE` and `licenses/`.

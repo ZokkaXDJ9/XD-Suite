@@ -13,8 +13,8 @@ foreach ($key in @($burnerKey,$suiteKey)) { if (Test-Path -LiteralPath $key) { t
 $report = [System.Collections.Generic.List[string]]::new()
 $report.Add('XD Suite / XD Burner installation round-trip')
 $report.Add([DateTimeOffset]::Now.ToString('O'))
-$suiteSetup = Join-Path $projectRoot 'dist\XD-Suite-Setup-0.2.0.exe'
-$burnerSetup = Join-Path $projectRoot 'dist\XD-Brenner-Setup-0.2.0.exe'
+$suiteSetup = Join-Path $projectRoot 'dist\XD-Suite-Setup-0.2.1.exe'
+$burnerSetup = Join-Path $projectRoot 'dist\XD-Brenner-Setup-0.2.1.exe'
 $menuRoot = [Environment]::GetFolderPath('Programs')
 function Run-Process([string]$file,[string[]]$arguments) {
     $p = Start-Process -FilePath $file -ArgumentList $arguments -PassThru -Wait -WindowStyle Hidden
@@ -58,7 +58,7 @@ try {
     Clean-Marker $burnerDirectory
     $report.Add('PASS: separate uninstallers remove owned files and preserve unrelated user files')
 
-    $legacySetup = Join-Path $projectRoot 'dist\KlarBrand-Setup-0.1.0.exe'
+    $legacySetup = Join-Path $projectRoot 'artifacts\legacy-builds\v0.1.0\KlarBrand-Setup-0.1.0.exe'
     if (-not $SkipLegacyUpgrade -and (Test-Path -LiteralPath $legacySetup)) {
         Run-Process $legacySetup @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-','/TASKS=""',('/DIR="' + $legacyDirectory + '"'))
         Mark-Directory $legacyDirectory

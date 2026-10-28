@@ -2,7 +2,7 @@
 param([string]$RuntimeVersion = '8.0.33', [string]$Repository = 'ZokkaXDJ9/XD-Suite')
 $ErrorActionPreference = 'Stop'
 $projectRoot = $PSScriptRoot
-$version = '0.2.0'
+$version = '0.2.1'
 Push-Location $projectRoot
 function Publish-App([string]$project, [string]$name) {
     $output = Join-Path $projectRoot ('dist\' + $name)
@@ -29,7 +29,7 @@ try {
     $compiler = $env:ISCC_PATH
     if (-not $compiler) { $compiler = Join-Path $projectRoot '.tools\InnoSetup\ISCC.exe' }
     if (-not (Test-Path -LiteralPath $compiler)) { throw 'Inno Setup compiler missing. Run tools\get-installer-compiler.ps1 or set ISCC_PATH.' }
-    Publish-App '.\KlarBrand\XDBurner.csproj' 'XDBurner'
+    Publish-App '.\XDBurner\XDBurner.csproj' 'XDBurner'
     $burnerFilename = "XD-Brenner-Setup-$version.exe"
     Build-Setup '.\installer\XDBurner.iss' $burnerFilename
     $burnerSetup = Get-Item -LiteralPath (Join-Path $projectRoot ('dist\' + $burnerFilename))
