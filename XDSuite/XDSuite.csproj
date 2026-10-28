@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework><UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><Version>0.2.0</Version>
+    <ApplicationManifest>../KlarBrand/app.manifest</ApplicationManifest>
+    <AssemblyName>XDSuite</AssemblyName><Product>XD Suite</Product><Description>Freie Werkzeuge. Ein Zuhause.</Description>
+    <ApplicationIcon>Assets/XDSuite.ico</ApplicationIcon>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../XD.Common/XD.Common.csproj" />
+    <Resource Include="Assets/XDSuite.ico" />
+    <Content Include="../catalog/catalog.json" Link="catalog.json" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+  </ItemGroup>
+</Project>

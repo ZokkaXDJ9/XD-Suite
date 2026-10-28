@@ -1,0 +1,49 @@
+{
+    "schemaVersion":  1,
+    "apps":  [
+                 {
+                     "id":  "xd-burner",
+                     "name":  {
+                                  "de":  "XD Brenner",
+                                  "en":  "XD Burner"
+                              },
+                     "description":  {
+                                         "de":  "Dateien und Musik auf CD brennen. Klar, einfach und ohne Extras kaufen zu müssen.",
+                                         "en":  "Burn files and music to CD. Clear, simple, and free of paid extras."
+                                     },
+                     "category":  {
+                                      "de":  "Datenträger \u0026 Sicherung",
+                                      "en":  "Discs \u0026 backup"
+                                  },
+                     "version":  "0.2.0",
+                     "installerUrl":  "https://github.com/ZokkaXDJ9/XD-Suite/releases/download/v0.2.0/XD-Brenner-Setup-0.2.0.exe",
+                     "installerSha256":  "d93b37d6b4d1957734251a7c3605d051e11e66e036084a3774ff03564540f874",
+                     "installerSizeBytes":  50423817,
+                     "executable":  "XDBurner.exe",
+                     "registryId":  "{B5AF424C-85D1-47D4-AF62-30A5A15C5094}_is1",
+                     "installFolder":  "XDBurner",
+                     "features":  [
+                                      {
+                                          "de":  "Daten-CDs und Audio-CDs",
+                                          "en":  "Data CDs and audio CDs"
+                                      },
+                                      {
+                                          "de":  "MP3/WAV und Drag-and-drop",
+                                          "en":  "MP3/WAV and drag and drop"
+                                      },
+                                      {
+                                          "de":  "ISO erstellen und brennen",
+                                          "en":  "Create and burn ISO images"
+                                      },
+                                      {
+                                          "de":  "CD-RW löschen und wiederverwenden",
+                                          "en":  "Erase and reuse CD-RWs"
+                                      },
+                                      {
+                                          "de":  "Deutsch und Englisch umschaltbar",
+                                          "en":  "Switch between German and English"
+                                      }
+                                  ]
+                 }
+             ]
+}

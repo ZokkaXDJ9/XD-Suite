@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets/XDBurner.ico</ApplicationIcon>
+    <Version>0.2.0</Version>
+    <AssemblyName>XDBurner</AssemblyName>
+    <Product>XD Brenner</Product>
+    <Description>Einfach CDs brennen. Frei und ohne Umwege.</Description>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../XD.Common/XD.Common.csproj" />
+    <PackageReference Include="NAudio" Version="2.3.0" />
+    <EmbeddedResource Include="../tests/fixtures/tone.mp3" LogicalName="XDBurner.TestTone.mp3" />
+    <Resource Include="Assets/XDBurner.ico" />
+  </ItemGroup>
+</Project>
