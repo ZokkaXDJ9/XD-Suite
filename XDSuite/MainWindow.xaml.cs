@@ -16,24 +16,65 @@ public partial class MainWindow : Window
     private string filter = "all";
     private bool busy, installing;
     private CancellationTokenSource? cancellation;
+    private readonly CancellationTokenSource lifetime = new();
     private AppCard? Selected => AppList.SelectedItem as AppCard;
 
-    public MainWindow(bool preview = false)
+    public MainWindow(bool preview = false, bool skipUpdateCheck = false, bool updateCompleted = false)
     {
         InitializeComponent();
         L10n.Attach(this);
         L10n.Changed += LanguageChanged;
-        Closed += (_, _) => { L10n.Changed -= LanguageChanged; transport.Dispose(); };
+        Closed += (_, _) => { lifetime.Cancel(); L10n.Changed -= LanguageChanged; transport.Dispose(); lifetime.Dispose(); };
         AllNav.IsChecked = true;
-        ReadLocalCatalog();
+        ReadLocalCatalog(preview);
         LanguageChanged(null, EventArgs.Empty);
-        Loaded += async (_, _) => { if (!preview) await RefreshCatalog(); };
+        Loaded += async (_, _) =>
+        {
+            if (preview) return;
+            await RefreshCatalog();
+            if (updateCompleted) { StatusTitle.Text = "Update abgeschlossen."; StatusText.Text = "XD Suite " + SuiteUpdates.VersionText; }
+            if (!skipUpdateCheck && IsVisible) await CheckSuiteUpdate();
+        };
+    }
+    private async Task CheckSuiteUpdate()
+    {
+        try
+        {
+            var update = await SuiteUpdates.Check(transport, settings.Repository, SuiteUpdates.CurrentVersion, lifetime.Token);
+            if (update == null || !IsVisible || busy) return;
+            string message = $"Für XD Suite ist Version {update.Package.Version} verfügbar.\nInstallierte Version: {SuiteUpdates.VersionText}\n\nJetzt herunterladen und installieren?\n\nDie vorhandene Installation wird aktualisiert. Einstellungen und installierte Programme bleiben erhalten.";
+            if (LocalizedDialog.Show(this, message, "Update verfügbar", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+            SetBusy(true);
+            ProgressBar.Visibility = Visibility.Visible; ProgressBar.IsIndeterminate = false; ProgressBar.Value = 0;
+            StatusTitle.Text = "Suite-Update wird heruntergeladen …";
+            try
+            {
+                var progress = new Progress<DownloadProgress>(p => { ProgressBar.Value = p.Percent; StatusText.Text = p.Message; });
+                string installer = await transport.Download(update.Package, Path.Combine(SuiteSettings.DataDirectory, "Downloads"), progress, cancellation!.Token);
+                cancellation.Token.ThrowIfCancellationRequested();
+                SuiteUpdates.StartInstallerAfterExit(installer, update.Package);
+                SetBusy(false);
+                Application.Current.Shutdown();
+            }
+            catch (OperationCanceledException) { StatusTitle.Text = "Download abgebrochen."; StatusText.Text = "Es wurden keine Änderungen vorgenommen."; }
+            catch (Exception error) { ShowError(error); }
+            finally { if (busy) SetBusy(false); }
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception error) { App.Log(error); }
     }
     private string CachePath => Path.Combine(SuiteSettings.DataDirectory, "catalog-" + settings.Repository.Replace('/', '-') + ".json");
-    private void ReadLocalCatalog()
+    private void ReadLocalCatalog(bool preview = false)
     {
-        try { catalog = PackageValidation.Parse(File.ReadAllText(CachePath)); }
-        catch (Exception ex) when (ex is IOException or JsonException or InvalidDataException or UnauthorizedAccessException) { catalog = PackageValidation.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "catalog.json"))); }
+        var bundled = PackageValidation.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "catalog.json")));
+        try
+        {
+            catalog = preview ? bundled : PackageValidation.Parse(File.ReadAllText(CachePath));
+            // A cache from an older app must not replace the newer bundled packages when offline.
+            if (settings.Repository == "ZokkaXDJ9/XD-Suite")
+                catalog = new(1, catalog.Apps.Select(cached => bundled.Apps.FirstOrDefault(p => p.Id == cached.Id && Version.Parse(p.Version) > Version.Parse(cached.Version)) ?? cached).Concat(bundled.Apps.Where(p => catalog.Apps.All(c => c.Id != p.Id))).ToList());
+        }
+        catch (Exception ex) when (ex is IOException or JsonException or InvalidDataException or UnauthorizedAccessException) { catalog = bundled; }
         Rebuild();
     }
     private void Rebuild()
@@ -78,7 +119,7 @@ public partial class MainWindow : Window
             try { await File.WriteAllTextAsync(temporary, JsonSerializer.Serialize(updated, PackageValidation.JsonOptions)); File.Move(temporary, CachePath, true); }
             finally { if (File.Exists(temporary)) File.Delete(temporary); }
             catalog = updated;
-            StatusTitle.Text = "Deine Programme sind auf dem neuesten Stand.";
+            StatusTitle.Text = "Programmkatalog aktualisiert.";
             StatusText.Text = "Programmkatalog von GitHub Releases geladen.";
         }
         catch (OperationCanceledException) when (cancellation!.IsCancellationRequested) { StatusTitle.Text = "Aktualisierung abgebrochen."; StatusText.Text = "Der bisherige Programmkatalog bleibt verfügbar."; }
@@ -97,7 +138,7 @@ public partial class MainWindow : Window
         string question = $"{selected.Name} {selected.Package.Version} herunterladen und installieren?\n\nDownloadquelle: GitHub Releases\nDas Programm kann danach auch ohne XD Suite gestartet werden.";
         if (LocalizedDialog.Show(this, question, "Programm installieren", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
         SetBusy(true);
-        StatusTitle.Text = "Dein Programm wird vorbereitet …";
+        StatusTitle.Text = "Download wird vorbereitet …";
         StatusText.Text = "Das Setup wird heruntergeladen und geprüft.";
         ProgressBar.Visibility = Visibility.Visible;
         ProgressBar.IsIndeterminate = false;
@@ -109,11 +150,11 @@ public partial class MainWindow : Window
             await PackageInstaller.Install(setup, selected.Package, () =>
             {
                 installing = true; CancelButton.IsEnabled = false; ProgressBar.IsIndeterminate = true;
-                StatusTitle.Text = "Das Programm wird installiert …";
+                StatusTitle.Text = "Programm wird installiert …";
                 StatusText.Text = "Bitte warten, bis das Setup fertig ist.";
             }, cancellation.Token);
-            StatusTitle.Text = "Dein Programm ist bereit.";
-            StatusText.Text = "Du kannst es hier oder direkt über das Startmenü öffnen.";
+            StatusTitle.Text = "Installation abgeschlossen.";
+            StatusText.Text = "Das Programm kann über die Suite oder das Startmenü geöffnet werden.";
             ProgressBar.IsIndeterminate = false; ProgressBar.Value = 100;
         }
         catch (OperationCanceledException) { StatusTitle.Text = "Download abgebrochen."; StatusText.Text = "Es wurde kein Programm installiert."; ProgressBar.Visibility = Visibility.Collapsed; }
@@ -171,7 +212,7 @@ public partial class MainWindow : Window
     }
     private void ShowError(Exception ex)
     {
-        App.Log(ex); StatusTitle.Text = "Das hat noch nicht geklappt.";
+        App.Log(ex); StatusTitle.Text = "Vorgang fehlgeschlagen.";
         StatusText.Text = ex is HttpRequestException ? "Der Download ist gerade nicht erreichbar. Bitte die Internetverbindung und die Downloadquelle prüfen." : ex.Message;
         LocalizedDialog.Show(this, StatusText.Text, "XD Suite");
     }

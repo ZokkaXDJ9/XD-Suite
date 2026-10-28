@@ -2,7 +2,7 @@
 param([string]$RuntimeVersion = '8.0.33', [string]$Repository = 'ZokkaXDJ9/XD-Suite')
 $ErrorActionPreference = 'Stop'
 $projectRoot = $PSScriptRoot
-$version = '0.2.1'
+$version = '0.3.0'
 Push-Location $projectRoot
 function Publish-App([string]$project, [string]$name) {
     $output = Join-Path $projectRoot ('dist\' + $name)
@@ -44,9 +44,12 @@ try {
     [System.IO.File]::WriteAllText((Join-Path $projectRoot 'catalog\catalog.json'), $json, $encoding)
     [System.IO.File]::WriteAllText((Join-Path $projectRoot 'dist\catalog.json'), $json, $encoding)
     Publish-App '.\XDSuite\XDSuite.csproj' 'XDSuite'
+    & dotnet build '.\XD.UpdateHelper\XD.UpdateHelper.csproj' -c Release --nologo
+    if ($LASTEXITCODE -ne 0) { throw 'Update helper build failed.' }
+    Copy-Item -LiteralPath '.\XD.UpdateHelper\bin\Release\net472\XDUpdateHelper.exe','.\XD.UpdateHelper\bin\Release\net472\XDUpdateHelper.exe.config' -Destination '.\dist\XDSuite' -Force
     Build-Setup '.\installer\XDSuite.iss' "XD-Suite-Setup-$version.exe"
     $sums = foreach ($file in @($burnerFilename,"XD-Suite-Setup-$version.exe",'catalog.json')) { (Get-FileHash -LiteralPath (Join-Path $projectRoot ('dist\' + $file)) -Algorithm SHA256).Hash.ToLowerInvariant() + '  ' + $file }
     [System.IO.File]::WriteAllLines((Join-Path $projectRoot 'dist\SHA256SUMS.txt'), $sums)
-    Write-Host 'Fertig: XD Brenner und XD Suite mit getrennten, zweisprachigen Setups.'
+    Write-Host 'Fertig: XD Brenner und XD Suite Setups.'
 }
 finally { Pop-Location }

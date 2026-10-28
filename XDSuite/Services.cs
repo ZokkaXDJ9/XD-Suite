@@ -39,7 +39,7 @@ public sealed class PackageTransport : IDisposable
     public PackageTransport(HttpMessageHandler? handler = null)
     {
         client = new(handler ?? new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromMinutes(10) };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("XD-Suite/0.2.1");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("XD-Suite/0.3.0");
     }
     internal async Task<HttpResponseMessage> Get(Uri uri, CancellationToken token)
     {
@@ -126,7 +126,7 @@ public static class PackageInstaller
     {
         if (!await PackageTransport.Verify(path, app, token)) throw new InvalidDataException("Die Setup-Prüfsumme stimmt nicht. Die Datei wird nicht ausgeführt.");
         token.ThrowIfCancellationRequested();
-        using var process = new Process { StartInfo = new ProcessStartInfo(path) { UseShellExecute = false, CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden } };
+        using var process = new Process { StartInfo = new ProcessStartInfo(path) { UseShellExecute = true, WindowStyle = ProcessWindowStyle.Hidden } };
         foreach (string argument in new[] { "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/SP-", "/TASKS=\"\"" }) process.StartInfo.ArgumentList.Add(argument);
         process.StartInfo.ArgumentList.Add(L10n.Current == UiLanguage.German ? "/LANG=german" : "/LANG=english");
         if (testInstallDirectory != null) process.StartInfo.ArgumentList.Add("/DIR=" + Path.GetFullPath(testInstallDirectory));

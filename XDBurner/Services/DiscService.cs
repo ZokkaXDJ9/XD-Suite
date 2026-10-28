@@ -6,6 +6,17 @@ namespace XDBurner.Services;
 
 public sealed class DiscService
 {
+    public long GetDataImageSize(IReadOnlyList<string> paths, CancellationToken token)
+    {
+        if (paths.Count == 0) return 0;
+        using var scope = new ComScope();
+        var entries = ProjectFiles.Snapshot(paths, token);
+        dynamic image = CreateImage(scope, entries, "XD_DISC", int.MaxValue, new IgnoreProgress(), token);
+        dynamic result = scope.Keep((object)image.CreateResultImage());
+        token.ThrowIfCancellationRequested();
+        return (long)result.TotalBlocks * 2048;
+    }
+    private sealed class IgnoreProgress : IProgress<OperationProgress> { public void Report(OperationProgress value) { } }
     public const long DefaultCdBytes = 360000L * 2048;
     private const string DataEvents = "2735413C-7F64-5B0F-8F00-5D77AFBE261E";
     private const string AudioEvents = "2735413F-7F64-5B0F-8F00-5D77AFBE261E";
@@ -125,7 +136,7 @@ public sealed class DiscService
                 token.ThrowIfCancellationRequested();
                 progress.Report(new($"Titel {i + 1} von {paths.Count} wird vorbereitet: {Path.GetFileName(paths[i])}", i * 100d / paths.Count));
                 string pcm = Path.Combine(temporary, $"{i:00}.pcm");
-                tracks.Add((pcm, AudioService.ConvertToPcm(paths[i], pcm, token)));
+                tracks.Add((pcm, AudioService.ConvertToPcm(paths[i], pcm, token, options.AudioGapSeconds)));
             }
             token.ThrowIfCancellationRequested();
             using var scope = new ComScope();

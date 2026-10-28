@@ -6,18 +6,18 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$tag = 'v0.2.1'
+$tag = 'v0.3.0'
 if ($Repository -notmatch '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$') { throw 'Invalid repository.' }
 Push-Location $projectRoot
 try {
-    $assets = @('dist\XD-Suite-Setup-0.2.1.exe','dist\XD-Brenner-Setup-0.2.1.exe','dist\catalog.json','dist\SHA256SUMS.txt')
+    $assets = @('dist\XD-Suite-Setup-0.3.0.exe','dist\XD-Brenner-Setup-0.3.0.exe','dist\catalog.json','dist\SHA256SUMS.txt')
     foreach ($asset in $assets) { if (-not (Test-Path -LiteralPath $asset)) { throw "Missing release asset: $asset" } }
     $catalog = [System.IO.File]::ReadAllText((Join-Path $projectRoot 'dist\catalog.json')) | ConvertFrom-Json
     $burner = $catalog.apps | Where-Object id -eq 'xd-burner'
-    if ($burner.installerSha256 -ne (Get-FileHash -LiteralPath 'dist\XD-Brenner-Setup-0.2.1.exe').Hash -or $burner.installerUrl -notlike "https://github.com/$Repository/releases/download/$tag/*") { throw 'Catalog does not match the release assets or target repository.' }
+    if ($burner.installerSha256 -ne (Get-FileHash -LiteralPath 'dist\XD-Brenner-Setup-0.3.0.exe').Hash -or $burner.installerUrl -notlike "https://github.com/$Repository/releases/download/$tag/*") { throw 'Catalog does not match the release assets or target repository.' }
     if ($CreateRepository) {
         if (Test-Path -LiteralPath '.git') { throw 'A repository already exists. Refusing to initialize or switch branches.' }
-        & gh repo create $Repository --public --description 'Free, independent Windows apps with an optional bilingual launcher. No ads, accounts or paid features.'
+        & gh repo create $Repository --public --description 'Windows CD burner and application launcher with German and English interfaces.'
         if ($LASTEXITCODE -ne 0) { throw 'Repository creation failed.' }
         & git init -b main
         if ($LASTEXITCODE -ne 0) { throw 'Git initialization failed.' }
@@ -28,15 +28,15 @@ try {
     $remote = (& git remote get-url origin).Trim()
     if ($LASTEXITCODE -ne 0 -or $remote -notin @("https://github.com/$Repository.git","git@github.com:$Repository.git")) { throw 'Origin does not match target repository.' }
     $branch = (& git branch --show-current).Trim()
-    & git add -A -- '.gitattributes' '.gitignore' 'LICENSE' 'README.md' 'build-release.ps1' 'XDBurner' 'XD.Common' 'XDSuite' 'catalog' 'installer' 'licenses' 'tests' 'tools' 'docs'
+    & git add -A -- '.gitattributes' '.gitignore' 'LICENSE' 'README.md' 'build-release.ps1' 'XDBurner' 'XD.Common' 'XD.UpdateHelper' 'XDSuite' 'catalog' 'installer' 'licenses' 'tests' 'tools' 'docs'
     if ($LASTEXITCODE -ne 0) { throw 'Staging failed.' }
     & git diff --cached --check
     if ($LASTEXITCODE -ne 0) { throw 'Staged diff checks failed.' }
     & git diff --cached --quiet
-    if ($LASTEXITCODE -eq 1) { & git commit -m 'Finish XD Burner naming across source folders and release outputs'; if ($LASTEXITCODE -ne 0) { throw 'Commit failed.' } }
+    if ($LASTEXITCODE -eq 1) { & git commit -m 'Add in-place suite updates, admin component setup and disc capacity details'; if ($LASTEXITCODE -ne 0) { throw 'Commit failed.' } }
     & git push -u origin $branch
     if ($LASTEXITCODE -ne 0) { throw 'Push failed.' }
-    $releaseArgs = @('release','create',$tag,'--repo',$Repository,'--target',$branch,'--title','XD Suite & XD Burner 0.2.1','--notes-file','docs\release-notes-0.2.1.md')
+    $releaseArgs = @('release','create',$tag,'--repo',$Repository,'--target',$branch,'--title','XD Suite & XD Burner 0.3.0','--notes-file','docs\release-notes-0.3.0.md')
     if (-not $Publish) { $releaseArgs += '--draft' }
     $releaseArgs += $assets
     & gh @releaseArgs

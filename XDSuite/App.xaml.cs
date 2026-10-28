@@ -77,7 +77,7 @@ public partial class App : Application
             }
             mutex = new Mutex(true, @"Local\XDSuite.App", out ownsMutex);
             if (!ownsMutex) { LocalizedDialog.Show("XD Suite ist bereits geöffnet.", "XD Suite"); Shutdown(0); return; }
-            MainWindow = new MainWindow(); MainWindow.Show();
+            MainWindow = new MainWindow(skipUpdateCheck: e.Args.Contains("--skip-update-check"), updateCompleted: e.Args.Contains("--update-completed")); MainWindow.Show();
         }
         catch (Exception ex)
         {

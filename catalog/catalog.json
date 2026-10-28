@@ -8,17 +8,17 @@
                                   "en":  "XD Burner"
                               },
                      "description":  {
-                                         "de":  "Dateien und Musik auf CD brennen. Klar, einfach und ohne Extras kaufen zu müssen.",
-                                         "en":  "Burn files and music to CD. Clear, simple, and free of paid extras."
+                                         "de":  "Daten-CDs und Audio-CDs brennen, ISO-Dateien erstellen und CD-RWs löschen.",
+                                         "en":  "Burn data CDs and audio CDs, create ISO images and erase CD-RWs."
                                      },
                      "category":  {
                                       "de":  "Datenträger \u0026 Sicherung",
                                       "en":  "Discs \u0026 backup"
                                   },
-                     "version":  "0.2.1",
-                     "installerUrl":  "https://github.com/ZokkaXDJ9/XD-Suite/releases/download/v0.2.1/XD-Brenner-Setup-0.2.1.exe",
-                     "installerSha256":  "211b3c3e28f690480bcc3b4a5d18c6af3fe39f17288378e48a628118467e07f0",
-                     "installerSizeBytes":  50441131,
+                     "version":  "0.3.0",
+                     "installerUrl":  "https://github.com/ZokkaXDJ9/XD-Suite/releases/download/v0.3.0/XD-Brenner-Setup-0.3.0.exe",
+                     "installerSha256":  "75f00a778644969e1e99477492e80fd8ec6b559016abc2cdde1a588e73bcbc27",
+                     "installerSizeBytes":  50474715,
                      "executable":  "XDBurner.exe",
                      "registryId":  "{B5AF424C-85D1-47D4-AF62-30A5A15C5094}_is1",
                      "installFolder":  "XDBurner",
@@ -28,8 +28,8 @@
                                           "en":  "Data CDs and audio CDs"
                                       },
                                       {
-                                          "de":  "MP3/WAV und Drag-and-drop",
-                                          "en":  "MP3/WAV and drag and drop"
+                                          "de":  "MP3/WAV/OGG und Drag-and-drop",
+                                          "en":  "MP3/WAV/OGG and drag and drop"
                                       },
                                       {
                                           "de":  "ISO erstellen und brennen",

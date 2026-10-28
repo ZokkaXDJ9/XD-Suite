@@ -53,6 +53,7 @@ internal static class SelfTest
             var progress = new InlineProgress();
             service.ExportIso(sources, "XD_BURNER_TEST", iso, progress, CancellationToken.None);
             byte[] image = File.ReadAllBytes(iso);
+            Check(service.GetDataImageSize(sources, CancellationToken.None) == image.Length, "Disc usage includes exact file-system overhead");
             Check(image.Length > 0 && image.Length % 2048 == 0, "ISO sector alignment");
             var files = ReadJoliet(image);
             foreach (var entry in entries)
@@ -108,6 +109,9 @@ internal static class SelfTest
             long stereoSectors = AudioService.ConvertToPcm(stereo, Path.Combine(directory, "stereo.pcm"), CancellationToken.None);
             Check(stereoSectors is >= 314 and <= 317, "48 kHz stereo resampling length");
             Check(ProjectFiles.AudioSectors([TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(10)]) == 1350, "Audio capacity includes minimum track lengths and 2-second gaps");
+            Check(ProjectFiles.AudioSectors([TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(10)], 5) == 1800, "Selected audio gap is included in capacity");
+            long longerGap = AudioService.ConvertToPcm(mono, Path.Combine(directory, "gap5.pcm"), CancellationToken.None, 5);
+            Check(longerGap == sectors + 225, "5-second gap adds exactly 3 seconds of silence to TAO's fixed 2-second gap");
             lines.Add("PASS: WAV decode, mono/stereo mapping, 22.05/48 kHz resampling, raw PCM, 4-second minimum, sector padding and gap budgeting");
             string fixture = Path.Combine(directory, "tone.mp3");
             using (var input = typeof(SelfTest).Assembly.GetManifestResourceStream("XDBurner.TestTone.mp3") ?? throw new InvalidOperationException("MP3 fixture missing"))
@@ -116,6 +120,13 @@ internal static class SelfTest
             long mp3Sectors = AudioService.ConvertToPcm(fixture, Path.Combine(directory, "mp3.pcm"), CancellationToken.None);
             Check(mp3.Duration.TotalSeconds > 4 && mp3Sectors > 300, "MP3 decoder and PCM conversion");
             lines.Add("PASS: MP3 decoding through Windows Media Foundation and CD PCM conversion");
+            string ogg = Path.Combine(directory, "tone.ogg");
+            using (var input = typeof(SelfTest).Assembly.GetManifestResourceStream("XDBurner.TestTone.ogg")!)
+            using (var output = File.Create(ogg)) input.CopyTo(output);
+            Check(AudioService.Inspect(ogg).Duration.TotalSeconds is > 4.4 and < 4.6, "OGG duration");
+            long oggSectors = AudioService.ConvertToPcm(ogg, Path.Combine(directory, "ogg.pcm"), CancellationToken.None);
+            Check(oggSectors is >= 337 and <= 339, "OGG to resampled CD PCM");
+            lines.Add("PASS: OGG Vorbis decoding/resampling, selectable audio gaps and exact data-image capacity");
             lines.Add("NOT TESTED: physical CD-R/CD-RW writes, read-back verification, real burn progress/cancellation and erasure. Requires a burner and media.");
             lines.Add("ALL CHECKS PASSED");
         }

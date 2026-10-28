@@ -2,20 +2,22 @@
 param([switch]$SkipLegacyUpgrade)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
+$principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { throw 'Run installer integration tests from an elevated PowerShell.' }
 $artifactRoot = [System.IO.Path]::GetFullPath((Join-Path $projectRoot 'artifacts')) + '\'
 $suiteDirectory = [System.IO.Path]::GetFullPath((Join-Path $artifactRoot 'Installed XD Suite'))
 $burnerDirectory = [System.IO.Path]::GetFullPath((Join-Path $artifactRoot 'Installed XD Burner'))
 $legacyDirectory = [System.IO.Path]::GetFullPath((Join-Path $artifactRoot 'Legacy Upgrade'))
-$burnerKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{B5AF424C-85D1-47D4-AF62-30A5A15C5094}_is1'
-$suiteKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{F80CC53F-43F1-4E46-B7F4-61435E75303D}_is1'
+$burnerKey = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{B5AF424C-85D1-47D4-AF62-30A5A15C5094}_is1'
+$suiteKey = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{F80CC53F-43F1-4E46-B7F4-61435E75303D}_is1'
 foreach ($path in @($suiteDirectory,$burnerDirectory,$legacyDirectory)) { if (-not $path.StartsWith($artifactRoot,[StringComparison]::OrdinalIgnoreCase) -or (Test-Path -LiteralPath $path)) { throw "Unexpected or existing test directory: $path" } }
-foreach ($key in @($burnerKey,$suiteKey)) { if (Test-Path -LiteralPath $key) { throw 'A user installation already exists. Refusing to overwrite it for testing.' } }
+foreach ($key in @($burnerKey,$suiteKey,$burnerKey.Replace('HKLM:','HKCU:'),$suiteKey.Replace('HKLM:','HKCU:'))) { if (Test-Path -LiteralPath $key) { throw 'An installation already exists. Refusing to overwrite it for testing.' } }
 $report = [System.Collections.Generic.List[string]]::new()
 $report.Add('XD Suite / XD Burner installation round-trip')
 $report.Add([DateTimeOffset]::Now.ToString('O'))
-$suiteSetup = Join-Path $projectRoot 'dist\XD-Suite-Setup-0.2.1.exe'
-$burnerSetup = Join-Path $projectRoot 'dist\XD-Brenner-Setup-0.2.1.exe'
-$menuRoot = [Environment]::GetFolderPath('Programs')
+$suiteSetup = Join-Path $projectRoot 'dist\XD-Suite-Setup-0.3.0.exe'
+$burnerSetup = Join-Path $projectRoot 'dist\XD-Brenner-Setup-0.3.0.exe'
+$menuRoot = [Environment]::GetFolderPath('CommonPrograms')
 function Run-Process([string]$file,[string[]]$arguments) {
     $p = Start-Process -FilePath $file -ArgumentList $arguments -PassThru -Wait -WindowStyle Hidden
     if ($p.ExitCode -ne 0) { throw "Process failed ($($p.ExitCode)): $file" }
@@ -30,11 +32,11 @@ function Clean-Marker([string]$directory) {
     [System.IO.Directory]::Delete($directory,$false)
 }
 try {
-    Run-Process $suiteSetup @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-','/LANG=english','/TASKS=""',('/DIR="' + $suiteDirectory + '"'))
+    Run-Process $suiteSetup @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-','/COMPONENTS=suite','/LANG=english','/TASKS=""',('/DIR="' + $suiteDirectory + '"'))
     $suiteExe = Join-Path $suiteDirectory 'XDSuite.exe'
     if (-not (Test-Path -LiteralPath $suiteKey) -or -not (Test-Path -LiteralPath (Join-Path $menuRoot 'XD Suite.lnk'))) { throw 'Suite registration or shortcut missing.' }
     Run-Process $suiteExe @('--self-test','--report',('"' + (Join-Path $artifactRoot 'installed-suite-tests.txt') + '"'))
-    $report.Add('PASS: independent, offline, per-user suite installation and tests from installed application')
+    $report.Add('PASS: independent, offline, administrator suite installation and tests from installed application')
     Run-Process $suiteExe @('--test-install',('"' + $burnerDirectory + '"'),'--setup',('"' + $burnerSetup + '"'),'--report',('"' + (Join-Path $artifactRoot 'suite-real-install.txt') + '"'),'--english')
     $burnerExe = Join-Path $burnerDirectory 'XDBurner.exe'
     if ((Get-FileHash -LiteralPath $burnerExe).Hash -ne (Get-FileHash -LiteralPath (Join-Path $projectRoot 'dist\XDBurner\XDBurner.exe')).Hash) { throw 'Installed burner differs from release.' }

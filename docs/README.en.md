@@ -1,29 +1,35 @@
 # XD Suite and XD Burner
 
-Free, independent Windows apps. No account, advertising, trials, subscriptions or paid features. C# / WPF, MIT license.
+XD Burner records CDs on Windows. XD Suite manages and launches the individually installable applications. C# / WPF, MIT license.
 
-Install **XD-Brenner-Setup-0.2.1.exe** for the standalone burner, or **XD-Suite-Setup-0.2.1.exe** for the optional launcher. Both installers contain their own .NET runtime and normally require no administrator privileges. Both support German and English.
+Install **XD-Brenner-Setup-0.3.0.exe** for the standalone burner, or **XD-Suite-Setup-0.3.0.exe** for the launcher and selectable applications. The suite setup includes XD Burner; deselect it if it is not needed. Both setups request administrator privileges and offer German and English language selection. New installations use Program Files. Existing installations are updated in their current folder. The .NET runtime is included.
 
-Use **Sprache / Language → English / Deutsch** in either app to switch language immediately. Your choice is saved and used by both apps at their next launch. Filenames and user-entered disc names are preserved. Native Windows file pickers also follow the operating-system language.
+Use **Sprache / Language → English / Deutsch** in either app to switch language immediately. Your choice is saved and used by both apps at their next launch. Filenames and user-entered disc names are preserved. Native Windows file pickers follow the operating-system language.
 
-The suite discovers, launches, downloads, verifies and installs individual apps. Each app has its own EXE, installer, Start menu shortcut and uninstaller. Removing the suite does not remove the other apps. No background service or launcher is required to run them.
+Each app has its own EXE, installer, Start menu shortcut and uninstaller. Removing the suite does not remove other apps. They run independently of the launcher. Keep portable application folders intact, including the suite catalog and update helper.
 
-XD Burner supports data CDs, MP3/WAV audio CDs, data ISO export/burning and quick/full CD-RW erasure. Recording uses Windows IMAPI 2. Audio is converted locally with NAudio and Windows Media Foundation. Audio is track-at-once with approximately two-second gaps. No CD-Text, gapless audio, DVDs/Blu-rays, multisession, copy-protection removal, disc cloning or BIN/CUE support. Blank CD-R/CD-RW media are used and finalized. Data-size estimates exclude file-system overhead, which is checked before writing. A full audio disc needs about 850 MB of temporary storage. Compilation projects are not persisted yet.
+On startup, the suite checks GitHub for a newer stable suite release and asks whether to download and install it. After verifying size and SHA-256, it exits, runs the same installer against the same folder, and restarts. **The updater never invokes an uninstaller. Settings and independently installed tools are retained.** Self-updates select only the suite component. Cancelling the administrator prompt restarts the existing version. Earlier releases without this feature need one manual installation of the current setup.
 
-The default release repository is `ZokkaXDJ9/XD-Suite`. The app uses the latest published release's `catalog.json`, with a local fallback when unavailable. Each entry specifies HTTPS download URL, size and SHA-256. Downloads are verified before execution; corrupted files and unsafe redirects are rejected. The catalog accepts no shell commands. Change the repository under **Download source**.
+XD Burner supports data CDs, MP3/WAV/OGG Vorbis audio CDs, data ISO export/burning and quick/full CD-RW erasure. Rearrange tracks by dragging or with the arrow buttons. Select 2, 3, 5 or 10 seconds between tracks. The capacity display shows the amount free or over capacity; audio uses running time, and data includes actual ISO/Joliet file-system overhead. Without a disc, the display is a labelled standard 80-minute estimate. Windows IMAPI 2 records discs; NAudio, Media Foundation and NVorbis decode audio locally.
 
-Build on Windows with .NET SDK 9+ and Inno Setup 7.1.0:
+Audio uses track-at-once with a minimum two-second gap and four-second track length. Longer gaps add silence. No CD-Text, gapless audio, DVDs/Blu-rays, multisession, copy-protection removal, disc cloning or BIN/CUE support. OGG support covers Vorbis, not Opus. Blank CD-R/CD-RW media are used and finalized. A full audio disc needs about 850 MB of temporary storage. Compilation projects are not persisted yet.
+
+The default repository is `ZokkaXDJ9/XD-Suite`. The app uses the latest release's `catalog.json`, with a local fallback when unavailable. Entries specify HTTPS URL, size and SHA-256. Downloads are verified before execution; corrupted files and unsafe redirects are rejected. Change the repository under **Download source**.
+
+Build on Windows with .NET SDK 9+, the .NET Framework 4.7.2 targeting pack and Inno Setup 7.1.0:
 
 ```powershell
 .\tools\get-installer-compiler.ps1
 .\build-release.ps1
+.\tools\test-suite-update.ps1
+.\tools\test-setup-components.ps1
 .\tools\test-installer.ps1
 ```
 
-The build includes .NET 8.0.33; update the pinned runtime before future releases. Build output is in `dist/`. Installer creation and public release publication are separate steps. The installers are currently unsigned and may trigger Windows publisher notices.
+The apps include .NET 8.0.33; update the pinned runtime before future releases. The small update helper uses the .NET Framework provided by Windows 10/11. Output is in `dist/`. Publication is separate from building. Installers are currently unsigned and may trigger SmartScreen. Administrator privileges do not remove that warning. See [signing options](signing.md).
 
-Tests cover real IMAPI ISO creation and content hashes, Unicode folders, MP3/WAV conversion, PCM layout, cancellation, protection of source files and existing ISO targets, bilingual live WPF text, untouched user data, download validation with injected HTTP responses, and real installation/uninstallation. **Physical recording, read-back verification on burned media and CD-RW erasure still require a real burner.** Test with CD-RW on the target machine first. A real GitHub download also requires a published release. Reports and previews are in `artifacts/`.
+Tests cover real IMAPI ISO creation and hashes, image size, Unicode folders, MP3/WAV/OGG conversion, PCM layout and gaps, cancellation, source-file protection, bilingual WPF text, download validation and update-version selection. The update test runs the actual helper with isolated version 1 and version 2 installers and verifies preserved settings, restart and no uninstaller invocation. Product installer tests require elevation and refuse to overwrite existing installations. **Physical recording, read-back verification on burned media and CD-RW erasure still need a real burner.** Reports and previews are in `artifacts/`.
 
-The source folder, project and executable are all named XDBurner. Older working versions are upgraded using the same installation identity. Older local builds are archived under `artifacts/legacy-builds/`; `dist/` contains the current installers.
+The source folder, project and executable are named XDBurner. Older versions keep the same installation identity and folder. Old local builds are under `artifacts/legacy-builds/`; `dist/` contains current installers.
 
-All apps run independently. Shared language preference: `%LOCALAPPDATA%\XD\language.txt`. Suite catalog, downloads and settings: `%LOCALAPPDATA%\XDSuite`. Burner logs: `%LOCALAPPDATA%\XDBurner\Logs`. Licenses: `LICENSE` and `licenses/`.
+Language preference: `%LOCALAPPDATA%\XD\language.txt`. Suite data: `%LOCALAPPDATA%\XDSuite`. Burner logs: `%LOCALAPPDATA%\XDBurner\Logs`. Licenses: `LICENSE` and `licenses/`.

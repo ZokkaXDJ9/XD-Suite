@@ -4,16 +4,8 @@
     "en": "XD Burner"
   },
   {
-    "de": "XD Brenner – Einfach CDs brennen",
-    "en": "XD Burner – Burn CDs with ease"
-  },
-  {
-    "de": "Einfach. Frei. Gebrannt.",
-    "en": "Simple. Free. Burned."
-  },
-  {
-    "de": "DEINE CD",
-    "en": "YOUR CD"
+    "de": "BRENNEN",
+    "en": "BURN"
   },
   {
     "de": "Daten-CD",
@@ -36,28 +28,12 @@
     "en": "Erase CD-RW"
   },
   {
-    "de": "Deine Dateien. Deine CD.",
-    "en": "Your files. Your CD."
-  },
-  {
-    "de": "Ohne Konto, ohne Werbung,\nohne kostenpflichtige Extras.",
-    "en": "No account, no ads,\nno paid extras."
-  },
-  {
     "de": "Hilfe & Über XD Brenner",
     "en": "Help & About XD Burner"
   },
   {
-    "de": "GUTES BLEIBT.",
-    "en": "KEEP THE GOOD THINGS."
-  },
-  {
-    "de": "Eine CD für deine Dateien.",
-    "en": "A CD for your files."
-  },
-  {
-    "de": "Fotos, Dokumente und Erinnerungen. Sicher auf einer CD.",
-    "en": "Photos, documents and memories. Safe on a CD."
+    "de": "Dateien und Ordner auf CD brennen.",
+    "en": "Burn files and folders to CD."
   },
   {
     "de": "Brenner werden gesucht …",
@@ -68,12 +44,16 @@
     "en": "Refresh"
   },
   {
+    "de": "Update installieren",
+    "en": "Install update"
+  },
+  {
     "de": "CD auswerfen",
     "en": "Eject CD"
   },
   {
-    "de": "Deine Zusammenstellung",
-    "en": "Your compilation"
+    "de": "Dateien und Ordner",
+    "en": "Files and folders"
   },
   {
     "de": "Noch keine Dateien",
@@ -100,8 +80,8 @@
     "en": "LENGTH"
   },
   {
-    "de": "Was kommt auf deine CD?",
-    "en": "What goes on your CD?"
+    "de": "Keine Dateien hinzugefügt.",
+    "en": "No files added."
   },
   {
     "de": "Dateien hierher ziehen oder unten hinzufügen.",
@@ -124,8 +104,8 @@
     "en": "+ Music files"
   },
   {
-    "de": "Ein Abbild. Eine fertige CD.",
-    "en": "One image. One finished CD."
+    "de": "ISO-Datei auswählen",
+    "en": "Select ISO file"
   },
   {
     "de": "Wähle eine ISO-Datei aus. Ihr Inhalt wird als Daten-CD auf den Rohling geschrieben.",
@@ -144,10 +124,6 @@
     "en": "ISO 9660 · No BIN/CUE or audio images"
   },
   {
-    "de": "Platz für etwas Neues.",
-    "en": "Room for something new."
-  },
-  {
     "de": "Eine wiederbeschreibbare CD-RW lässt sich leeren und danach erneut brennen. CD-Rs können nicht gelöscht werden.",
     "en": "A rewritable CD-RW can be erased and burned again. CD-Rs cannot be erased."
   },
@@ -160,8 +136,8 @@
     "en": "Quick erase makes the disc reusable. Full erase takes several minutes, depending on your drive."
   },
   {
-    "de": "Alles eingestellt.",
-    "en": "All set."
+    "de": "Optionen",
+    "en": "Options"
   },
   {
     "de": "NAME DER CD",
@@ -204,12 +180,12 @@
     "en": "Estimate without a disc"
   },
   {
-    "de": "Bereit, wenn du es bist.",
-    "en": "Ready when you are."
+    "de": "Bereit",
+    "en": "Ready"
   },
   {
-    "de": "Füge Dateien hinzu. Dann kannst du deine CD brennen.",
-    "en": "Add your files. Then you're ready to burn a CD."
+    "de": "Dateien oder Ordner hinzufügen.",
+    "en": "Add files or folders."
   },
   {
     "de": "Als ISO speichern",
@@ -232,48 +208,36 @@
     "en": "No"
   },
   {
-    "de": "Deine Titelliste",
-    "en": "Your track list"
+    "de": "Audiotitel",
+    "en": "Audio track"
   },
   {
-    "de": "Dein nächster Lieblingsmix.",
-    "en": "Your next favourite mix."
+    "de": "Keine Audiotitel hinzugefügt.",
+    "en": "No audio tracks added."
   },
   {
-    "de": "MP3 oder WAV hierher ziehen.\nDie Reihenfolge bestimmst du.",
-    "en": "Drop MP3 or WAV files here.\nChoose your own track order."
+    "de": "MP3-, WAV- oder OGG-Dateien hierher ziehen.",
+    "en": "Drop MP3, WAV or OGG files here."
   },
   {
-    "de": "Musik, die mitkommt.",
-    "en": "Music to take with you."
-  },
-  {
-    "de": "Deine Titel als Audio-CD – für Anlage, Auto und CD-Player.",
-    "en": "Your tracks on an audio CD – for your stereo, car and CD player."
+    "de": "MP3- und WAV-Dateien als Audio-CD brennen.",
+    "en": "Burn MP3 and WAV files as an audio CD."
   },
   {
     "de": "MP3/WAV · ca. 2 s Pause pro Titel. CD-R für ältere CD-Player.",
     "en": "MP3/WAV · about 2 s between tracks. Use CD-R for older CD players."
   },
   {
-    "de": "Dein Abbild auf CD.",
-    "en": "Your image on a CD."
-  },
-  {
-    "de": "Eine vorhandene ISO-Datei direkt auf einen Rohling brennen.",
-    "en": "Burn an existing ISO image directly to a blank disc."
+    "de": "ISO-Abbild auf CD brennen.",
+    "en": "Burn an ISO image to CD."
   },
   {
     "de": "Leere CD-R oder CD-RW erforderlich. Die CD wird abgeschlossen.",
     "en": "A blank CD-R or CD-RW is required. The disc will be finalized."
   },
   {
-    "de": "Noch einmal von vorn.",
-    "en": "A fresh start."
-  },
-  {
-    "de": "Eine CD-RW leeren und für neue Inhalte vorbereiten.",
-    "en": "Erase a CD-RW and prepare it for new content."
+    "de": "Wiederbeschreibbare CD leeren.",
+    "en": "Erase a rewritable CD."
   },
   {
     "de": "Das Löschen lässt sich nach dem Start nicht abbrechen. Bitte den Brenner angeschlossen lassen.",
@@ -284,16 +248,16 @@
     "en": "Folders are preserved. The disc will be finalized."
   },
   {
-    "de": "Füge Musik hinzu und ordne deine Titel.",
-    "en": "Add music and arrange your tracks."
+    "de": "MP3-, WAV- oder OGG-Dateien hinzufügen.",
+    "en": "Add MP3, WAV or OGG files."
   },
   {
-    "de": "Wähle eine ISO-Datei und lege einen leeren Rohling ein.",
-    "en": "Choose an ISO file and insert a blank disc."
+    "de": "ISO-Datei auswählen und leere CD einlegen.",
+    "en": "Select an ISO file and insert a blank disc."
   },
   {
-    "de": "Lege die CD-RW ein, die du löschen möchtest.",
-    "en": "Insert the CD-RW you want to erase."
+    "de": "CD-RW einlegen.",
+    "en": "Insert a CD-RW."
   },
   {
     "de": "Kein CD-Brenner gefunden",
@@ -348,10 +312,6 @@
     "en": "Adding: {0}"
   },
   {
-    "de": "Für eine Audio-CD bitte einzelne MP3- oder WAV-Dateien hinzufügen.",
-    "en": "For an audio CD, please add individual MP3 or WAV files."
-  },
-  {
     "de": "Der Name „{0}“ ist bereits auf der CD vorhanden. Bitte vorher umbenennen.",
     "en": "The name “{0}” is already on the disc. Please rename it first."
   },
@@ -364,12 +324,12 @@
     "en": "Compilation updated."
   },
   {
-    "de": "Mit ↑ und ↓ kannst du die Reihenfolge ändern.",
-    "en": "Use ↑ and ↓ to change the track order."
+    "de": "Reihenfolge mit ↑ und ↓ ändern.",
+    "en": "Change the order with ↑ and ↓."
   },
   {
-    "de": "Die Originaldateien bleiben an ihrem bisherigen Ort.",
-    "en": "Your original files stay where they are."
+    "de": "Originaldateien wurden nicht verändert.",
+    "en": "Original files were not changed."
   },
   {
     "de": "Bitte genau eine ISO-Datei auswählen.",
@@ -400,16 +360,16 @@
     "en": "My_CD.iso"
   },
   {
-    "de": "Deine ISO-Datei ist fertig.",
-    "en": "Your ISO file is ready."
+    "de": "ISO-Datei gespeichert.",
+    "en": "ISO file saved."
   },
   {
     "de": "CD-RW löschen?",
     "en": "Erase CD-RW?"
   },
   {
-    "de": "Bereit zum Brennen?",
-    "en": "Ready to burn?"
+    "de": "CD brennen?",
+    "en": "Burn CD?"
   },
   {
     "de": "Vollständig",
@@ -436,12 +396,12 @@
     "en": "{0} files/folders"
   },
   {
-    "de": "Die CD-RW ist wieder frei.",
-    "en": "Your CD-RW is ready to use again."
+    "de": "CD-RW gelöscht.",
+    "en": "CD-RW erased."
   },
   {
-    "de": "Deine CD ist fertig.",
-    "en": "Your CD is ready."
+    "de": "Brennvorgang abgeschlossen.",
+    "en": "Burn completed."
   },
   {
     "de": "Du kannst neue Dateien oder Musik auf die CD brennen.",
@@ -460,8 +420,8 @@
     "en": "The data has been burned and the disc finalized."
   },
   {
-    "de": "Einen Moment …",
-    "en": "One moment …"
+    "de": "Vorgang läuft",
+    "en": "Operation in progress"
   },
   {
     "de": "Der Vorgang wird vorbereitet.",
@@ -520,8 +480,8 @@
     "en": "Plus space for the file system"
   },
   {
-    "de": "Das hat noch nicht geklappt.",
-    "en": "That didn't work yet."
+    "de": "Vorgang fehlgeschlagen.",
+    "en": "Operation failed."
   },
   {
     "de": "Über XD Brenner",
@@ -530,14 +490,6 @@
   {
     "de": "Bitte den laufenden Vorgang beenden oder abbrechen, bevor du XD Brenner schließt.",
     "en": "Please finish or cancel the current operation before closing XD Burner."
-  },
-  {
-    "de": "Vorgang läuft",
-    "en": "Operation in progress"
-  },
-  {
-    "de": "Audiotitel",
-    "en": "Audio track"
   },
   {
     "de": "Ordner",
@@ -832,12 +784,8 @@
     "en": "Write speed"
   },
   {
-    "de": "Von ZokkaXDJ9. Für alle.",
-    "en": "By ZokkaXDJ9. For everyone."
-  },
-  {
-    "de": "DEIN WERKZEUGKASTEN",
-    "en": "YOUR TOOLBOX"
+    "de": "PROGRAMME",
+    "en": "APPLICATIONS"
   },
   {
     "de": "Alle Programme",
@@ -848,24 +796,16 @@
     "en": "Installed"
   },
   {
-    "de": "Einfach gute Software.",
-    "en": "Simply good software."
-  },
-  {
-    "de": "Kostenlos. Ohne Werbung.\nOhne Konto. Ohne Umwege.",
-    "en": "Free. No ads.\nNo account. No hassle."
-  },
-  {
     "de": "Downloadquelle",
     "en": "Download source"
   },
   {
-    "de": "Weniger Umwege. Mehr erledigt.",
-    "en": "Less hassle. More done."
+    "de": "Programme verwalten",
+    "en": "Manage applications"
   },
   {
-    "de": "Deine Programme an einem Ort.",
-    "en": "Your apps in one place."
+    "de": "Programme installieren, aktualisieren und starten.",
+    "en": "Install, update and launch applications."
   },
   {
     "de": "Programme suchen …",
@@ -876,20 +816,12 @@
     "en": "Search apps"
   },
   {
-    "de": "Deine Werkzeuge. Deine Wahl.",
-    "en": "Your tools. Your choice."
-  },
-  {
-    "de": "Installiere nur, was du brauchst. Jedes Programm funktioniert\nauch einzeln – die Suite bringt alles bequem zusammen.",
-    "en": "Install only what you need. Every app also works\non its own – the suite brings everything together."
-  },
-  {
     "de": "Katalog aktualisieren",
     "en": "Refresh catalog"
   },
   {
-    "de": "Hier sind noch keine Programme.",
-    "en": "No apps to show here yet."
+    "de": "Keine Programme in dieser Ansicht.",
+    "en": "No applications in this view."
   },
   {
     "de": "AUSGEWÄHLTES PROGRAMM",
@@ -908,12 +840,8 @@
     "en": "Launch app"
   },
   {
-    "de": "Alles an seinem Platz.",
-    "en": "Everything in its place."
-  },
-  {
-    "de": "Wähle ein Programm zum Installieren oder Starten.",
-    "en": "Choose an app to install or launch."
+    "de": "Programm zum Installieren oder Starten auswählen.",
+    "en": "Select an application to install or launch."
   },
   {
     "de": "Verfügbare Programme",
@@ -944,8 +872,8 @@
     "en": "Connecting to GitHub Releases."
   },
   {
-    "de": "Deine Programme sind auf dem neuesten Stand.",
-    "en": "Your catalog is up to date."
+    "de": "Programmkatalog aktualisiert.",
+    "en": "Application catalog updated."
   },
   {
     "de": "Programmkatalog von GitHub Releases geladen.",
@@ -976,28 +904,28 @@
     "en": "Install app"
   },
   {
-    "de": "Dein Programm wird vorbereitet …",
-    "en": "Getting your app ready …"
+    "de": "Download wird vorbereitet …",
+    "en": "Preparing download …"
   },
   {
     "de": "Das Setup wird heruntergeladen und geprüft.",
     "en": "Downloading and verifying the installer."
   },
   {
-    "de": "Das Programm wird installiert …",
-    "en": "Installing your app …"
+    "de": "Programm wird installiert …",
+    "en": "Installing application …"
   },
   {
     "de": "Bitte warten, bis das Setup fertig ist.",
     "en": "Please wait for the installer to finish."
   },
   {
-    "de": "Dein Programm ist bereit.",
-    "en": "Your app is ready."
+    "de": "Installation abgeschlossen.",
+    "en": "Installation complete."
   },
   {
-    "de": "Du kannst es hier oder direkt über das Startmenü öffnen.",
-    "en": "You can open it here or directly from the Start menu."
+    "de": "Das Programm kann über die Suite oder das Startmenü geöffnet werden.",
+    "en": "The application can be opened from the suite or the Start menu."
   },
   {
     "de": "Download abgebrochen.",
@@ -1128,7 +1056,115 @@
     "en": "XD Suite is already open."
   },
   {
-    "de": "XD Brenner 0.2.1 – freie Software unter der MIT-Lizenz\n\nDaten-CD: Dateien und Ordner hinzufügen und brennen. „Als ISO speichern“ funktioniert auch ohne Brenner.\n\nAudio-CD: MP3/WAV hinzufügen, Titel mit ↑/↓ ordnen und brennen. Ca. 2 Sekunden Pause zwischen Titeln; kein CD-Text oder Gapless.\n\nISO brennen: Eine Daten-ISO auswählen und brennen.\n\nCD-RW löschen: Schnell oder vollständig leeren. CD-Rs sind nicht löschbar.\n\nNach dem Einlegen einer CD bitte „Aktualisieren“ wählen. Es werden leere CD-R/CD-RW verwendet und abgeschlossene CDs erstellt. Kein Multisession, keine Kopierschutzumgehung.\n\nBrenner und Rohling müssen die gewählte Brennart unterstützen. Einen echten Brenntest am Zielgerät bitte zunächst mit CD-RW durchführen.\n\nKein Konto, keine Werbung, keine Telemetrie. Audioumwandlung mit NAudio (MIT). Fehlerprotokolle liegen lokal unter %LOCALAPPDATA%\\XDBurner\\Logs.\n\nQuellcode, Lizenz und Bauanleitung liegen im Projektordner.",
-    "en": "XD Burner 0.2.1 – free software under the MIT license\n\nData CD: Add files and folders and burn them. “Save as ISO” also works without a burner.\n\nAudio CD: Add MP3/WAV files, arrange tracks using ↑/↓ and burn. About 2 seconds between tracks; no CD-Text or gapless audio.\n\nBurn ISO: Choose and burn a data ISO image.\n\nErase CD-RW: Quick or full erase. CD-Rs cannot be erased.\n\nAfter inserting a disc, choose “Refresh”. Blank CD-R/CD-RW discs are used and finalized. No multisession or copy-protection removal.\n\nThe drive and disc must support the selected recording mode. Please test with a CD-RW on the target device first.\n\nNo account, no ads, no telemetry. Audio conversion uses NAudio (MIT). Error logs are stored locally under %LOCALAPPDATA%\\XDBurner\\Logs.\n\nSource code, license and build instructions are in the project folder."
+    "de": "XD Brenner 0.3.0\n\nDaten-CD: Dateien und Ordner hinzufügen und brennen. „Als ISO speichern“ funktioniert auch ohne Brenner.\n\nAudio-CD: MP3/WAV/OGG hinzufügen, Titel per Ziehen oder mit ↑/↓ ordnen. Pause zwischen Titeln auswählbar (mindestens 2 Sekunden). Kein CD-Text oder Gapless.\n\nISO brennen: Daten-ISO auswählen und brennen.\n\nCD-RW löschen: Schnell oder vollständig löschen. CD-Rs sind nicht löschbar.\n\nNach dem Einlegen einer CD „Aktualisieren“ wählen. Es werden leere CD-R/CD-RW verwendet und abgeschlossene CDs erstellt. Kein Multisession.\n\nLizenz: MIT. Audioumwandlung: NAudio und NVorbis (MIT).\nFehlerprotokolle: %LOCALAPPDATA%\\XDBurner\\Logs.",
+    "en": "XD Burner 0.3.0\n\nData CD: Add files and folders and burn them. Save as ISO also works without a burner.\n\nAudio CD: Add MP3/WAV/OGG files and arrange tracks by dragging or with ↑/↓. Select the gap between tracks (at least 2 seconds). No CD-Text or gapless audio.\n\nBurn ISO: Select and burn a data ISO image.\n\nErase CD-RW: Quick or full erase. CD-Rs cannot be erased.\n\nAfter inserting a disc, select Refresh. Blank CD-R/CD-RW discs are used and finalized. No multisession.\n\nLicense: MIT. Audio conversion: NAudio and NVorbis (MIT).\nError logs: %LOCALAPPDATA%\\XDBurner\\Logs."
+  },
+  {
+    "de": "Titelliste",
+    "en": "Track list"
+  },
+  {
+    "de": "MP3-, WAV- und OGG-Dateien als Audio-CD brennen.",
+    "en": "Burn MP3, WAV and OGG files as an audio CD."
+  },
+  {
+    "de": "Reihenfolge per Ziehen oder mit ↑ und ↓ ändern. CD-R für ältere CD-Player verwenden.",
+    "en": "Drag tracks or use ↑ and ↓ to change their order. Use CD-R for older CD players."
+  },
+  {
+    "de": "Musikdateien (*.mp3;*.wav;*.ogg)|*.mp3;*.wav;*.ogg|Alle Dateien (*.*)|*.*",
+    "en": "Music files (*.mp3;*.wav;*.ogg)|*.mp3;*.wav;*.ogg|All files (*.*)|*.*"
+  },
+  {
+    "de": "Für eine Audio-CD bitte einzelne MP3-, WAV- oder OGG-Dateien hinzufügen.",
+    "en": "For an audio CD, add individual MP3, WAV or OGG files."
+  },
+  {
+    "de": "PAUSE ZWISCHEN TITELN",
+    "en": "GAP BETWEEN TRACKS"
+  },
+  {
+    "de": "Pause zwischen Audiotiteln",
+    "en": "Gap between audio tracks"
+  },
+  {
+    "de": "Track-at-once: mindestens 2 Sekunden.",
+    "en": "Track-at-once: at least 2 seconds."
+  },
+  {
+    "de": "{0} min zu viel",
+    "en": "{0} min over capacity"
+  },
+  {
+    "de": "{0} min frei",
+    "en": "{0} min free"
+  },
+  {
+    "de": "{0} zu viel",
+    "en": "{0} over capacity"
+  },
+  {
+    "de": "{0} frei",
+    "en": "{0} free"
+  },
+  {
+    "de": "Kapazität wird berechnet …",
+    "en": "Calculating disc usage …"
+  },
+  {
+    "de": "Inklusive {0} s Pause je Titel",
+    "en": "Including a {0} s gap per track"
+  },
+  {
+    "de": "Inklusive Dateisystem · Richtwert ohne Rohling",
+    "en": "Including file system · estimate without a disc"
+  },
+  {
+    "de": "Inklusive Dateisystem",
+    "en": "Including file system"
+  },
+  {
+    "de": "Größe konnte nicht berechnet werden.",
+    "en": "Could not calculate disc usage."
+  },
+  {
+    "de": "Update abgeschlossen.",
+    "en": "Update completed."
+  },
+  {
+    "de": "Für XD Suite ist Version {0} verfügbar.\nInstallierte Version: {1}\n\nJetzt herunterladen und installieren?\n\nDie vorhandene Installation wird aktualisiert. Einstellungen und installierte Programme bleiben erhalten.",
+    "en": "XD Suite version {0} is available.\nInstalled version: {1}\n\nDownload and install now?\n\nThe existing installation will be updated. Settings and installed applications will be preserved."
+  },
+  {
+    "de": "Suite-Update wird heruntergeladen …",
+    "en": "Downloading suite update …"
+  },
+  {
+    "de": "Es wurden keine Änderungen vorgenommen.",
+    "en": "No changes were made."
+  },
+  {
+    "de": "Die Update-Versionsnummer ist ungültig.",
+    "en": "The update version number is invalid."
+  },
+  {
+    "de": "Das Suite-Update enthält kein vollständiges Setup mit Prüfsumme.",
+    "en": "The suite update does not contain a complete installer and checksum."
+  },
+  {
+    "de": "Die Prüfsumme für das Suite-Update fehlt.",
+    "en": "The suite update checksum is missing."
+  },
+  {
+    "de": "Die Updatekomponente fehlt. Bitte das aktuelle Suite-Setup verwenden.",
+    "en": "The update component is missing. Use the current suite installer."
+  },
+  {
+    "de": "Die Updatekomponente konnte nicht gestartet werden.",
+    "en": "The update component could not be started."
+  },
+  {
+    "de": "Die Updatedaten sind zu groß.",
+    "en": "The update metadata is too large."
   }
 ]

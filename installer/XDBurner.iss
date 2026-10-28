@@ -1,16 +1,21 @@
-#define AppVersion "0.2.1"
+#define AppVersion "0.3.0"
 #define Root AddBackslash(SourcePath) + "..\"
+#define ProgramId "{B5AF424C-85D1-47D4-AF62-30A5A15C5094}"
+#define ProgramFolder "XDBurner"
+#define ProgramExe "XDBurner.exe"
 
 [Setup]
 AppId={{B5AF424C-85D1-47D4-AF62-30A5A15C5094}
 AppName={cm:BurnerName}
 AppVersion={#AppVersion}
 AppPublisher=XD Suite
-AppComments=Einfach CDs brennen. Frei und ohne Umwege.
-DefaultDirName={localappdata}\Programs\XDBurner
+AppComments=CD-Brennprogramm
+DefaultDirName={code:DefaultInstallDir}
 DefaultGroupName=XD Suite
 DisableProgramGroupPage=yes
-PrivilegesRequired=lowest
+PrivilegesRequired=admin
+UsePreviousAppDir=yes
+ShowLanguageDialog=yes
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0.17763
@@ -27,7 +32,7 @@ SetupLogging=yes
 CloseApplications=yes
 RestartApplications=no
 AppMutex=Local\XDBurner.App,Local\KlarBrand.App
-VersionInfoVersion=0.2.1.0
+VersionInfoVersion=0.3.0.0
 VersionInfoDescription=XD Burner Installation
 VersionInfoProductName=XD Brenner / XD Burner
 VersionInfoCopyright=2026 XD Suite contributors
@@ -53,16 +58,23 @@ Type: files; Name: "{userdesktop}\XD Brenner.lnk"
 Type: files; Name: "{userdesktop}\XD Burner.lnk"
 
 [Icons]
-Name: "{userprograms}\{cm:BurnerName}"; Filename: "{app}\XDBurner.exe"; WorkingDir: "{app}"
-Name: "{userdesktop}\{cm:BurnerName}"; Filename: "{app}\XDBurner.exe"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{autoprograms}\{cm:BurnerName}"; Filename: "{app}\XDBurner.exe"; WorkingDir: "{app}"
+Name: "{autodesktop}\{cm:BurnerName}"; Filename: "{app}\XDBurner.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\XDBurner.exe"; Description: "{cm:LaunchProgram,{cm:BurnerName}}"; Flags: nowait postinstall skipifsilent
 
 [Messages]
-german.WelcomeLabel2=XD Brenner hilft dir, Daten-CDs und Audio-CDs zu brennen und CD-RWs wiederzuverwenden.%n%nKostenlos, ohne Konto und unabhängig von XD Suite nutzbar. Die Laufzeit ist enthalten.%n%nDeutsch und Englisch lassen sich jederzeit im Menü wechseln.
-english.WelcomeLabel2=XD Burner helps you burn data CDs and audio CDs and reuse CD-RWs.%n%nFree, no account required, and works independently of XD Suite. The runtime is included.%n%nSwitch between German and English at any time in the menu.
+german.WelcomeLabel2=Dieses Setup installiert XD Brenner.%n%nFunktionen: Daten-CDs, Audio-CDs, ISO-Dateien und CD-RW-Löschen.%n%nDie Sprache kann später im Programm geändert werden.
+english.WelcomeLabel2=This setup installs XD Burner.%n%nFunctions: data CDs, audio CDs, ISO images and CD-RW erasing.%n%nThe language can also be changed in the application.
 
 [CustomMessages]
 german.BurnerName=XD Brenner
 english.BurnerName=XD Burner
+
+#include "UpgradePaths.iss"
+[Code]
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep = ssPostInstall then MigrateRegistration;
+end;

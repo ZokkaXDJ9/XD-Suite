@@ -7,16 +7,18 @@
     <Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets/XDBurner.ico</ApplicationIcon>
-    <Version>0.2.1</Version>
+    <Version>0.3.0</Version>
     <AssemblyName>XDBurner</AssemblyName>
     <Product>XD Brenner</Product>
-    <Description>Einfach CDs brennen. Frei und ohne Umwege.</Description>
+    <Description>Daten-CDs und Audio-CDs brennen, ISO-Dateien erstellen und CD-RWs löschen.</Description>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../XD.Common/XD.Common.csproj" />
     <PackageReference Include="NAudio" Version="2.3.0" />
+    <PackageReference Include="NVorbis" Version="0.10.5" />
     <EmbeddedResource Include="../tests/fixtures/tone.mp3" LogicalName="XDBurner.TestTone.mp3" />
+    <EmbeddedResource Include="../tests/fixtures/tone.ogg" LogicalName="XDBurner.TestTone.ogg" />
     <Resource Include="Assets/XDBurner.ico" />
   </ItemGroup>
 </Project>

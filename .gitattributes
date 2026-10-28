@@ -1,5 +1,6 @@
 * text=auto eol=lf
 *.ico binary
 *.mp3 binary
+*.ogg binary
 # Preserve upstream third-party notices without applying our whitespace rules.
 licenses/** -whitespace

@@ -10,7 +10,7 @@ public sealed record RecorderInfo(string Id, string SourceName)
 }
 public sealed record MediaInfo(string Description, long FreeBytes, long AudioSectors, bool IsBlank, int Type);
 public sealed record OperationProgress(string Message, double? Percent = null);
-public sealed record BurnOptions(string RecorderId, string VolumeName, bool Verify, bool Eject, bool Slow, bool FullErase);
+public sealed record BurnOptions(string RecorderId, string VolumeName, bool Verify, bool Eject, bool Slow, bool FullErase, int AudioGapSeconds = 2);
 public sealed record DataEntry(string DiscPath, string SourcePath, long Length, bool IsDirectory);
 
 public sealed record ProjectItem(string SourcePath, string Name, bool IsDirectory, long Bytes, TimeSpan Duration)
@@ -83,5 +83,9 @@ public static class ProjectFiles
         }
     }
 
-    public static long AudioSectors(IEnumerable<TimeSpan> durations) => durations.Sum(d => Math.Max(300L, (long)Math.Ceiling(d.TotalSeconds * 75)) + 150);
+    public static long AudioSectors(IEnumerable<TimeSpan> durations, int gapSeconds = 2)
+    {
+        if (gapSeconds is < 2 or > 30) throw new ArgumentOutOfRangeException(nameof(gapSeconds));
+        return durations.Sum(d => Math.Max(300L, (long)Math.Ceiling(d.TotalSeconds * 75)) + gapSeconds * 75L);
+    }
 }

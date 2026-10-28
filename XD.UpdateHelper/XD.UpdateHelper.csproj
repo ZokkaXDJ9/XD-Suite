@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType><TargetFramework>net472</TargetFramework><UseWindowsForms>true</UseWindowsForms>
+    <LangVersion>latest</LangVersion><Nullable>enable</Nullable><Version>0.3.0</Version>
+    <AssemblyName>XDUpdateHelper</AssemblyName><Product>XD Suite Update</Product>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+</Project>

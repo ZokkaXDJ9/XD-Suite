@@ -55,6 +55,16 @@ internal static class SelfTest
             using var invalidCatalog = new PackageTransport(new FakeHandler(_ => new(HttpStatusCode.OK) { Content = new StringContent("{\"schemaVersion\":999,\"apps\":[]}") }));
             await Reject(() => invalidCatalog.FetchCatalog(new("https://example.test/catalog.json"), CancellationToken.None), "Unsupported catalog");
             lines.Add("PASS: bad hashes, cancellation, partial cleanup, unsafe redirects and invalid online catalogs rejected");
+            string updateFile = "XD-Suite-Setup-9.1.0.exe";
+            string release = JsonSerializer.Serialize(new { tag_name = "v9.1.0", draft = false, prerelease = false, assets = new[] { new { name = updateFile, size = payload.Length, browser_download_url = "https://example.test/" + updateFile }, new { name = "SHA256SUMS.txt", size = 100, browser_download_url = "https://example.test/SHA256SUMS.txt" } } });
+            using var updateTransport = new PackageTransport(new FakeHandler(request => new(HttpStatusCode.OK) { Content = new StringContent(request.RequestUri!.AbsolutePath.EndsWith("SHA256SUMS.txt") ? hash + "  " + updateFile + "\n" : release) }));
+            var update = await SuiteUpdates.Check(updateTransport, "ZokkaXDJ9/XD-Suite", new Version(9, 0, 0, 0), CancellationToken.None);
+            Check(update?.Package.Version == "9.1.0" && update.Package.InstallerSha256 == hash, "Suite update asset and hash selection");
+            Check(await SuiteUpdates.Check(updateTransport, "ZokkaXDJ9/XD-Suite", new Version(9, 1, 0, 0), CancellationToken.None) == null, "Equal versions do not prompt");
+            Check(await SuiteUpdates.Check(updateTransport, "ZokkaXDJ9/XD-Suite", new Version(10, 0, 0), CancellationToken.None) == null, "Downgrades do not prompt");
+            using var missingSum = new PackageTransport(new FakeHandler(request => new(HttpStatusCode.OK) { Content = new StringContent(request.RequestUri!.AbsolutePath.EndsWith("SHA256SUMS.txt") ? "" : release) }));
+            await Reject(() => SuiteUpdates.Check(missingSum, "ZokkaXDJ9/XD-Suite", new Version(1, 0, 0), CancellationToken.None), "Suite update without matching checksum");
+            lines.Add("PASS: suite startup update detection, normalized version comparison, no downgrade and required checksum");
             lines.Add("NOTE: HTTP responses were injected. A real GitHub Release download requires publishing the release.");
             lines.Add("ALL SUITE CHECKS PASSED");
         }

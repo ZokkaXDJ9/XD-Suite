@@ -32,7 +32,7 @@ public sealed class AppCard(AppPackage package, InstalledApp? installed)
     public string Size => (Package.InstallerSizeBytes / 1048576d).ToString("0.0", L10n.Culture) + " MB";
     public bool HasUpdate => Installed != null && System.Version.TryParse(Installed.Version.Split('+')[0], out var current) && System.Version.TryParse(Package.Version, out var latest) && latest > current;
     public string Status => L10n.T(Installed == null ? "Noch nicht installiert" : HasUpdate ? "Update verfügbar" : "Installiert");
-    public string Action => L10n.T(Installed == null ? "Herunterladen & installieren" : HasUpdate ? "Aktualisieren" : "Programm starten");
+    public string Action => L10n.T(Installed == null ? "Herunterladen & installieren" : HasUpdate ? "Update installieren" : "Programm starten");
 }
 
 public static class PackageValidation
