@@ -1,10 +1,11 @@
 namespace XDConverter;
 
-public enum EncodingMode { Cbr, Abr, Vbr, ConstrainedVbr, Pcm, Lossless }
+public enum EncodingMode { Automatic = -1, Cbr, Abr, Vbr, ConstrainedVbr, Pcm, Lossless }
 
 // These choices describe the bundled encoders, rather than offering settings they cannot encode.
 public static class EncodingProfile
 {
+    public const int AutomaticQuality = -1000; // Vorbis Q-1 and MP3 V0 are real manual choices.
     private static readonly int[] commonRates = [8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000, 64000, 88200, 96000, 176400, 192000];
     public static int[] Rates(string format, EncodingMode? mode = null) => format switch
     {
@@ -46,29 +47,55 @@ public static class EncodingProfile
         _ => Enumerable.Range(1, 5).ToArray()
     };
     public static int DefaultQuality(string format) => format == "OGG" ? 5 : 2;
+    public static EncodingMode EffectiveMode(string format, EncodingMode? mode) => mode is not null and not EncodingMode.Automatic ? mode.Value : format switch
+    {
+        "WAV" => EncodingMode.Pcm,
+        "FLAC" => EncodingMode.Lossless,
+        _ => EncodingMode.Vbr
+    };
     public static bool UsesQuality(string format, EncodingMode mode) => mode == EncodingMode.Vbr && format != "Opus";
     public static bool UsesBitrate(string format, EncodingMode mode) => mode is EncodingMode.Cbr or EncodingMode.Abr or EncodingMode.ConstrainedVbr || format == "Opus";
     public static void Validate(ConvertOptions options)
     {
         string format = options.Format.Id;
-        if (!OutputFormat.All.Contains(options.Format) || !Modes(format).Contains(options.Mode ?? Modes(format)[0]) ||
-            options.SampleRate != 0 && !Rates(format, options.Mode ?? Modes(format)[0]).Contains(options.SampleRate) || options.Channels is not (0 or 1 or 2)) throw new ConversionError("InvalidOptions");
-        var mode = options.Mode ?? Modes(format)[0];
-        if (UsesBitrate(format, mode) && !Bitrates(format, options.SampleRate, options.Channels).Contains(options.Quality) ||
-            UsesQuality(format, mode) && !Qualities(format).Contains(options.VbrQuality) ||
-            format == "WAV" && options.Quality is not (8 or 16 or 24 or 32 or 33 or 64) ||
-            format == "FLAC" && (options.Compression is < 0 or > 12 || options.BitDepth is not (0 or 16 or 24)) ||
-            format == "Opus" && options.Application is not ("audio" or "voip" or "lowdelay")) throw new ConversionError("InvalidOptions");
+        var mode = EffectiveMode(format, options.Mode);
+        if (!OutputFormat.All.Contains(options.Format) || !Modes(format).Contains(mode) ||
+            options.SampleRate != 0 && !Rates(format, mode).Contains(options.SampleRate) || options.Channels is not (0 or 1 or 2)) throw new ConversionError("InvalidOptions");
+        if (UsesBitrate(format, mode) && options.Quality != 0 && !Bitrates(format, options.SampleRate, options.Channels).Contains(options.Quality) ||
+            UsesQuality(format, mode) && options.VbrQuality != AutomaticQuality && !Qualities(format).Contains(options.VbrQuality) ||
+            format == "WAV" && options.Quality is not (0 or 8 or 16 or 24 or 32 or 33 or 64) ||
+            format == "FLAC" && (options.Compression is < -1 or > 12 || options.BitDepth is not (0 or 16 or 24)) ||
+            format == "Opus" && options.Application is not ("auto" or "audio" or "voip" or "lowdelay")) throw new ConversionError("InvalidOptions");
     }
-    public static int EffectiveRate(AudioInfo input, ConvertOptions options)
+    public static ConvertOptions Resolve(AudioInfo input, ConvertOptions options)
     {
-        if (options.SampleRate != 0) return options.SampleRate;
-        if (options.Format.Id == "Opus") return 48000;
-        if (options.Format.Id is "WAV" or "FLAC") return input.SampleRate;
-        var mode = options.Mode ?? Modes(options.Format.Id)[0];
-        var rates = Rates(options.Format.Id, mode).AsEnumerable();
-        if (UsesBitrate(options.Format.Id, mode))
-            rates = rates.Where(r => Bitrates(options.Format.Id, r, options.Channels).Contains(options.Quality));
-        return rates.MinBy(r => Math.Abs(r - input.SampleRate));
+        Validate(options);
+        string format = options.Format.Id;
+        var mode = EffectiveMode(format, options.Mode);
+        int channels = options.Channels == 0 ? format is "WAV" or "FLAC" ? input.Channels : Math.Min(input.Channels, 2) : options.Channels;
+        int rate = options.SampleRate;
+        if (rate == 0)
+        {
+            if (format == "Opus") rate = 48000;
+            else if (format is "WAV" or "FLAC") rate = input.SampleRate;
+            else
+            {
+                var rates = Rates(format, mode).AsEnumerable();
+                if (UsesBitrate(format, mode) && options.Quality != 0)
+                    rates = rates.Where(r => Bitrates(format, r, options.Channels).Contains(options.Quality));
+                rate = rates.MinBy(r => Math.Abs(r - input.SampleRate));
+            }
+        }
+        int quality = options.Quality;
+        if (quality == 0)
+        {
+            if (format == "WAV") quality = input.Codec.StartsWith("pcm_f64", StringComparison.Ordinal) ? 64 : input.Codec.StartsWith("pcm_f32", StringComparison.Ordinal) ? 32 : input.BitsPerSample switch { 8 => 8, > 24 => 33, > 16 => 24, _ => 16 };
+            else if (UsesBitrate(format, mode)) quality = Bitrates(format, rate, channels).MinBy(b => Math.Abs(b - (format == "Opus" ? channels == 1 ? 64 : 128 : channels == 1 ? 128 : 192)));
+        }
+        return options with { Mode = mode, SampleRate = rate, Quality = quality,
+            VbrQuality = options.VbrQuality == AutomaticQuality ? DefaultQuality(format) : options.VbrQuality,
+            Compression = options.Compression == -1 ? 5 : options.Compression,
+            Application = options.Application == "auto" ? "audio" : options.Application };
     }
+    public static int EffectiveRate(AudioInfo input, ConvertOptions options) => Resolve(input, options).SampleRate;
 }

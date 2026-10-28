@@ -4,7 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
     <AssemblyName>XDConverter.Preview</AssemblyName><Product>XD Konverter Vorschau</Product>
     <SuiteVersion>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)..\..\XDSuite\XDSuite.csproj')), '&lt;Version&gt;([^&lt;]+)&lt;/Version&gt;').Groups[1].Value)</SuiteVersion>
-    <Version>$(SuiteVersion)</Version><InformationalVersion>$(SuiteVersion)-preview+audio-options</InformationalVersion>
+    <Version>$(SuiteVersion)</Version><InformationalVersion>$(SuiteVersion)-preview+automatic-defaults</InformationalVersion>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets/XDConverter.ico</ApplicationIcon>
     <Description>Lokale Audiokonvertierung - Vorschau</Description>

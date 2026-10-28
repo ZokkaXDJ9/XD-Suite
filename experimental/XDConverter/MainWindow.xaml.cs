@@ -80,7 +80,7 @@ public partial class MainWindow : Window
         var p = Preferences;
         if (activeFormat == "WAV") p.Depth = Value(QualityCombo);
         else if (activeFormat == "FLAC") p.Compression = Value(QualityCombo);
-        else if (EncodingProfile.UsesQuality(activeFormat, p.Mode)) p.VbrQuality = Value(QualityCombo);
+        else if (EncodingProfile.UsesQuality(activeFormat, EncodingProfile.EffectiveMode(activeFormat, p.Mode))) p.VbrQuality = Value(QualityCombo);
         else p.Bitrate = Value(QualityCombo);
     }
     private void RefreshOptions()
@@ -88,13 +88,14 @@ public partial class MainWindow : Window
         refreshing = true;
         var p = Preferences;
         var modes = EncodingProfile.Modes(activeFormat);
-        if (!modes.Contains(p.Mode)) p.Mode = modes[0];
-        SetChoices(ModeCombo, modes.Select(m => new Choice(T[m.ToString()], (int)m)).ToArray(), (int)p.Mode);
-        SetChoices(RateCombo, [new(T["Automatic"], 0), .. EncodingProfile.Rates(activeFormat, p.Mode).Select(r => new Choice(r.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo(T.English ? "en-US" : "de-DE")) + " Hz", r))], p.Rate);
+        if (p.Mode != EncodingMode.Automatic && !modes.Contains(p.Mode)) p.Mode = EncodingMode.Automatic;
+        var effectiveMode = EncodingProfile.EffectiveMode(activeFormat, p.Mode);
+        SetChoices(ModeCombo, [new(T["Automatic"], (int)EncodingMode.Automatic), .. modes.Select(m => new Choice(T[m.ToString()], (int)m))], (int)p.Mode);
+        SetChoices(RateCombo, [new(T["Automatic"], 0), .. EncodingProfile.Rates(activeFormat, effectiveMode).Select(r => new Choice(r.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo(T.English ? "en-US" : "de-DE")) + " Hz", r))], p.Rate);
         p.Rate = Value(RateCombo);
         SetChoices(ChannelCombo, [new(T["Automatic"], 0), new(T["Mono"], 1), new(T["Stereo"], 2)], p.Channels);
         SetChoices(DepthCombo, [new(T["Automatic"], 0), new(T["Depth16"], 16), new(T["Depth24"], 24)], p.FlacDepth);
-        SetChoices(ApplicationCombo, [new(T["Music"], 0), new(T["Speech"], 1), new(T["LowDelay"], 2)], p.Application);
+        SetChoices(ApplicationCombo, [new(T["Automatic"], -1), new(T["Music"], 0), new(T["Speech"], 1), new(T["LowDelay"], 2)], p.Application);
         FlacDepthPanel.Visibility = activeFormat == "FLAC" ? Visibility.Visible : Visibility.Collapsed;
         ApplicationPanel.Visibility = activeFormat == "Opus" ? Visibility.Visible : Visibility.Collapsed;
         Choice[] choices;
@@ -102,32 +103,45 @@ public partial class MainWindow : Window
         if (activeFormat == "WAV")
         {
             QualityLabel.Text = T["BitDepth"];
-            choices = [new(T["Depth8"], 8), new(T["Depth16"], 16), new(T["Depth24"], 24), new(T["Depth32"], 33), new(T["Float"], 32), new(T["Float64"], 64)]; selected = p.Depth;
+            choices = [new(T["Automatic"], 0), new(T["Depth8"], 8), new(T["Depth16"], 16), new(T["Depth24"], 24), new(T["Depth32"], 33), new(T["Float"], 32), new(T["Float64"], 64)]; selected = p.Depth;
         }
         else if (activeFormat == "FLAC")
         {
             QualityLabel.Text = T["Compression"];
-            choices = Enumerable.Range(0, 13).Select(n => new Choice(n + (n == 0 ? T["Fastest"] : n == 5 ? " · " + T["Default"] : n == 12 ? T["Smallest"] : ""), n)).ToArray(); selected = p.Compression;
+            choices = [new(T["Automatic"], -1), .. Enumerable.Range(0, 13).Select(n => new Choice(n + (n == 0 ? T["Fastest"] : n == 5 ? " · " + T["Default"] : n == 12 ? T["Smallest"] : ""), n))]; selected = p.Compression;
         }
-        else if (EncodingProfile.UsesQuality(activeFormat, p.Mode))
+        else if (EncodingProfile.UsesQuality(activeFormat, effectiveMode))
         {
             QualityLabel.Text = T["VbrQuality"];
-            choices = EncodingProfile.Qualities(activeFormat).Select(n => new Choice((activeFormat == "MP3" ? "V" : "Q ") + n, n)).ToArray(); selected = p.VbrQuality;
+            choices = [new(T["Automatic"], EncodingProfile.AutomaticQuality), .. EncodingProfile.Qualities(activeFormat).Select(n => new Choice((activeFormat == "MP3" ? "V" : "Q ") + n, n))]; selected = p.VbrQuality;
         }
         else
         {
-            QualityLabel.Text = T[p.Mode == EncodingMode.Cbr ? "Bitrate" : "TargetBitrate"];
-            choices = EncodingProfile.Bitrates(activeFormat, p.Rate, p.Channels).Select(n => new Choice(n + " kbit/s", n)).ToArray(); selected = p.Bitrate;
+            QualityLabel.Text = T[effectiveMode == EncodingMode.Cbr ? "Bitrate" : "TargetBitrate"];
+            choices = [new(T["Automatic"], 0), .. EncodingProfile.Bitrates(activeFormat, p.Rate, p.Channels).Select(n => new Choice(n + " kbit/s", n))]; selected = p.Bitrate;
         }
-        SetChoices(QualityCombo, choices, choices.MinBy(c => Math.Abs(c.Value - selected))!.Value);
-        ModeCombo.IsEnabled = modes.Length > 1;
+        SetChoices(QualityCombo, choices, selected);
         ModePanel.Visibility = modes.Length > 1 ? Visibility.Visible : Visibility.Collapsed;
-        EncodingHint.Text = T[activeFormat == "FLAC" ? "FlacHint" : activeFormat == "WAV" ? "PcmHint" : EncodingProfile.UsesQuality(activeFormat, p.Mode) ? activeFormat == "MP3" ? "Mp3VbrHint" : "VbrHint" : "BitrateHint"];
+        EncodingHint.Text = T[activeFormat == "FLAC" ? "FlacHint" : activeFormat == "WAV" ? "PcmHint" : EncodingProfile.UsesQuality(activeFormat, effectiveMode) ? activeFormat == "MP3" ? "Mp3VbrHint" : "VbrHint" : "BitrateHint"];
         if (activeFormat == "Opus") EncodingHint.Text += "\n" + T["OpusHint"];
         refreshing = false;
         StoreOptions();
+        RefreshAutomaticSummary();
     }
-    private void Quality_Changed(object sender, SelectionChangedEventArgs e) => StoreQuality();
+    private bool HasOverrides => Preferences.Mode != EncodingMode.Automatic || Preferences.Rate != 0 || Preferences.Channels != 0 ||
+        (activeFormat == "WAV" ? Preferences.Depth != 0 : activeFormat == "FLAC" ? Preferences.Compression != -1 || Preferences.FlacDepth != 0 :
+            EncodingProfile.UsesQuality(activeFormat, EncodingProfile.EffectiveMode(activeFormat, Preferences.Mode)) ? Preferences.VbrQuality != EncodingProfile.AutomaticQuality : Preferences.Bitrate != 0) ||
+        activeFormat == "Opus" && Preferences.Application != -1;
+    private void RefreshAutomaticSummary()
+    {
+        bool custom = HasOverrides;
+        AutomaticSummary.Text = T[custom ? "ManualSettings" : "AutomaticSettings"];
+        AutomaticIntro.Text = T[custom ? "ManualIntro" : "AutomaticIntro"];
+        AutomaticButton.Visibility = custom ? Visibility.Visible : Visibility.Collapsed;
+    }
+    private void Automatic_Click(object sender, RoutedEventArgs e) { settings.UseAutomatic(activeFormat); RefreshOptions(); }
+    private void Quality_Changed(object sender, SelectionChangedEventArgs e) { StoreQuality(); if (ready && !refreshing) RefreshAutomaticSummary(); }
+    private void Detail_Changed(object sender, SelectionChangedEventArgs e) { if (ready && !refreshing) { StoreOptions(); RefreshAutomaticSummary(); } }
     private void Options_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (!ready || refreshing) return;
@@ -209,7 +223,7 @@ public partial class MainWindow : Window
         StoreOptions();
         var p = Preferences;
         var options = new ConvertOptions(Format, OutputBox.Text.Trim(), activeFormat == "WAV" ? p.Depth : p.Bitrate, p.Rate, p.Channels, TagsCheck.IsChecked == true,
-            p.Mode, p.VbrQuality, p.Compression, p.FlacDepth, p.Application switch { 1 => "voip", 2 => "lowdelay", _ => "audio" });
+            p.Mode, p.VbrQuality, p.Compression, p.FlacDepth, p.Application switch { -1 => "auto", 1 => "voip", 2 => "lowdelay", _ => "audio" });
         var pending = rows.Where(r => r.Info != null).ToArray();
         SetBusy(true); ProgressBar.IsIndeterminate = false; ProgressBar.Value = 0;
         int success = 0, failed = 0, canceled = 0;

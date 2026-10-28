@@ -57,6 +57,7 @@ internal static class SelfTest
             Check(resampled.SampleRate == 48000 && resampled.Channels == 1 && resampled.Codec == "pcm_s24le", "24-bit mono resampling");
             checks.Add("PASS: lossless FLAC PCM round trip; 24-bit WAV, 48 kHz resampling and mono output.");
             await EncodingChecks.Run(engine, input, root, checks);
+            await AutomaticChecks.Run(engine, input, root, checks);
 
             string sameFolder = await engine.Convert(input, new(OutputFormat.All[1], root, 16), _ => { }, CancellationToken.None);
             Check(sameFolder != tagged && before.SequenceEqual(SHA256.HashData(File.ReadAllBytes(tagged))), "Same-directory conversion protects original");
@@ -94,20 +95,44 @@ internal static class SelfTest
             var formats = (ComboBox)window.FindName("FormatCombo");
             var modes = (ComboBox)window.FindName("ModeCombo");
             var qualityControl = (ComboBox)window.FindName("QualityCombo");
-            modes.SelectedIndex = 2; qualityControl.SelectedIndex = 0;
+            var advanced = (Expander)window.FindName("AdvancedExpander");
+            Check(!advanced.IsExpanded, "Optional settings start collapsed");
+            foreach (var format in OutputFormat.All)
+            {
+                formats.SelectedItem = format;
+                Check(qualityControl.SelectedItem.ToString() == "Automatisch" && modes.SelectedItem.ToString() == "Automatisch" && ((ComboBox)window.FindName("RateCombo")).SelectedItem.ToString() == "Automatisch" && ((ComboBox)window.FindName("ChannelCombo")).SelectedItem.ToString() == "Automatisch", "Automatic defaults for " + format.Id);
+                Check(((ComboBox)window.FindName("DepthCombo")).SelectedItem.ToString() == "Automatisch" && ((ComboBox)window.FindName("ApplicationCombo")).SelectedItem.ToString() == "Automatisch", "Automatic depth/application defaults");
+            }
+            advanced.IsExpanded = true;
+            formats.SelectedItem = OutputFormat.All.Single(f => f.Id == "MP3");
+            foreach (var mode in EncodingProfile.Modes("MP3"))
+            {
+                Select(modes, Texts.Current[mode.ToString()]);
+                Check(qualityControl.SelectedItem.ToString() == "Automatisch", "Automatic bitrate/quality offered for " + mode);
+            }
+            Select(qualityControl, "V0");
             Check(qualityControl.SelectedItem.ToString() == "V0", "MP3 VBR quality selection");
             Texts.Current.Set(true);
             Check(qualityControl.SelectedItem.ToString() == "V0", "VBR quality survives translation");
-            formats.SelectedItem = OutputFormat.All.Single(f => f.Id == "FLAC"); qualityControl.SelectedIndex = 12;
-            Check(qualityControl.IsEnabled && qualityControl.Items.Count == 13, "FLAC compression control available");
+            formats.SelectedItem = OutputFormat.All.Single(f => f.Id == "FLAC"); Select(qualityControl, "12 · maximum compression");
+            Check(qualityControl.IsEnabled && qualityControl.Items[0].ToString() == "Automatic", "Automatic and manual FLAC compression available");
             formats.SelectedItem = OutputFormat.All.Single(f => f.Id == "MP3");
-            Check(modes.SelectedIndex == 2 && qualityControl.SelectedItem.ToString() == "V0", "MP3 options retained across format changes");
+            Check(modes.SelectedItem.ToString() == Texts.Current["Vbr"] && qualityControl.SelectedItem.ToString() == "V0", "MP3 options retained across format changes");
             formats.SelectedItem = OutputFormat.All.Single(f => f.Id == "FLAC");
-            Check(qualityControl.SelectedIndex == 12, "FLAC options retained across format changes");
+            Check(qualityControl.SelectedItem.ToString() == "12 · maximum compression", "FLAC options retained across format changes");
             formats.SelectedItem = OutputFormat.All.Single(f => f.Id == "Opus");
             Check(!((ComboBox)window.FindName("RateCombo")).Items.Cast<object>().Any(i => i.ToString()!.Contains("44,100", StringComparison.Ordinal)), "Opus excludes unsupported 44.1 kHz");
             formats.SelectedItem = OutputFormat.All.Single(f => f.Id == "MP3");
+            Check(((Button)window.FindName("AutomaticButton")).IsVisible, "Manual overrides offer reset to automatic");
+            ((Button)window.FindName("AutomaticButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Check(modes.SelectedItem.ToString() == "Automatic" && qualityControl.SelectedItem.ToString() == "Automatic", "Reset all audio preferences to automatic");
+            formats.SelectedItem = OutputFormat.All.Single(f => f.Id == "OGG"); Select(qualityControl, "Q -1");
+            Texts.Current.Set(false);
+            Check(qualityControl.SelectedItem.ToString() == "Q -1", "Vorbis Q-1 is a manual value distinct from Automatic");
+            ((Button)window.FindName("AutomaticButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            formats.SelectedItem = OutputFormat.All.Single(f => f.Id == "MP3"); advanced.IsExpanded = false;
             checks.Add("PASS: actual WPF mode/quality selection, V0 retained through language and format changes, independent FLAC compression and codec-specific rate choices.");
+            checks.Add("PASS: all formats start fully automatic; every MP3 mode offers automatic quality/bitrate, optional settings collapse, V0/Q-1 stay distinct from Automatic, and reset restores automatic operation.");
             ((Button)window.FindName("ClearButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             ((TextBox)window.FindName("OutputBox")).Text = Path.Combine(root, "gui-output");
             var drop = (DragEventArgs)Activator.CreateInstance(typeof(DragEventArgs), BindingFlags.Instance | BindingFlags.NonPublic, null, [new DataObject(DataFormats.FileDrop, new[] { tagged }), DragDropKeyStates.None, DragDropEffects.Copy, window, new Point(50, 50)], null)!;
@@ -132,6 +157,7 @@ internal static class SelfTest
     }
     private static bool ContainsText(JsonElement element, string value) => element.ValueKind switch { JsonValueKind.String => element.GetString() == value, JsonValueKind.Object => element.EnumerateObject().Any(p => ContainsText(p.Value, value)), JsonValueKind.Array => element.EnumerateArray().Any(p => ContainsText(p, value)), _ => false };
     private static void Check(bool okay, string description) { if (!okay) throw new InvalidOperationException(description); }
+    private static void Select(ComboBox combo, string label) => combo.SelectedItem = combo.Items.Cast<object>().Single(i => i.ToString() == label);
     private static async Task Reject(Func<Task> action, string description) { try { await action(); } catch (Exception error) when (error is ConversionError or OperationCanceledException) { return; } throw new InvalidOperationException(description); }
     private static async Task Wait(Func<bool> condition)
     {

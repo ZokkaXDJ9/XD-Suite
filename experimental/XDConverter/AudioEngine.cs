@@ -6,14 +6,14 @@ using System.Text.Json;
 
 namespace XDConverter;
 
-public sealed record AudioInfo(string Path, TimeSpan Duration, int SampleRate, int Channels, string Codec, long Bytes);
+public sealed record AudioInfo(string Path, TimeSpan Duration, int SampleRate, int Channels, string Codec, long Bytes, int BitsPerSample = 0);
 public sealed record OutputFormat(string Id, string Extension, string Encoder)
 {
     public static readonly OutputFormat[] All = [new("MP3", ".mp3", "libmp3lame"), new("WAV", ".wav", "pcm_s16le"), new("FLAC", ".flac", "flac"), new("OGG", ".ogg", "libvorbis"), new("M4A", ".m4a", "aac"), new("Opus", ".opus", "libopus")];
     public override string ToString() => Id;
 }
-public sealed record ConvertOptions(OutputFormat Format, string Directory, int Quality = 192, int SampleRate = 0, int Channels = 0, bool Tags = true,
-    EncodingMode? Mode = null, int VbrQuality = 2, int Compression = 5, int BitDepth = 0, string Application = "audio");
+public sealed record ConvertOptions(OutputFormat Format, string Directory, int Quality = 0, int SampleRate = 0, int Channels = 0, bool Tags = true,
+    EncodingMode? Mode = null, int VbrQuality = EncodingProfile.AutomaticQuality, int Compression = -1, int BitDepth = 0, string Application = "auto");
 public sealed class ConversionError(string key, string detail = "") : Exception(detail)
 {
     public string Key { get; } = key;
@@ -43,7 +43,7 @@ public sealed class AudioEngine(string directory)
         if (!Extensions.Contains(System.IO.Path.GetExtension(path))) throw new ConversionError("AudioOnly");
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
         timeout.CancelAfter(TimeSpan.FromSeconds(30));
-        var result = await ProcessRunner.Run(Ffprobe, ["-v", "error", "-protocol_whitelist", "file", "-show_entries", "format=duration:stream=codec_type,codec_name,sample_rate,channels,duration:stream_disposition=attached_pic", "-of", "json", "-i", path], timeout.Token);
+        var result = await ProcessRunner.Run(Ffprobe, ["-v", "error", "-protocol_whitelist", "file", "-show_entries", "format=duration:stream=codec_type,codec_name,sample_rate,channels,duration,bits_per_sample,bits_per_raw_sample:stream_disposition=attached_pic", "-of", "json", "-i", path], timeout.Token);
         using var document = JsonDocument.Parse(result.Output);
         var streams = document.RootElement.GetProperty("streams").EnumerateArray().ToArray();
         if (streams.Any(s => s.GetProperty("codec_type").GetString() == "video" && (!s.TryGetProperty("disposition", out var d) || !d.TryGetProperty("attached_pic", out var a) || a.GetInt32() != 1))) throw new ConversionError("AudioOnly");
@@ -52,12 +52,15 @@ public sealed class AudioEngine(string directory)
         double seconds = 0;
         if (document.RootElement.TryGetProperty("format", out var format) && format.TryGetProperty("duration", out var duration)) double.TryParse(duration.GetString(), NumberStyles.Float, CultureInfo.InvariantCulture, out seconds);
         if (seconds <= 0 && audio.TryGetProperty("duration", out duration)) double.TryParse(duration.GetString(), NumberStyles.Float, CultureInfo.InvariantCulture, out seconds);
-        return new(path, TimeSpan.FromSeconds(double.IsFinite(seconds) && seconds > 0 ? seconds : 0), int.Parse(audio.GetProperty("sample_rate").GetString()!, CultureInfo.InvariantCulture), audio.GetProperty("channels").GetInt32(), audio.GetProperty("codec_name").GetString() ?? "", new FileInfo(path).Length);
+        int bits = 0;
+        if (audio.TryGetProperty("bits_per_raw_sample", out var rawBits)) int.TryParse(rawBits.ToString(), out bits);
+        if (bits == 0 && audio.TryGetProperty("bits_per_sample", out var sampleBits)) int.TryParse(sampleBits.ToString(), out bits);
+        return new(path, TimeSpan.FromSeconds(double.IsFinite(seconds) && seconds > 0 ? seconds : 0), int.Parse(audio.GetProperty("sample_rate").GetString()!, CultureInfo.InvariantCulture), audio.GetProperty("channels").GetInt32(), audio.GetProperty("codec_name").GetString() ?? "", new FileInfo(path).Length, bits);
     }
 
     public async Task<string> Convert(AudioInfo input, ConvertOptions options, Action<double> progress, CancellationToken token)
     {
-        EncodingProfile.Validate(options);
+        options = EncodingProfile.Resolve(input, options);
         token.ThrowIfCancellationRequested();
         string outputDirectory = System.IO.Path.GetFullPath(options.Directory);
         Directory.CreateDirectory(outputDirectory);
@@ -66,7 +69,7 @@ public sealed class AudioEngine(string directory)
         {
             var args = new List<string> { "-hide_banner", "-nostdin", "-loglevel", "error", "-xerror", "-n", "-protocol_whitelist", "file", "-i", input.Path, "-map", "0:a:0", "-vn", "-sn", "-dn", "-map_metadata", options.Tags ? "0" : "-1", "-c:a" };
             args.Add(options.Format.Id == "WAV" ? options.Quality switch { 8 => "pcm_u8", 24 => "pcm_s24le", 32 => "pcm_f32le", 33 => "pcm_s32le", 64 => "pcm_f64le", _ => "pcm_s16le" } : options.Format.Encoder);
-            var mode = options.Mode ?? EncodingProfile.Modes(options.Format.Id)[0];
+            var mode = options.Mode!.Value;
             if (options.Format.Id == "FLAC")
             {
                 args.AddRange(["-compression_level", options.Compression.ToString(CultureInfo.InvariantCulture)]);
@@ -77,7 +80,7 @@ public sealed class AudioEngine(string directory)
             if (options.Format.Id == "MP3") args.AddRange(["-abr", mode == EncodingMode.Abr ? "1" : "0"]);
             if (options.Format.Id == "Opus") args.AddRange(["-vbr", mode == EncodingMode.Cbr ? "off" : mode == EncodingMode.ConstrainedVbr ? "constrained" : "on", "-application", options.Application]);
             if (options.Format.Id == "MP3") args.AddRange(["-id3v2_version", "3"]);
-            args.AddRange(["-ar", EncodingProfile.EffectiveRate(input, options).ToString(CultureInfo.InvariantCulture)]);
+            args.AddRange(["-ar", options.SampleRate.ToString(CultureInfo.InvariantCulture)]);
             if (options.Channels != 0) args.AddRange(["-ac", options.Channels.ToString(CultureInfo.InvariantCulture)]);
             else if (input.Channels > 2 && options.Format.Id is "MP3" or "M4A" or "OGG" or "Opus") args.AddRange(["-ac", "2"]);
             args.AddRange(["-stats_period", "0.2", "-progress", "pipe:1", "-nostats", temporary]);

@@ -11,7 +11,13 @@ public sealed class Texts : INotifyPropertyChanged
     public event EventHandler? Changed;
     private static readonly Dictionary<string, (string De, string En)> values = new()
     {
-        ["Title"] = ("XD Konverter", "XD Converter"), ["Preview"] = ("Vorschau · {0} · Test: Audiooptionen", "Preview · {0} · Test: audio options"),
+        ["Title"] = ("XD Konverter", "XD Converter"), ["Preview"] = ("Vorschau · {0} · Test: Automatik", "Preview · {0} · Test: automatic settings"),
+        ["Advanced"] = ("Weitere Einstellungen", "More settings"),
+        ["AutomaticSettings"] = ("Einstellungen: Automatisch", "Settings: Automatic"),
+        ["ManualSettings"] = ("Einstellungen: Angepasst", "Settings: Custom"),
+        ["AutomaticIntro"] = ("Zielformat wählen und konvertieren. Die Audioeinstellungen werden automatisch gewählt; Änderungen sind optional.", "Choose a format and convert. Audio settings are selected automatically; changes are optional."),
+        ["ManualIntro"] = ("Manuell geänderte Werte werden verwendet. Alle übrigen Audioeinstellungen bleiben automatisch.", "Your manual choices are used. All other audio settings remain automatic."),
+        ["UseAutomatic"] = ("Automatisch verwenden", "Use automatic settings"),
         ["EncodingMode"] = ("Codierung", "Encoding"), ["Cbr"] = ("CBR · konstante Bitrate", "CBR · constant bitrate"),
         ["Abr"] = ("ABR · mittlere Zielbitrate", "ABR · average target bitrate"), ["Vbr"] = ("VBR · variable Bitrate", "VBR · variable bitrate"),
         ["ConstrainedVbr"] = ("CVBR · begrenzte variable Bitrate", "CVBR · constrained variable bitrate"),

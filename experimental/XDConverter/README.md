@@ -4,6 +4,12 @@ Entwicklung auf `app/xd-converter`. Diese Vorschau gehört nicht zum Live-Katalo
 
 Ausgabe: MP3, WAV, FLAC, OGG/Vorbis, M4A/AAC und Opus. Eingabe unter anderem MP3, WAV, FLAC, OGG, M4A, AAC, Opus, WMA und AIFF. Dateien können einzeln, als Ordner oder per Drag-and-drop hinzugefügt werden. Text-Tags werden optional übernommen; Coverbilder derzeit nicht.
 
+Alle Audioeinstellungen stehen standardmäßig auf **Automatisch**. Für eine normale Konvertierung reichen Dateien, Zielformat und Zielordner. Die optionalen Detailfelder stehen unter „Weitere Einstellungen“. Auch bei einer manuell gewählten Codierung kann Bitrate bzw. VBR-Qualität automatisch bleiben. „Automatisch verwenden“ setzt die Audioeinstellungen des aktuellen Formats zurück; eine sichtbare Zusammenfassung kennzeichnet manuelle Anpassungen.
+
+Die Automatik wird für jede Quelldatei einzeln aufgelöst. MP3/AAC/Vorbis verwenden VBR mit einer ausgewogenen Qualitätsstufe, Opus VBR mit passender Mono-/Stereo-Zielbitrate. Bei manueller CBR-/ABR-Wahl wird eine zur Abtastrate und Kanalzahl passende Bitrate gewählt. WAV erhält Bittiefe und Zahlenformat einer PCM-Quelle; bei Quellen ohne PCM-Bittiefe werden 16 Bit verwendet. FLAC verwendet automatisch die normale Kompressionsstufe. Abtastrate und Kanäle bleiben soweit mit dem Zielformat vereinbar erhalten. Es findet keine inhaltliche Spracherkennung statt; die automatische Opus-Verwendung ist „Musik / allgemein“.
+
+Beim ersten Laden alter Vorschau-Einstellungen werden die früher fest gespeicherten Standardwerte einmalig in Automatisch übersetzt. Abweichende manuelle Werte, Zielordner, Sprache und Tag-Einstellungen bleiben erhalten. Neue manuelle Entscheidungen bleiben auch dann gespeichert, wenn ihr Zahlenwert dem früheren Standard entspricht. Automatisch ist getrennt von den gültigen manuellen Werten MP3 V0, Vorbis Q−1 und FLAC-Stufe 0 gespeichert.
+
 | Format | Einstellungen |
 | --- | --- |
 | MP3 | CBR, ABR, VBR V0–V9; 8–320 kbit/s; 8–48 kHz |
@@ -17,7 +23,7 @@ Die verfügbaren Bitraten hängen von Abtastrate und Kanalzahl ab. Automatische 
 
 Jedes Zielformat speichert seine eigenen Einstellungen. Alle FLAC-Kompressionsstufen erhalten dieselben PCM-Samples, solange Bittiefe, Abtastrate und Kanalzahl beibehalten werden. Höhere Abtastraten oder Bittiefen stellen verlorene Quelldetails nicht wieder her. [Encoderoptionen in der FFmpeg-Dokumentation](https://ffmpeg.org/ffmpeg-codecs.html).
 
-Die Produktversion folgt automatisch `XDSuite/XDSuite.csproj` (aktuell 0.4.1). Dieser lokale Teststand trägt die Build-Kennung `audio-options`. Einzelprogramme erhalten keine eigenen Versionssprünge.
+Die Produktversion folgt automatisch `XDSuite/XDSuite.csproj` (aktuell 0.4.1). Dieser lokale Teststand trägt die Build-Kennung `automatic-defaults`. Einzelprogramme erhalten keine eigenen Versionssprünge.
 
 Die Originaldateien werden nicht verändert. Existiert ein Zielname bereits, erhält das neue Ergebnis einen anderen Namen. Ergebnisse werden zuerst temporär geschrieben; Abbruch und Fehler entfernen die unvollständige Datei. Bereits fertige Ergebnisse bleiben erhalten.
 
