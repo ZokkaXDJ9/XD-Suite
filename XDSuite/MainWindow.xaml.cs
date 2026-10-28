@@ -11,7 +11,6 @@ namespace XDSuite;
 public partial class MainWindow : Window
 {
     private Catalog catalog = new(1, []);
-    private readonly SuiteSettings settings = SuiteSettings.Load();
     private readonly PackageTransport transport = new();
     private string filter = "all";
     private bool busy, installing;
@@ -40,7 +39,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            var update = await SuiteUpdates.Check(transport, settings.Repository, SuiteUpdates.CurrentVersion, lifetime.Token);
+            var update = await SuiteUpdates.Check(transport, SuiteSettings.Repository, SuiteUpdates.CurrentVersion, lifetime.Token);
             if (update == null || !IsVisible || busy) return;
             string message = $"Für XD Suite ist Version {update.Package.Version} verfügbar.\nInstallierte Version: {SuiteUpdates.VersionText}\n\nJetzt herunterladen und installieren?\n\nDie vorhandene Installation wird aktualisiert. Einstellungen und installierte Programme bleiben erhalten.";
             if (LocalizedDialog.Show(this, message, "Update verfügbar", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
@@ -63,7 +62,7 @@ public partial class MainWindow : Window
         catch (OperationCanceledException) { }
         catch (Exception error) { App.Log(error); }
     }
-    private string CachePath => Path.Combine(SuiteSettings.DataDirectory, "catalog-" + settings.Repository.Replace('/', '-') + ".json");
+    private string CachePath => Path.Combine(SuiteSettings.DataDirectory, "catalog-" + SuiteSettings.Repository.Replace('/', '-') + ".json");
     private void ReadLocalCatalog(bool preview = false)
     {
         var bundled = PackageValidation.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "catalog.json")));
@@ -71,8 +70,7 @@ public partial class MainWindow : Window
         {
             catalog = preview ? bundled : PackageValidation.Parse(File.ReadAllText(CachePath));
             // A cache from an older app must not replace the newer bundled packages when offline.
-            if (settings.Repository == "ZokkaXDJ9/XD-Suite")
-                catalog = new(1, catalog.Apps.Select(cached => bundled.Apps.FirstOrDefault(p => p.Id == cached.Id && Version.Parse(p.Version) > Version.Parse(cached.Version)) ?? cached).Concat(bundled.Apps.Where(p => catalog.Apps.All(c => c.Id != p.Id))).ToList());
+            catalog = new(1, catalog.Apps.Select(cached => bundled.Apps.FirstOrDefault(p => p.Id == cached.Id && Version.Parse(p.Version) > Version.Parse(cached.Version)) ?? cached).Concat(bundled.Apps.Where(p => catalog.Apps.All(c => c.Id != p.Id))).ToList());
         }
         catch (Exception ex) when (ex is IOException or JsonException or InvalidDataException or UnauthorizedAccessException) { catalog = bundled; }
         Rebuild();
@@ -113,7 +111,7 @@ public partial class MainWindow : Window
         StatusText.Text = "Verbindung zu GitHub Releases wird hergestellt.";
         try
         {
-            var updated = await transport.FetchLatestCatalog(settings.Repository, cancellation!.Token);
+            var updated = await transport.FetchLatestCatalog(SuiteSettings.Repository, cancellation!.Token);
             Directory.CreateDirectory(SuiteSettings.DataDirectory);
             string temporary = CachePath + "." + Guid.NewGuid().ToString("N") + ".tmp";
             try { await File.WriteAllTextAsync(temporary, JsonSerializer.Serialize(updated, PackageValidation.JsonOptions)); File.Move(temporary, CachePath, true); }
@@ -135,7 +133,7 @@ public partial class MainWindow : Window
     {
         if (busy || Selected is not { } selected) return;
         if (selected.Installed != null && !selected.HasUpdate) { Launch(selected); return; }
-        string question = $"{selected.Name} {selected.Package.Version} herunterladen und installieren?\n\nDownloadquelle: GitHub Releases\nDas Programm kann danach auch ohne XD Suite gestartet werden.";
+        string question = $"{selected.Name} {selected.Package.Version} herunterladen und installieren?\n\nDas Programm kann danach auch ohne XD Suite gestartet werden.";
         if (LocalizedDialog.Show(this, question, "Programm installieren", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
         SetBusy(true);
         StatusTitle.Text = "Download wird vorbereitet …";
@@ -183,25 +181,6 @@ public partial class MainWindow : Window
         RefreshSelection();
     }
     private void Cancel_Click(object sender, RoutedEventArgs e) { if (!installing) { cancellation?.Cancel(); CancelButton.IsEnabled = false; } }
-    private void Settings_Click(object sender, RoutedEventArgs e)
-    {
-        if (busy) return;
-        var dialog = new Window { Title = L10n.T("Downloadquelle"), Width = 480, SizeToContent = SizeToContent.Height, ResizeMode = ResizeMode.NoResize, Owner = this, WindowStartupLocation = WindowStartupLocation.CenterOwner, FontFamily = FontFamily, FontSize = 14, Background = Background };
-        var panel = new StackPanel { Margin = new Thickness(24) };
-        panel.Children.Add(new TextBlock { Text = L10n.T("GitHub-Repository für den Programmkatalog"), FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 12) });
-        var input = new TextBox { Text = settings.Repository, Padding = new Thickness(10) };
-        System.Windows.Automation.AutomationProperties.SetName(input, "GitHub Repository");
-        panel.Children.Add(input);
-        panel.Children.Add(new TextBlock { Text = L10n.T("Format: Besitzer/Repository. Ein öffentliches Release muss catalog.json und die einzelnen Setups enthalten."), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 12, 0, 18), FontSize = 12 });
-        var save = new Button { Content = L10n.T("Speichern"), IsDefault = true, HorizontalAlignment = HorizontalAlignment.Right };
-        save.Click += (_, _) =>
-        {
-            try { SuiteSettings.ValidateRepository(input.Text.Trim()); settings.Repository = input.Text.Trim(); settings.Save(); ReadLocalCatalog(); dialog.DialogResult = true; }
-            catch (Exception ex) { LocalizedDialog.Show(dialog, ex.Message, "Downloadquelle"); }
-        };
-        panel.Children.Add(save); dialog.Content = panel;
-        if (dialog.ShowDialog() == true) _ = RefreshCatalog();
-    }
     private void German_Click(object sender, RoutedEventArgs e) => SetLanguage(UiLanguage.German);
     private void English_Click(object sender, RoutedEventArgs e) => SetLanguage(UiLanguage.English);
     private void SetLanguage(UiLanguage language) { try { L10n.Set(language); } catch (Exception ex) { ShowError(ex); } }
@@ -213,7 +192,7 @@ public partial class MainWindow : Window
     private void ShowError(Exception ex)
     {
         App.Log(ex); StatusTitle.Text = "Vorgang fehlgeschlagen.";
-        StatusText.Text = ex is HttpRequestException ? "Der Download ist gerade nicht erreichbar. Bitte die Internetverbindung und die Downloadquelle prüfen." : ex.Message;
+        StatusText.Text = ex is HttpRequestException ? "Der Download ist gerade nicht erreichbar. Bitte die Internetverbindung prüfen." : ex.Message;
         LocalizedDialog.Show(this, StatusText.Text, "XD Suite");
     }
     private void Window_Closing(object? sender, CancelEventArgs e)

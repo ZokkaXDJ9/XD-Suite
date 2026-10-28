@@ -2,7 +2,7 @@
 param([string]$RuntimeVersion = '8.0.33', [string]$Repository = 'ZokkaXDJ9/XD-Suite')
 $ErrorActionPreference = 'Stop'
 $projectRoot = $PSScriptRoot
-$version = '0.3.1'
+$version = '0.4.0'
 Push-Location $projectRoot
 function Publish-App([string]$project, [string]$name) {
     $output = Join-Path $projectRoot ('dist\' + $name)

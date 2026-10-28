@@ -32,8 +32,10 @@ internal static class SelfTest
                 using var audioEvents = new ProgressConnection(audio, "2735413F-7F64-5B0F-8F00-5D77AFBE261E", new Action<object, object>((_, _) => { }));
                 object erase = scope.Create("IMAPI2.MsftDiscFormat2Erase");
                 using var eraseEvents = new ProgressConnection(erase, "2735413A-7F64-5B0F-8F00-5D77AFBE261E", new Action<object, int, int>((_, _, _) => { }));
+                object raw = scope.Create("IMAPI2.MsftDiscFormat2RawCD");
+                using var rawEvents = new ProgressConnection(raw, "27354142-7F64-5B0F-8F00-5D77AFBE261E", new Action<object, object>((_, _) => { }));
             }
-            lines.Add("PASS: all three real COM event subscriptions and full verification setting");
+            lines.Add("PASS: all four real COM event subscriptions and full verification setting");
 
             string source = Path.Combine(directory, "Erinnerungen");
             Directory.CreateDirectory(Path.Combine(source, "Unterordner", "Leer"));
@@ -112,6 +114,20 @@ internal static class SelfTest
             Check(ProjectFiles.AudioSectors([TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(10)], 5) == 1800, "Selected audio gap is included in capacity");
             long longerGap = AudioService.ConvertToPcm(mono, Path.Combine(directory, "gap5.pcm"), CancellationToken.None, 5);
             Check(longerGap == sectors + 225, "5-second gap adds exactly 3 seconds of silence to TAO's fixed 2-second gap");
+            string dao0 = Path.Combine(directory, "dao0.pcm"), dao1 = Path.Combine(directory, "dao1.pcm");
+            AudioService.ConvertToPcm(mono, dao0, CancellationToken.None, 0, true);
+            AudioService.ConvertToPcm(mono, dao1, CancellationToken.None, 1, true);
+            foreach (int gap in new[] { 0, 1 })
+            {
+                using var rawScope = new ComScope();
+                dynamic rawImage = DiscService.CreateRawAudioImage(rawScope, [gap == 0 ? dao0 : dao1, dao0], 2);
+                dynamic second = rawScope.Keep((object)rawImage.TrackInfo[2]);
+                Check((int)second.StartingLba == 300 + gap * 75, "DAO preserves exact zero/one-second track boundary");
+                Check((int)rawImage.StartOfLeadout == ProjectFiles.AudioSectors([TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1)], gap), "DAO capacity equals actual leadout");
+                var rawStream = rawScope.Keep((System.Runtime.InteropServices.ComTypes.IStream)rawImage.CreateResultImage());
+                rawStream.Stat(out var rawStat, 1); Check(rawStat.cbSize > 0, "Actual RAW CD stream generated");
+            }
+            lines.Add("PASS: actual IMAPI DAO images with 0/1-second gaps, exact track boundaries, leadout/capacity and RAW event connection");
             lines.Add("PASS: WAV decode, mono/stereo mapping, 22.05/48 kHz resampling, raw PCM, 4-second minimum, sector padding and gap budgeting");
             string fixture = Path.Combine(directory, "tone.mp3");
             using (var input = typeof(SelfTest).Assembly.GetManifestResourceStream("XDBurner.TestTone.mp3") ?? throw new InvalidOperationException("MP3 fixture missing"))

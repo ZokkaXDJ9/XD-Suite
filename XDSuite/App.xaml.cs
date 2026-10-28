@@ -78,6 +78,7 @@ public partial class App : Application
             mutex = new Mutex(true, @"Local\XDSuite.App", out ownsMutex);
             if (!ownsMutex) { LocalizedDialog.Show("XD Suite ist bereits geöffnet.", "XD Suite"); Shutdown(0); return; }
             MainWindow = new MainWindow(skipUpdateCheck: e.Args.Contains("--skip-update-check"), updateCompleted: e.Args.Contains("--update-completed")); MainWindow.Show();
+            _ = RemoveLegacyForwarder();
         }
         catch (Exception ex)
         {
@@ -94,5 +95,26 @@ public partial class App : Application
     {
         try { Directory.CreateDirectory(SuiteSettings.DataDirectory); File.AppendAllText(Path.Combine(SuiteSettings.DataDirectory, "errors.log"), DateTimeOffset.Now.ToString("O") + "\n" + ex + "\n"); }
         catch (IOException) { } catch (UnauthorizedAccessException) { }
+    }
+    private static async Task RemoveLegacyForwarder()
+    {
+        string oldFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "XDSuite");
+        if (Path.GetFullPath(AppContext.BaseDirectory).TrimEnd('\\').Equals(oldFolder, StringComparison.OrdinalIgnoreCase)) return;
+        string oldExe = Path.Combine(oldFolder, "XDSuite.exe"), helper = Path.Combine(AppContext.BaseDirectory, "XDUpdateHelper.exe");
+        for (int attempt = 0; attempt < 3; attempt++)
+        {
+            await Task.Delay(1000);
+            try
+            {
+                if (!File.Exists(oldExe) || !File.Exists(helper) || !File.ReadAllBytes(oldExe).SequenceEqual(File.ReadAllBytes(helper))) return;
+                File.Delete(oldExe);
+                string config = oldExe + ".config";
+                if (File.Exists(config) && File.Exists(helper + ".config") && File.ReadAllBytes(config).SequenceEqual(File.ReadAllBytes(helper + ".config"))) File.Delete(config);
+                if (!Directory.EnumerateFileSystemEntries(oldFolder).Any()) Directory.Delete(oldFolder, false);
+                return;
+            }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { return; }
+        }
     }
 }

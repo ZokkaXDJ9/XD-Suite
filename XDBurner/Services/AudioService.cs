@@ -16,9 +16,9 @@ public static class AudioService
     }
 
     // IMAPI expects headerless 44.1 kHz / 16 bit / stereo PCM, padded to full 2352-byte CD sectors.
-    public static long ConvertToPcm(string source, string destination, CancellationToken token, int gapSeconds = 2)
+    public static long ConvertToPcm(string source, string destination, CancellationToken token, int gapSeconds = 2, bool discAtOnce = false)
     {
-        if (gapSeconds is < 2 or > 30) throw new ArgumentOutOfRangeException(nameof(gapSeconds));
+        if (gapSeconds < (discAtOnce ? 0 : 2) || gapSeconds > 30) throw new ArgumentOutOfRangeException(nameof(gapSeconds));
         using var reader = Open(source);
         ISampleProvider samples = reader.Samples;
         if (samples.WaveFormat.Channels == 1) samples = new MonoToStereoSampleProvider(samples);
@@ -35,7 +35,7 @@ public static class AudioService
         }
         if (output.Length == 0) throw new InvalidOperationException("Die Audiodatei konnte nicht gelesen werden.");
         // Track-at-once supplies a fixed 2 s gap. Additional selected silence is appended to PCM.
-        long length = Math.Max(300 * 2352L, (output.Length + 2351) / 2352 * 2352) + (gapSeconds - 2) * 75L * 2352;
+        long length = Math.Max(300 * 2352L, (output.Length + 2351) / 2352 * 2352) + (discAtOnce ? gapSeconds : gapSeconds - 2) * 75L * 2352;
         output.SetLength(length);
         return length / 2352;
     }

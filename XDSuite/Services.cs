@@ -9,28 +9,14 @@ using XD.Common;
 
 namespace XDSuite;
 
-public sealed class SuiteSettings
+public static class SuiteSettings
 {
-    public string Repository { get; set; } = "ZokkaXDJ9/XD-Suite";
+    public const string Repository = "ZokkaXDJ9/XD-Suite";
     public static string DataDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "XDSuite");
-    public static SuiteSettings Load()
-    {
-        try { var settings = JsonSerializer.Deserialize<SuiteSettings>(File.ReadAllText(Path.Combine(DataDirectory, "settings.json"))) ?? new(); ValidateRepository(settings.Repository); return settings; }
-        catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException or InvalidOperationException) { return new(); }
-    }
-    public void Save()
-    {
-        ValidateRepository(Repository);
-        Directory.CreateDirectory(DataDirectory);
-        string path = Path.Combine(DataDirectory, "settings.json"), temporary = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
-        File.WriteAllText(temporary, JsonSerializer.Serialize(this));
-        File.Move(temporary, path, true);
-    }
     public static void ValidateRepository(string value)
     {
         if (string.IsNullOrWhiteSpace(value) || !Regex.IsMatch(value, "^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}/[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$") || value.Contains("..")) throw new InvalidOperationException("Bitte ein GitHub-Repository als Besitzer/Repository eingeben.");
     }
-    public Uri CatalogUri { get { ValidateRepository(Repository); return new($"https://github.com/{Repository}/releases/latest/download/catalog.json"); } }
 }
 
 public sealed class PackageTransport : IDisposable
@@ -39,7 +25,7 @@ public sealed class PackageTransport : IDisposable
     public PackageTransport(HttpMessageHandler? handler = null)
     {
         client = new(handler ?? new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromMinutes(10) };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("XD-Suite/0.3.1");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("XD-Suite/0.4.0");
     }
     internal async Task<HttpResponseMessage> Get(Uri uri, CancellationToken token)
     {

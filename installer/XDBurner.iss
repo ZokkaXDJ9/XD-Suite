@@ -1,4 +1,4 @@
-#define AppVersion "0.3.1"
+#define AppVersion "0.4.0"
 #define Root AddBackslash(SourcePath) + "..\"
 #define ProgramId "{B5AF424C-85D1-47D4-AF62-30A5A15C5094}"
 #define ProgramFolder "XDBurner"
@@ -14,7 +14,7 @@ DefaultDirName={code:DefaultInstallDir}
 DefaultGroupName=XD Suite
 DisableProgramGroupPage=yes
 PrivilegesRequired=admin
-UsePreviousAppDir=yes
+UsePreviousAppDir=no
 ShowLanguageDialog=yes
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
@@ -32,7 +32,7 @@ SetupLogging=yes
 CloseApplications=yes
 RestartApplications=no
 AppMutex=Local\XDBurner.App,Local\KlarBrand.App
-VersionInfoVersion=0.3.1.0
+VersionInfoVersion=0.4.0.0
 VersionInfoDescription=XD Burner Installation
 VersionInfoProductName=XD Brenner / XD Burner
 VersionInfoCopyright=2026 XD Suite contributors
@@ -49,6 +49,10 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "{#Root}dist\XDBurner\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [InstallDelete]
+Type: files; Name: "{autoprograms}\XD Brenner.lnk"
+Type: files; Name: "{autoprograms}\XD Burner.lnk"
+Type: files; Name: "{autodesktop}\XD Brenner.lnk"
+Type: files; Name: "{autodesktop}\XD Burner.lnk"
 Type: files; Name: "{app}\KlarBrand.exe"
 Type: files; Name: "{userprograms}\KlarBrand.lnk"
 Type: files; Name: "{userdesktop}\KlarBrand.lnk"
@@ -69,6 +73,8 @@ german.WelcomeLabel2=Dieses Setup installiert XD Brenner.%n%nFunktionen: Daten-C
 english.WelcomeLabel2=This setup installs XD Burner.%n%nFunctions: data CDs, audio CDs, ISO images and CD-RW erasing.%n%nThe language can also be changed in the application.
 
 [CustomMessages]
+german.MoveInstallError=Der bisherige Programmordner konnte nicht nach Programme verschoben werden. Bitte das Programm schließen und erneut versuchen.
+english.MoveInstallError=The previous application folder could not be moved to Program Files. Close the application and try again.
 german.BurnerName=XD Brenner
 english.BurnerName=XD Burner
 
@@ -76,5 +82,5 @@ english.BurnerName=XD Burner
 [Code]
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
-  if CurStep = ssPostInstall then MigrateRegistration;
+  if CurStep = ssDone then MigrateRegistration;
 end;

@@ -20,6 +20,7 @@ public sealed class DiscService
     public const long DefaultCdBytes = 360000L * 2048;
     private const string DataEvents = "2735413C-7F64-5B0F-8F00-5D77AFBE261E";
     private const string AudioEvents = "2735413F-7F64-5B0F-8F00-5D77AFBE261E";
+    private const string RawAudioEvents = "27354142-7F64-5B0F-8F00-5D77AFBE261E";
     private const string EraseEvents = "2735413A-7F64-5B0F-8F00-5D77AFBE261E";
 
     public List<RecorderInfo> GetRecorders()
@@ -136,11 +137,18 @@ public sealed class DiscService
                 token.ThrowIfCancellationRequested();
                 progress.Report(new($"Titel {i + 1} von {paths.Count} wird vorbereitet: {Path.GetFileName(paths[i])}", i * 100d / paths.Count));
                 string pcm = Path.Combine(temporary, $"{i:00}.pcm");
-                tracks.Add((pcm, AudioService.ConvertToPcm(paths[i], pcm, token, options.AudioGapSeconds)));
+                bool dao = options.AudioGapSeconds < 2;
+                int gap = dao && i == paths.Count - 1 ? 0 : options.AudioGapSeconds;
+                tracks.Add((pcm, AudioService.ConvertToPcm(paths[i], pcm, token, gap, dao)));
             }
             token.ThrowIfCancellationRequested();
             using var scope = new ComScope();
             dynamic recorder = OpenRecorder(scope, options.RecorderId);
+            if (options.AudioGapSeconds < 2)
+            {
+                WithRecorder((object)recorder, options.Eject, progress, () => BurnGapless(scope, (object)recorder, tracks.Select(t => t.Path).ToArray(), options, progress, token));
+                return;
+            }
             WithRecorder((object)recorder, options.Eject, progress, () =>
             {
                 dynamic writer = scope.Create("IMAPI2.MsftDiscFormat2TrackAtOnce");
@@ -192,6 +200,49 @@ public sealed class DiscService
             Directory.Delete(temporary);
             Native.PreventSleep(false);
         }
+    }
+
+    internal static dynamic CreateRawAudioImage(ComScope scope, IReadOnlyList<string> pcm, int sectorType)
+    {
+        dynamic image = scope.Create("IMAPI2.MsftRawCDImageCreator");
+        image.ResultingImageType = sectorType;
+        image.DisableGaplessAudio = false;
+        foreach (string path in pcm) image.AddTrack(0, scope.Keep(Native.OpenRead(path)));
+        return image;
+    }
+
+    private static void BurnGapless(ComScope scope, object recorderObject, IReadOnlyList<string> pcm, BurnOptions options, IProgress<OperationProgress> progress, CancellationToken token)
+    {
+        dynamic recorder = recorderObject;
+        dynamic writer = scope.Create("IMAPI2.MsftDiscFormat2RawCD");
+        if (!(bool)writer.IsRecorderSupported(recorder)) throw new InvalidOperationException("Dieses Laufwerk unterstützt keine Audiopausen unter 2 Sekunden (Disc-at-once erforderlich).");
+        writer.Recorder = recorder; writer.ClientName = "XDBurner";
+        EnsureCd(writer, recorder, true); SetSpeed(writer, options.Slow);
+        int[] supported = ((Array)writer.SupportedSectorTypes).Cast<object>().Select(Convert.ToInt32).ToArray();
+        int type = new[] { 2, 3, 1 }.FirstOrDefault(supported.Contains);
+        if (type == 0) throw new InvalidOperationException("Dieses Laufwerk unterstützt keine Audiopausen unter 2 Sekunden (Disc-at-once erforderlich).");
+        writer.RequestedSectorType = type;
+        dynamic image = CreateRawAudioImage(scope, pcm, type);
+        IStream stream = scope.Keep((IStream)image.CreateResultImage());
+        Action<object, object> callback = (sender, args) =>
+        {
+            dynamic state = args;
+            int action = (int)state.CurrentAction;
+            progress.Report(new(action == 3 ? "Audio-CD wird abgeschlossen. Bitte warten …" : "Audio-CD wird gebrannt …", action == 2 ? SectorProgress(args) * 100 : null));
+            if (token.IsCancellationRequested) TryCancel(sender, false);
+        };
+        using var connection = new ProgressConnection((object)writer, RawAudioEvents, callback);
+        bool prepared = false;
+        try
+        {
+            token.ThrowIfCancellationRequested();
+            writer.PrepareMedia(); prepared = true;
+            if ((long)image.StartOfLeadout > (long)writer.LastPossibleStartOfLeadout) throw new InvalidOperationException("Die Titel passen einschließlich der Pausen nicht auf den eingelegten Rohling.");
+            token.ThrowIfCancellationRequested();
+            writer.WriteMedia(stream);
+            token.ThrowIfCancellationRequested();
+        }
+        finally { if (prepared) writer.ReleaseMedia(); }
     }
 
     public void Erase(BurnOptions options, IProgress<OperationProgress> progress)

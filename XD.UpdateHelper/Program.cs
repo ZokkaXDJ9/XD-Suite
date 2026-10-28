@@ -16,6 +16,19 @@ internal static class Program
     [STAThread]
     private static void Main(string[] args)
     {
+        if (Path.GetFileName(Application.ExecutablePath).Equals("XDSuite.exe", StringComparison.OrdinalIgnoreCase))
+        {
+            // Compatibility forwarder for the first update out of the old per-user directory.
+            using (var root = Microsoft.Win32.RegistryKey.OpenBaseKey(Microsoft.Win32.RegistryHive.LocalMachine, Microsoft.Win32.RegistryView.Registry64))
+            using (var key = root.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\{F80CC53F-43F1-4E46-B7F4-61435E75303D}_is1"))
+            {
+                string folder = key?.GetValue("InstallLocation") as string ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "XDSuite");
+                string target = Path.Combine(folder, "XDSuite.exe");
+                if (File.Exists(target) && !target.Equals(Application.ExecutablePath, StringComparison.OrdinalIgnoreCase))
+                    Process.Start(new ProcessStartInfo(target, string.Join(" ", args.Select(a => "\"" + a.Replace("\"", "\\\"") + "\""))) { UseShellExecute = true, WorkingDirectory = folder });
+            }
+            return;
+        }
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
         try { Application.Run(new UpdateWindow(Options.Parse(args))); }
@@ -29,6 +42,7 @@ internal sealed class Options
     public string Setup = "", Target = "", Sha256 = "", Language = "german";
     public bool English => Language == "english";
     public string Executable => Path.Combine(Target, "XDSuite.exe");
+    public string InstallTarget => Target.Equals(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "XDSuite"), StringComparison.OrdinalIgnoreCase) ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "XDSuite") : Target;
     public static Options Parse(string[] args)
     {
         var values = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -107,15 +121,17 @@ internal sealed class UpdateWindow : Form
         var start = new ProcessStartInfo(options.Setup)
         {
             UseShellExecute = true, WindowStyle = ProcessWindowStyle.Hidden,
-            Arguments = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /COMPONENTS=suite /LANG=" + options.Language + " /DIR=" + Quote(options.Target)
+            Arguments = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /COMPONENTS=suite /LANG=" + options.Language + " /DIR=" + Quote(options.InstallTarget)
         };
-        File.AppendAllText(log, "Starting in-place setup: " + options.Setup + "\nTarget: " + options.Target + "\n");
+        File.AppendAllText(log, "Starting update setup: " + options.Setup + "\nTarget: " + options.InstallTarget + "\n");
         using (var installer = Process.Start(start) ?? throw new IOException("Installer could not be started.")) { installer.WaitForExit(); return installer.ExitCode; }
     }
     private void Restart(string argument)
     {
-        if (!File.Exists(options.Executable)) throw new FileNotFoundException("XD Suite executable not found.");
-        Process.Start(new ProcessStartInfo(options.Executable, argument) { UseShellExecute = true, WorkingDirectory = options.Target });
+        string target = Path.Combine(options.InstallTarget, "XDSuite.exe");
+        if (!File.Exists(target)) target = options.Executable;
+        if (!File.Exists(target)) throw new FileNotFoundException("XD Suite executable not found.");
+        Process.Start(new ProcessStartInfo(target, argument) { UseShellExecute = true, WorkingDirectory = Path.GetDirectoryName(target) });
     }
     private static string Quote(string value) => "\"" + value.Replace("\"", "\\\"") + "\"";
 }

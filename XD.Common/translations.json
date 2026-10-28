@@ -48,6 +48,14 @@
     "en": "Install update"
   },
   {
+    "de": "Dieses Laufwerk unterstützt keine Audiopausen unter 2 Sekunden (Disc-at-once erforderlich).",
+    "en": "This drive does not support audio gaps below 2 seconds (Disc-at-once is required)."
+  },
+  {
+    "de": "Audio-CD wird gebrannt …",
+    "en": "Burning audio CD …"
+  },
+  {
     "de": "CD auswerfen",
     "en": "Eject CD"
   },
@@ -896,8 +904,8 @@
     "en": "The online source is currently unavailable. You can still launch installed apps."
   },
   {
-    "de": "{0} {1} herunterladen und installieren?\n\nDownloadquelle: GitHub Releases\nDas Programm kann danach auch ohne XD Suite gestartet werden.",
-    "en": "Download and install {0} {1}?\n\nDownload source: GitHub Releases\nYou will also be able to launch the app without XD Suite."
+    "de": "{0} {1} herunterladen und installieren?\n\nDas Programm kann danach auch ohne XD Suite gestartet werden.",
+    "en": "Download and install {0} {1}?\n\nYou will also be able to launch the app without XD Suite."
   },
   {
     "de": "Programm installieren",
@@ -956,8 +964,8 @@
     "en": "Save"
   },
   {
-    "de": "Der Download ist gerade nicht erreichbar. Bitte die Internetverbindung und die Downloadquelle prüfen.",
-    "en": "The download is currently unavailable. Please check your internet connection and download source."
+    "de": "Der Download ist gerade nicht erreichbar. Bitte die Internetverbindung prüfen.",
+    "en": "The download is currently unavailable. Please check your internet connection."
   },
   {
     "de": "Bitte die laufende Installation abschließen lassen.",
@@ -1056,8 +1064,8 @@
     "en": "XD Suite is already open."
   },
   {
-    "de": "XD Brenner 0.3.1\n\nDaten-CD: Dateien und Ordner hinzufügen und brennen. „Als ISO speichern“ funktioniert auch ohne Brenner.\n\nAudio-CD: MP3/WAV/OGG hinzufügen, Titel per Ziehen oder mit ↑/↓ ordnen. Pause zwischen Titeln auswählbar (mindestens 2 Sekunden). Kein CD-Text oder Gapless.\n\nISO brennen: Daten-ISO auswählen und brennen.\n\nCD-RW löschen: Schnell oder vollständig löschen. CD-Rs sind nicht löschbar.\n\nNach dem Einlegen einer CD „Aktualisieren“ wählen. Es werden leere CD-R/CD-RW verwendet und abgeschlossene CDs erstellt. Kein Multisession.\n\nLizenz: MIT. Audioumwandlung: NAudio und NVorbis (MIT).\nFehlerprotokolle: %LOCALAPPDATA%\\XDBurner\\Logs.",
-    "en": "XD Burner 0.3.1\n\nData CD: Add files and folders and burn them. Save as ISO also works without a burner.\n\nAudio CD: Add MP3/WAV/OGG files and arrange tracks by dragging or with ↑/↓. Select the gap between tracks (at least 2 seconds). No CD-Text or gapless audio.\n\nBurn ISO: Select and burn a data ISO image.\n\nErase CD-RW: Quick or full erase. CD-Rs cannot be erased.\n\nAfter inserting a disc, select Refresh. Blank CD-R/CD-RW discs are used and finalized. No multisession.\n\nLicense: MIT. Audio conversion: NAudio and NVorbis (MIT).\nError logs: %LOCALAPPDATA%\\XDBurner\\Logs."
+    "de": "XD Brenner 0.4.0\n\nDaten-CD: Dateien und Ordner hinzufügen und brennen. „Als ISO speichern“ funktioniert auch ohne Brenner.\n\nAudio-CD: MP3/WAV/OGG hinzufügen, Titel per Ziehen oder mit ↑/↓ ordnen. Pause zwischen Titeln auswählbar, auch 0 Sekunden. Kein CD-Text.\n\nISO brennen: Daten-ISO auswählen und brennen.\n\nCD-RW löschen: Schnell oder vollständig löschen. CD-Rs sind nicht löschbar.\n\nNach dem Einlegen einer CD „Aktualisieren“ wählen. Es werden leere CD-R/CD-RW verwendet und abgeschlossene CDs erstellt. Kein Multisession.\n\nLizenz: MIT. Audioumwandlung: NAudio und NVorbis (MIT).\nFehlerprotokolle: %LOCALAPPDATA%\\XDBurner\\Logs.",
+    "en": "XD Burner 0.4.0\n\nData CD: Add files and folders and burn them. Save as ISO also works without a burner.\n\nAudio CD: Add MP3/WAV/OGG files and arrange tracks by dragging or with ↑/↓. Select the gap between tracks, including 0 seconds. No CD-Text.\n\nBurn ISO: Select and burn a data ISO image.\n\nErase CD-RW: Quick or full erase. CD-Rs cannot be erased.\n\nAfter inserting a disc, select Refresh. Blank CD-R/CD-RW discs are used and finalized. No multisession.\n\nLicense: MIT. Audio conversion: NAudio and NVorbis (MIT).\nError logs: %LOCALAPPDATA%\\XDBurner\\Logs."
   },
   {
     "de": "Titelliste",
@@ -1088,8 +1096,8 @@
     "en": "Gap between audio tracks"
   },
   {
-    "de": "Track-at-once: mindestens 2 Sekunden.",
-    "en": "Track-at-once: at least 2 seconds."
+    "de": "0 s: keine zusätzliche Pause.",
+    "en": "0 s: no added gap."
   },
   {
     "de": "{0} min zu viel",

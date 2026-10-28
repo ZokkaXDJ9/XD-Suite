@@ -31,7 +31,7 @@
         <StackPanel Grid.Row="3">
           <Button Content="Hilfe &amp; Über XD Brenner" Click="Help_Click" Padding="4,8" Background="Transparent" BorderThickness="0" FontSize="12"/>
           <Menu Background="Transparent" HorizontalAlignment="Center" Margin="0,6,0,0"><MenuItem Header="Sprache / Language"><MenuItem x:Name="GermanMenu" Header="Deutsch" IsCheckable="True" Click="German_Click"/><MenuItem x:Name="EnglishMenu" Header="English" IsCheckable="True" Click="English_Click"/></MenuItem></Menu>
-          <TextBlock Text="VERSION 0.3.1 · XD SUITE" FontSize="9" Foreground="#7A8672" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+          <TextBlock Text="VERSION 0.4.0 · XD SUITE" FontSize="9" Foreground="#7A8672" HorizontalAlignment="Center" Margin="0,8,0,0"/>
         </StackPanel>
       </Grid>
     </Border>
@@ -124,7 +124,7 @@
                 <ComboBox x:Name="SpeedCombo" SelectedIndex="0" AutomationProperties.Name="Brenngeschwindigkeit"><ComboBoxItem Content="Automatisch"/><ComboBoxItem Content="Langsamste verfügbare"/></ComboBox>
                 <CheckBox x:Name="VerifyCheck" IsChecked="True" Content="Daten nach dem Brennen prüfen" FontSize="12" Margin="0,15,0,7"/>
               </StackPanel>
-              <StackPanel x:Name="GapPanel" Visibility="Collapsed" Margin="0,8,0,8"><TextBlock Text="PAUSE ZWISCHEN TITELN" FontSize="10" Foreground="#68736E" Margin="0,0,0,8"/><ComboBox x:Name="GapCombo" SelectedIndex="0" SelectionChanged="Gap_Changed" AutomationProperties.Name="Pause zwischen Audiotiteln"><ComboBoxItem Content="2 s" Tag="2"/><ComboBoxItem Content="3 s" Tag="3"/><ComboBoxItem Content="5 s" Tag="5"/><ComboBoxItem Content="10 s" Tag="10"/></ComboBox><TextBlock Text="Track-at-once: mindestens 2 Sekunden." FontSize="10" Foreground="#68736E" Margin="0,5,0,0"/></StackPanel>
+              <StackPanel x:Name="GapPanel" Visibility="Collapsed" Margin="0,8,0,8"><TextBlock Text="PAUSE ZWISCHEN TITELN" FontSize="10" Foreground="#68736E" Margin="0,0,0,8"/><ComboBox x:Name="GapCombo" SelectedIndex="2" SelectionChanged="Gap_Changed" AutomationProperties.Name="Pause zwischen Audiotiteln"><ComboBoxItem Content="0 s" Tag="0"/><ComboBoxItem Content="1 s" Tag="1"/><ComboBoxItem Content="2 s" Tag="2"/><ComboBoxItem Content="3 s" Tag="3"/><ComboBoxItem Content="5 s" Tag="5"/><ComboBoxItem Content="10 s" Tag="10"/></ComboBox><TextBlock Text="0 s: keine zusätzliche Pause." FontSize="10" Foreground="#68736E" Margin="0,5,0,0"/></StackPanel>
               <CheckBox x:Name="FullEraseCheck" Visibility="Collapsed" Content="Vollständig löschen" FontSize="12"/>
               <CheckBox x:Name="EjectCheck" IsChecked="True" Content="CD danach auswerfen" FontSize="12"/>
               <Border x:Name="InfoSeparator" Height="1" Background="#E7EAE1" Margin="0,12,0,12"/>

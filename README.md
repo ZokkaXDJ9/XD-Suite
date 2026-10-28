@@ -4,10 +4,10 @@ XD Brenner ist ein Windows-Programm zum Brennen von CDs. XD Suite verwaltet und 
 
 ## Installation und Sprache
 
-- **`dist/XD-Brenner-Setup-0.3.1.exe`** installiert nur XD Brenner.
-- **`dist/XD-Suite-Setup-0.3.1.exe`** installiert XD Suite und die im Setup ausgewählten Programme. XD Brenner ist enthalten und einzeln abwählbar.
+- **`dist/XD-Brenner-Setup-0.4.0.exe`** installiert nur XD Brenner.
+- **`dist/XD-Suite-Setup-0.4.0.exe`** installiert XD Suite und die im Setup ausgewählten Programme. XD Brenner ist enthalten und einzeln abwählbar.
 
-Beide Setups fordern Administratorrechte an und zeigen eine Sprachauswahl für Deutsch und Englisch. Frische Installationen verwenden `%ProgramFiles%\XDBurner` bzw. `XDSuite`. Vorhandene Installationen werden im bisherigen Ordner aktualisiert. Die benötigte .NET-Laufzeit ist enthalten; auch das auswählbare Brenner-Setup benötigt keinen weiteren Download.
+Beide Setups fordern Administratorrechte an und zeigen eine Sprachauswahl für Deutsch und Englisch. Frische Installationen verwenden `%ProgramFiles%\XDBurner` bzw. `XDSuite`. Ältere Installationen unter AppData werden ohne Deinstaller nach Programme verschoben und dort aktualisiert. Die benötigte .NET-Laufzeit ist enthalten; auch das auswählbare Brenner-Setup benötigt keinen weiteren Download.
 
 In beiden Apps wechselt **Sprache / Language → Deutsch / English** die Oberfläche direkt. Die Auswahl wird gespeichert und von beiden Apps beim nächsten Start übernommen. Dateinamen und eigene Eingaben bleiben erhalten. Windows-Dateiauswahldialoge folgen der Betriebssystemsprache.
 
@@ -19,22 +19,22 @@ Die Setups sind derzeit unsigniert. Windows kann deshalb „Unbekannter Herausge
 
 XD Suite zeigt den Programmkatalog, erkennt installierte Programme und startet sie. Die Ansichten **Alle Programme**, **Installiert**, **Updates** und die Suche verwenden den Katalog. Ein Klick auf **Herunterladen & installieren** lädt das jeweilige Setup von GitHub Releases und prüft Größe und SHA-256 vor der Ausführung. Beschädigte Downloads werden verworfen. Downloads lassen sich abbrechen; eine gestartete Installation wird vollständig abgewartet.
 
-Beim Start prüft XD Suite die neueste stabile GitHub-Version der Suite selbst. Ist sie neuer, fragt ein Nachrichtenfenster nach dem Herunterladen und Installieren. Nach Zustimmung wird das Setup geprüft, die Suite beendet, dasselbe Setup im bisherigen Ordner ausgeführt und die Suite wieder gestartet. **Der Updater startet keinen Deinstaller. Einstellungen und einzeln installierte Programme bleiben erhalten.** Das Suite-Update wählt ausschließlich die Suite-Komponente. Wird die Administratorabfrage abgebrochen, startet die vorhandene Suite wieder. Frühere Versionen ohne Updateprüfung müssen einmal manuell mit dem aktuellen Setup aktualisiert werden.
+Beim Start prüft XD Suite die neueste stabile GitHub-Version der Suite selbst. Ist sie neuer, fragt ein Nachrichtenfenster nach dem Herunterladen und Installieren. Nach Zustimmung wird das Setup geprüft, die Suite beendet, dasselbe Setup im Programmordner ausgeführt und die Suite wieder gestartet. **Der Updater startet keinen Deinstaller. Einstellungen und einzeln installierte Programme bleiben erhalten.** Das Suite-Update wählt ausschließlich die Suite-Komponente. Wird die Administratorabfrage abgebrochen, startet die vorhandene Suite wieder. Frühere Versionen ohne Updateprüfung müssen einmal manuell mit dem aktuellen Setup aktualisiert werden.
 
-Vorgesehene Quelle ist `ZokkaXDJ9/XD-Suite`. Der Katalog liegt unter:
+Die fest hinterlegte Quelle ist `ZokkaXDJ9/XD-Suite`. Der Katalog liegt unter:
 
 ```text
 https://github.com/ZokkaXDJ9/XD-Suite/releases/latest/download/catalog.json
 ```
 
-Unter **Downloadquelle** lässt sich ein anderes öffentliches Repository als `Besitzer/Repository` einstellen. Ohne Verbindung bleibt der gebündelte oder zuletzt gültige Katalog verfügbar. Installierte Apps lassen sich weiterhin starten. Der Katalog enthält Sprachtexte, Version, HTTPS-URL, Größe, SHA-256 und Installationskennung, aber keine Shell-Befehle oder Setup-Argumente. Weiterleitungen zu HTTP werden abgewiesen.
+Die Suite löst die konkrete Katalogdatei über die GitHub-Release-Schnittstelle auf. Ohne Verbindung bleibt der gebündelte oder zuletzt gültige Katalog verfügbar. Installierte Apps lassen sich weiterhin starten. Der Katalog enthält Sprachtexte, Version, HTTPS-URL, Größe, SHA-256 und Installationskennung, aber keine Shell-Befehle oder Setup-Argumente. Weiterleitungen zu HTTP werden abgewiesen.
 
 ## XD Brenner
 
 | Bereich | Funktion |
 | --- | --- |
 | Daten-CD | Dateien und Ordner, Drag-and-drop, ISO 9660 + Joliet, Kapazität einschließlich Dateisystem, freier bzw. überschrittener Platz |
-| Audio-CD | MP3/WAV/OGG (Vorbis), Reihenfolge per Ziehen oder ↑/↓, Pausen von 2/3/5/10 Sekunden, Laufzeit und Überschreitung, bis zu 99 Titel |
+| Audio-CD | MP3/WAV/OGG (Vorbis), Reihenfolge per Ziehen oder ↑/↓, Pausen von 0/1/2/3/5/10 Sekunden, Laufzeit und Überschreitung, bis zu 99 Titel |
 | ISO brennen | Daten-ISO auf leere CD-R/CD-RW schreiben |
 | ISO speichern | Daten-Zusammenstellung auch ohne Laufwerk als ISO exportieren |
 | CD-RW löschen | Schnell oder vollständig, mit Rückfrage |
@@ -42,7 +42,7 @@ Unter **Downloadquelle** lässt sich ein anderes öffentliches Repository als `B
 
 Windows IMAPI 2 übernimmt das Brennen. NAudio 2.3.0 und Windows Media Foundation lesen MP3/WAV; NVorbis 0.10.5 liest OGG/Vorbis. Audio wird lokal nach 44,1 kHz / 16 Bit / Stereo umgewandelt.
 
-Audio verwendet Track-at-once mit mindestens zwei Sekunden Pause und mindestens vier Sekunden pro Titel. Größere gewählte Pausen ergänzen Stille. Mehrkanalton wird abgewiesen. OGG meint Vorbis, nicht Opus. Kein CD-Text, Gapless, DVD/Blu-ray, Disc-Kopieren, Multisession, Packet Writing, Overburning, BIN/CUE oder Kopierschutzumgehung. Leere CD-R/CD-RW werden beschrieben und abgeschlossen.
+Für 0/1 Sekunde Pause verwendet Audio Disc-at-once; dafür muss das Laufwerk diese Brennart unterstützen. Ab 2 Sekunden wird Track-at-once verwendet. Titel werden auf mindestens vier Sekunden aufgefüllt. Größere gewählte Pausen ergänzen Stille. Mehrkanalton wird abgewiesen. OGG meint Vorbis, nicht Opus. Kein CD-Text, DVD/Blu-ray, Disc-Kopieren, Multisession, Packet Writing, Overburning, BIN/CUE oder Kopierschutzumgehung. Leere CD-R/CD-RW werden beschrieben und abgeschlossen.
 
 Die Datenkapazität wird nach Änderungen mit einem echten IMAPI-Dateisystem berechnet. Ohne Rohling gilt ein gekennzeichneter 80-Minuten-Richtwert. Vor dem Schreiben wird das Image erneut geprüft. ISO-Export bis zur Kapazität einer üblichen 80-Minuten-CD. Verknüpfungen und Cloud-Platzhalter zuerst lokal kopieren. Eine volle Audio-CD benötigt etwa 850 MB temporären Speicher. Zusammenstellungen werden noch nicht als Projektdatei gespeichert.
 
@@ -75,10 +75,10 @@ Tests verwenden echtes IMAPI für ISO-Erstellung, Unicode-Strukturen, Größenbe
 - `catalog/`: zweisprachiger Programmkatalog.
 - `installer/`: unabhängige Setups mit stabilen Installationskennungen.
 - `%LOCALAPPDATA%\XD\language.txt`: gemeinsame Sprachpräferenz.
-- `%LOCALAPPDATA%\XDSuite`: Downloadquelle, Katalog, Setups, Updatehelfer und Fehlerprotokoll.
+- `%LOCALAPPDATA%\XDSuite`: Katalog, Setups, Updatehelfer und Fehlerprotokoll.
 - `%LOCALAPPDATA%\XDBurner\Logs`: lokale Fehlerprotokolle.
 
-Ältere Installationen behalten ihren Ordner. Alte lokale Builds liegen unter `artifacts/legacy-builds/`; `dist/` enthält die aktuellen Setups.
+Die Programmbinärdateien gehören nach Programme; Sprachpräferenz, Katalog und Protokolle bleiben als Benutzerdaten unter AppData. Alte lokale Builds liegen unter `artifacts/legacy-builds/`; `dist/` enthält die aktuellen Setups.
 
 ## Quellen und Lizenzen
 

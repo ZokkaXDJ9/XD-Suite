@@ -85,7 +85,8 @@ public static class ProjectFiles
 
     public static long AudioSectors(IEnumerable<TimeSpan> durations, int gapSeconds = 2)
     {
-        if (gapSeconds is < 2 or > 30) throw new ArgumentOutOfRangeException(nameof(gapSeconds));
-        return durations.Sum(d => Math.Max(300L, (long)Math.Ceiling(d.TotalSeconds * 75)) + gapSeconds * 75L);
+        if (gapSeconds is < 0 or > 30) throw new ArgumentOutOfRangeException(nameof(gapSeconds));
+        var tracks = durations.ToArray();
+        return tracks.Sum(d => Math.Max(300L, (long)Math.Ceiling(d.TotalSeconds * 75))) + gapSeconds * 75L * (gapSeconds < 2 ? Math.Max(0, tracks.Length - 1) : tracks.Length);
     }
 }
