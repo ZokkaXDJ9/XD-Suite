@@ -28,6 +28,7 @@ try {
     $remote = (& git remote get-url origin).Trim()
     if ($LASTEXITCODE -ne 0 -or $remote -notin @("https://github.com/$Repository.git","git@github.com:$Repository.git")) { throw 'Origin does not match target repository.' }
     $branch = (& git branch --show-current).Trim()
+    if ($LASTEXITCODE -ne 0 -or $branch -ne 'main') { throw 'Suite releases can only be published from main. Application branches are for development and local previews.' }
     & git add -A -- '.gitattributes' '.gitignore' 'LICENSE' 'README.md' 'build-release.ps1' 'XDBurner' 'XD.Common' 'XD.UpdateHelper' 'XDSuite' 'catalog' 'installer' 'licenses' 'tests' 'tools' 'docs'
     if ($LASTEXITCODE -ne 0) { throw 'Staging failed.' }
     & git diff --cached --check
