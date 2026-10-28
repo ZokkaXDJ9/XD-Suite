@@ -30,6 +30,9 @@ Copy-Item -LiteralPath (Join-Path $previewRoot 'engine.lock.json'),(Join-Path $p
 New-Item -ItemType Directory -Path (Join-Path $appRoot 'licenses') -Force | Out-Null
 Get-ChildItem -LiteralPath (Join-Path $projectRoot 'licenses') -File | Where-Object Name -Match '^(dotnet|wpf)' | Copy-Item -Destination (Join-Path $appRoot 'licenses') -Force
 $exe = Join-Path $appRoot 'XDConverter.Preview.exe'
+$suiteVersion = ([xml][System.IO.File]::ReadAllText((Join-Path $projectRoot 'XDSuite\XDSuite.csproj'))).Project.PropertyGroup.Version | Where-Object { $_ }
+$appVersion = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($exe)
+if ($appVersion.FileVersion -ne ($suiteVersion + '.0') -or -not $appVersion.ProductVersion.StartsWith($suiteVersion + '-preview+')) { throw 'Preview product version must match the current suite version; distinguish test builds through metadata only.' }
 $report = Join-Path $artifactRoot 'converter-tests.txt'
 $test = Start-Process -FilePath $exe -ArgumentList @('--self-test','--report',('"' + $report + '"')) -PassThru -Wait -WindowStyle Hidden
 if ($test.ExitCode -ne 0) { throw "Preview integration tests failed: $report" }

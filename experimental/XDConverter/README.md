@@ -2,7 +2,22 @@
 
 Entwicklung auf `app/xd-converter`. Diese Vorschau gehört nicht zum Live-Katalog oder zum Suite-Setup. Video ist für einen späteren Schritt vorgesehen.
 
-Ausgabe: MP3, WAV (16/24 Bit PCM oder 32 Bit Float), FLAC, OGG/Vorbis, M4A/AAC und Opus. Eingabe unter anderem MP3, WAV, FLAC, OGG, M4A, AAC, Opus, WMA und AIFF. Dateien können einzeln, als Ordner oder per Drag-and-drop hinzugefügt werden. Abtastrate, Kanäle und Qualität sind wählbar. Text-Tags werden optional übernommen; Coverbilder derzeit nicht.
+Ausgabe: MP3, WAV, FLAC, OGG/Vorbis, M4A/AAC und Opus. Eingabe unter anderem MP3, WAV, FLAC, OGG, M4A, AAC, Opus, WMA und AIFF. Dateien können einzeln, als Ordner oder per Drag-and-drop hinzugefügt werden. Text-Tags werden optional übernommen; Coverbilder derzeit nicht.
+
+| Format | Einstellungen |
+| --- | --- |
+| MP3 | CBR, ABR, VBR V0–V9; 8–320 kbit/s; 8–48 kHz |
+| M4A / AAC | Mittlere Zielbitrate oder VBR Q1–Q5; 32–512 kbit/s; 7,35–96 kHz |
+| OGG / Vorbis | Mittlere Zielbitrate oder VBR Q−1–Q10; 32–448 kbit/s; VBR bis 192 kHz, Zielbitrate bis 48 kHz |
+| Opus | CBR, VBR, begrenztes VBR; 6–512 kbit/s; Encoder-Eingang 8/12/16/24/48 kHz; Musik, Sprache oder geringe Verzögerung |
+| WAV | 8/16/24/32 Bit PCM, 32/64 Bit Float; 8–192 kHz |
+| FLAC | Kompressionsstufe 0–12; automatische oder 16/24 Bit Bittiefe; 8–192 kHz |
+
+Die verfügbaren Bitraten hängen von Abtastrate und Kanalzahl ab. Automatische Kanalwahl bietet Bitraten an, die auch für Mono geeignet sind; für höhere AAC-/Vorbis-/Opus-Bitraten Stereo ausdrücklich wählen. Automatische Abtastrate wählt einen passenden Encoder-Eingang. Opus wird unabhängig von dieser Eingangsrate als 48 kHz ausgelesen. Die VBR-Skalen sind formatspezifisch: bei MP3 bedeutet V0 die höchste Qualität, bei AAC und Vorbis bedeuten höhere Q-Werte höhere Qualität. Mehrkanalquellen werden für die verlustbehafteten Zielformate bei automatischer Kanalwahl auf Stereo gemischt. WAV und FLAC behalten die Quellkanäle bei.
+
+Jedes Zielformat speichert seine eigenen Einstellungen. Alle FLAC-Kompressionsstufen erhalten dieselben PCM-Samples, solange Bittiefe, Abtastrate und Kanalzahl beibehalten werden. Höhere Abtastraten oder Bittiefen stellen verlorene Quelldetails nicht wieder her. [Encoderoptionen in der FFmpeg-Dokumentation](https://ffmpeg.org/ffmpeg-codecs.html).
+
+Die Produktversion folgt automatisch `XDSuite/XDSuite.csproj` (aktuell 0.4.1). Dieser lokale Teststand trägt die Build-Kennung `audio-options`. Einzelprogramme erhalten keine eigenen Versionssprünge.
 
 Die Originaldateien werden nicht verändert. Existiert ein Zielname bereits, erhält das neue Ergebnis einen anderen Namen. Ergebnisse werden zuerst temporär geschrieben; Abbruch und Fehler entfernen die unvollständige Datei. Bereits fertige Ergebnisse bleiben erhalten.
 
@@ -20,7 +35,7 @@ Vom Repository-Verzeichnis aus:
 Der Build lädt einen festgelegten [BtbN-LGPL-Build](https://github.com/BtbN/FFmpeg-Builds/releases/tag/autobuild-2026-10-28-19-47), prüft SHA-256 und verwendet FFmpeg/ffprobe als getrennte Prozesse. [FFmpeg nennt BtbN als Anbieter von Windows-Builds](https://ffmpeg.org/download.html). Version, Download und Build-Quellen stehen in `engine.lock.json`. Die Lizenz und die mitgelieferte Dokumentation werden in den Vorschau-Ordner kopiert. Es wird kein öffentlicher Binärdownload für den Konverter veröffentlicht.
 
 - Start ohne Installation: `artifacts/converter-preview/app/XDConverter.Preview.exe`.
-- Optionales separates Setup: `artifacts/converter-preview/XD-Konverter-Vorschau-Setup-0.1.1.exe`.
+- Optionales separates Setup: `artifacts/converter-preview/XD-Konverter-Vorschau-Setup-0.4.1.exe`.
 - Testbericht: `artifacts/converter-preview/converter-tests.txt`.
 - Prüfung unveränderter Live-Quellen: `artifacts/converter-preview/isolation-check.txt`.
 - Isolierter Installer-Test: `artifacts/converter-preview/installer-test.txt` (Elevation nur in der Testkopie ausgeschaltet).

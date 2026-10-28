@@ -12,7 +12,8 @@ public sealed record OutputFormat(string Id, string Extension, string Encoder)
     public static readonly OutputFormat[] All = [new("MP3", ".mp3", "libmp3lame"), new("WAV", ".wav", "pcm_s16le"), new("FLAC", ".flac", "flac"), new("OGG", ".ogg", "libvorbis"), new("M4A", ".m4a", "aac"), new("Opus", ".opus", "libopus")];
     public override string ToString() => Id;
 }
-public sealed record ConvertOptions(OutputFormat Format, string Directory, int Quality = 192, int SampleRate = 0, int Channels = 0, bool Tags = true);
+public sealed record ConvertOptions(OutputFormat Format, string Directory, int Quality = 192, int SampleRate = 0, int Channels = 0, bool Tags = true,
+    EncodingMode? Mode = null, int VbrQuality = 2, int Compression = 5, int BitDepth = 0, string Application = "audio");
 public sealed class ConversionError(string key, string detail = "") : Exception(detail)
 {
     public string Key { get; } = key;
@@ -56,9 +57,7 @@ public sealed class AudioEngine(string directory)
 
     public async Task<string> Convert(AudioInfo input, ConvertOptions options, Action<double> progress, CancellationToken token)
     {
-        if (!OutputFormat.All.Contains(options.Format) || options.SampleRate is not (0 or 44100 or 48000) || options.Channels is not (0 or 1 or 2)) throw new ArgumentException("Invalid conversion options.");
-        if (options.Format.Id == "Opus" && options.SampleRate == 44100) throw new ConversionError("OpusRate");
-        if (options.Format.Id == "WAV" ? options.Quality is not (16 or 24 or 32) : options.Format.Id != "FLAC" && options.Quality is not (128 or 192 or 256 or 320)) throw new ArgumentException("Invalid quality.");
+        EncodingProfile.Validate(options);
         token.ThrowIfCancellationRequested();
         string outputDirectory = System.IO.Path.GetFullPath(options.Directory);
         Directory.CreateDirectory(outputDirectory);
@@ -66,13 +65,21 @@ public sealed class AudioEngine(string directory)
         try
         {
             var args = new List<string> { "-hide_banner", "-nostdin", "-loglevel", "error", "-xerror", "-n", "-protocol_whitelist", "file", "-i", input.Path, "-map", "0:a:0", "-vn", "-sn", "-dn", "-map_metadata", options.Tags ? "0" : "-1", "-c:a" };
-            args.Add(options.Format.Id == "WAV" ? options.Quality switch { 24 => "pcm_s24le", 32 => "pcm_f32le", _ => "pcm_s16le" } : options.Format.Encoder);
-            if (options.Format.Id == "FLAC") args.AddRange(["-compression_level", "5"]);
-            else if (options.Format.Id != "WAV") args.AddRange(["-b:a", options.Quality.ToString(CultureInfo.InvariantCulture) + "k"]);
+            args.Add(options.Format.Id == "WAV" ? options.Quality switch { 8 => "pcm_u8", 24 => "pcm_s24le", 32 => "pcm_f32le", 33 => "pcm_s32le", 64 => "pcm_f64le", _ => "pcm_s16le" } : options.Format.Encoder);
+            var mode = options.Mode ?? EncodingProfile.Modes(options.Format.Id)[0];
+            if (options.Format.Id == "FLAC")
+            {
+                args.AddRange(["-compression_level", options.Compression.ToString(CultureInfo.InvariantCulture)]);
+                if (options.BitDepth != 0) args.AddRange(["-sample_fmt", options.BitDepth == 16 ? "s16" : "s32", "-bits_per_raw_sample", options.BitDepth.ToString(CultureInfo.InvariantCulture)]);
+            }
+            else if (EncodingProfile.UsesQuality(options.Format.Id, mode)) args.AddRange(["-q:a", options.VbrQuality.ToString(CultureInfo.InvariantCulture)]);
+            else if (EncodingProfile.UsesBitrate(options.Format.Id, mode)) args.AddRange(["-b:a", options.Quality.ToString(CultureInfo.InvariantCulture) + "k"]);
+            if (options.Format.Id == "MP3") args.AddRange(["-abr", mode == EncodingMode.Abr ? "1" : "0"]);
+            if (options.Format.Id == "Opus") args.AddRange(["-vbr", mode == EncodingMode.Cbr ? "off" : mode == EncodingMode.ConstrainedVbr ? "constrained" : "on", "-application", options.Application]);
             if (options.Format.Id == "MP3") args.AddRange(["-id3v2_version", "3"]);
-            if (options.SampleRate != 0) args.AddRange(["-ar", options.SampleRate.ToString(CultureInfo.InvariantCulture)]);
+            args.AddRange(["-ar", EncodingProfile.EffectiveRate(input, options).ToString(CultureInfo.InvariantCulture)]);
             if (options.Channels != 0) args.AddRange(["-ac", options.Channels.ToString(CultureInfo.InvariantCulture)]);
-            else if (input.Channels > 2 && options.Format.Id is "MP3" or "M4A" or "Opus") args.AddRange(["-ac", "2"]);
+            else if (input.Channels > 2 && options.Format.Id is "MP3" or "M4A" or "OGG" or "Opus") args.AddRange(["-ac", "2"]);
             args.AddRange(["-stats_period", "0.2", "-progress", "pipe:1", "-nostats", temporary]);
             await ProcessRunner.Run(Ffmpeg, args, token, line =>
             {

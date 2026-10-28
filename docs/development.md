@@ -1,5 +1,9 @@
 # Entwicklung und lokale Tests
 
+Die Versionsnummer der Hauptsuite ist die gemeinsame Produktversion. Einzelprogramme übernehmen diesen Stand und erhalten keine eigenen Versionssprünge. Erst wenn die Version der Hauptsuite erhöht wird, dürfen sich die Produktversionen der Programme ändern. Lokale Teststände werden über eine Build-Kennung unterschieden; sie erzeugen keine neuen öffentlichen Programmversionen.
+
+Der Konverter liest seine Produktversion beim Build aus `XDSuite/XDSuite.csproj`. Oberfläche und Installer übernehmen diese Nummer aus der gebauten Anwendung. Dadurch bleiben lokale Änderungen automatisch auf dem aktuellen Suite-Stand.
+
 | Branch | Zuständigkeit |
 | --- | --- |
 | `main` | XD Suite, gemeinsame Komponenten und freigegebener Stand der Programme |

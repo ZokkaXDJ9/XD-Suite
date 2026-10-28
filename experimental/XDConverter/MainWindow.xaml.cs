@@ -16,6 +16,9 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<AudioRow> rows = [];
     private CancellationTokenSource? cancellation;
     private bool ready, busy, closeAfterCancel;
+    private bool refreshing;
+    private string activeFormat = "";
+    private EncoderPreferences Preferences => settings.ForFormat(activeFormat);
     private string statusKey = "Ready";
     private string? detailKey;
     private object[] detailArgs = [];
@@ -35,6 +38,7 @@ public partial class MainWindow : Window
         FormatCombo.SelectedItem = OutputFormat.All.FirstOrDefault(f => f.Id == settings.Format) ?? OutputFormat.All[0];
         OutputBox.Text = settings.OutputDirectory;
         TagsCheck.IsChecked = settings.Tags;
+        activeFormat = Format.Id;
         ready = true; RefreshLanguage(true);
         Texts.Current.Changed += Language_Changed;
         Closed += (_, _) => Texts.Current.Changed -= Language_Changed;
@@ -53,10 +57,8 @@ public partial class MainWindow : Window
     {
         GermanMenu.IsChecked = !T.English; EnglishMenu.IsChecked = T.English;
         NameColumn.Header = T["Name"]; LengthColumn.Header = T["Duration"]; SourceColumn.Header = T["Source"]; StateColumn.Header = T["Status"];
-        int rate = initial ? settings.Rate : Value(RateCombo), channels = initial ? settings.Channels : Value(ChannelCombo), quality = initial ? settings.Quality : Value(QualityCombo);
-        SetChoices(RateCombo, [new(T["Automatic"], 0), new(T.English ? "44,100 Hz" : "44.100 Hz", 44100), new(T.English ? "48,000 Hz" : "48.000 Hz", 48000)], rate);
-        SetChoices(ChannelCombo, [new(T["Automatic"], 0), new(T["Mono"], 1), new(T["Stereo"], 2)], channels);
-        RefreshQuality(quality);
+        if (!initial) StoreOptions();
+        RefreshOptions();
         foreach (var row in rows) row.Refresh();
         RefreshRows(); RefreshStatus();
     }
@@ -64,18 +66,79 @@ public partial class MainWindow : Window
     {
         combo.ItemsSource = choices; combo.SelectedItem = choices.FirstOrDefault(c => c.Value == selected) ?? choices[0];
     }
-    private void RefreshQuality(int previous)
+    private void StoreOptions()
     {
-        Choice[] choices = Format.Id switch
-        {
-            "WAV" => [new(T["Depth16"], 16), new(T["Depth24"], 24), new(T["Float"], 32)],
-            "FLAC" => [new(T["Default"], 5)],
-            _ => [new("128 kbit/s", 128), new("192 kbit/s", 192), new("256 kbit/s", 256), new("320 kbit/s", 320)]
-        };
-        SetChoices(QualityCombo, choices, choices.Any(c => c.Value == previous) ? previous : Format.Id is "WAV" or "FLAC" ? choices[0].Value : 192);
-        QualityCombo.IsEnabled = !busy && Format.Id != "FLAC";
+        if (!ready || refreshing) return;
+        var p = Preferences;
+        p.Mode = (EncodingMode)Value(ModeCombo); p.Rate = Value(RateCombo); p.Channels = Value(ChannelCombo);
+        StoreQuality();
+        p.FlacDepth = Value(DepthCombo); p.Application = Value(ApplicationCombo);
     }
-    private void Format_Changed(object sender, SelectionChangedEventArgs e) { if (ready) RefreshQuality(Value(QualityCombo)); }
+    private void StoreQuality()
+    {
+        if (refreshing || !ready) return;
+        var p = Preferences;
+        if (activeFormat == "WAV") p.Depth = Value(QualityCombo);
+        else if (activeFormat == "FLAC") p.Compression = Value(QualityCombo);
+        else if (EncodingProfile.UsesQuality(activeFormat, p.Mode)) p.VbrQuality = Value(QualityCombo);
+        else p.Bitrate = Value(QualityCombo);
+    }
+    private void RefreshOptions()
+    {
+        refreshing = true;
+        var p = Preferences;
+        var modes = EncodingProfile.Modes(activeFormat);
+        if (!modes.Contains(p.Mode)) p.Mode = modes[0];
+        SetChoices(ModeCombo, modes.Select(m => new Choice(T[m.ToString()], (int)m)).ToArray(), (int)p.Mode);
+        SetChoices(RateCombo, [new(T["Automatic"], 0), .. EncodingProfile.Rates(activeFormat, p.Mode).Select(r => new Choice(r.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo(T.English ? "en-US" : "de-DE")) + " Hz", r))], p.Rate);
+        p.Rate = Value(RateCombo);
+        SetChoices(ChannelCombo, [new(T["Automatic"], 0), new(T["Mono"], 1), new(T["Stereo"], 2)], p.Channels);
+        SetChoices(DepthCombo, [new(T["Automatic"], 0), new(T["Depth16"], 16), new(T["Depth24"], 24)], p.FlacDepth);
+        SetChoices(ApplicationCombo, [new(T["Music"], 0), new(T["Speech"], 1), new(T["LowDelay"], 2)], p.Application);
+        FlacDepthPanel.Visibility = activeFormat == "FLAC" ? Visibility.Visible : Visibility.Collapsed;
+        ApplicationPanel.Visibility = activeFormat == "Opus" ? Visibility.Visible : Visibility.Collapsed;
+        Choice[] choices;
+        int selected;
+        if (activeFormat == "WAV")
+        {
+            QualityLabel.Text = T["BitDepth"];
+            choices = [new(T["Depth8"], 8), new(T["Depth16"], 16), new(T["Depth24"], 24), new(T["Depth32"], 33), new(T["Float"], 32), new(T["Float64"], 64)]; selected = p.Depth;
+        }
+        else if (activeFormat == "FLAC")
+        {
+            QualityLabel.Text = T["Compression"];
+            choices = Enumerable.Range(0, 13).Select(n => new Choice(n + (n == 0 ? T["Fastest"] : n == 5 ? " · " + T["Default"] : n == 12 ? T["Smallest"] : ""), n)).ToArray(); selected = p.Compression;
+        }
+        else if (EncodingProfile.UsesQuality(activeFormat, p.Mode))
+        {
+            QualityLabel.Text = T["VbrQuality"];
+            choices = EncodingProfile.Qualities(activeFormat).Select(n => new Choice((activeFormat == "MP3" ? "V" : "Q ") + n, n)).ToArray(); selected = p.VbrQuality;
+        }
+        else
+        {
+            QualityLabel.Text = T[p.Mode == EncodingMode.Cbr ? "Bitrate" : "TargetBitrate"];
+            choices = EncodingProfile.Bitrates(activeFormat, p.Rate, p.Channels).Select(n => new Choice(n + " kbit/s", n)).ToArray(); selected = p.Bitrate;
+        }
+        SetChoices(QualityCombo, choices, choices.MinBy(c => Math.Abs(c.Value - selected))!.Value);
+        ModeCombo.IsEnabled = modes.Length > 1;
+        ModePanel.Visibility = modes.Length > 1 ? Visibility.Visible : Visibility.Collapsed;
+        EncodingHint.Text = T[activeFormat == "FLAC" ? "FlacHint" : activeFormat == "WAV" ? "PcmHint" : EncodingProfile.UsesQuality(activeFormat, p.Mode) ? activeFormat == "MP3" ? "Mp3VbrHint" : "VbrHint" : "BitrateHint"];
+        if (activeFormat == "Opus") EncodingHint.Text += "\n" + T["OpusHint"];
+        refreshing = false;
+        StoreOptions();
+    }
+    private void Quality_Changed(object sender, SelectionChangedEventArgs e) => StoreQuality();
+    private void Options_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (!ready || refreshing) return;
+        Preferences.Mode = (EncodingMode)Value(ModeCombo); Preferences.Rate = Value(RateCombo); Preferences.Channels = Value(ChannelCombo);
+        RefreshOptions();
+    }
+    private void Format_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (!ready) return;
+        StoreOptions(); activeFormat = Format.Id; RefreshOptions();
+    }
     private void German_Click(object sender, RoutedEventArgs e) => Texts.Current.Set(false);
     private void English_Click(object sender, RoutedEventArgs e) => Texts.Current.Set(true);
     private async void Add_Click(object sender, RoutedEventArgs e)
@@ -143,7 +206,10 @@ public partial class MainWindow : Window
     {
         if (busy) return;
         if (string.IsNullOrWhiteSpace(OutputBox.Text)) { ShowError(new ConversionError("OutputRequired")); return; }
-        var options = new ConvertOptions(Format, OutputBox.Text.Trim(), Value(QualityCombo), Value(RateCombo), Value(ChannelCombo), TagsCheck.IsChecked == true);
+        StoreOptions();
+        var p = Preferences;
+        var options = new ConvertOptions(Format, OutputBox.Text.Trim(), activeFormat == "WAV" ? p.Depth : p.Bitrate, p.Rate, p.Channels, TagsCheck.IsChecked == true,
+            p.Mode, p.VbrQuality, p.Compression, p.FlacDepth, p.Application switch { 1 => "voip", 2 => "lowdelay", _ => "audio" });
         var pending = rows.Where(r => r.Info != null).ToArray();
         SetBusy(true); ProgressBar.IsIndeterminate = false; ProgressBar.Value = 0;
         int success = 0, failed = 0, canceled = 0;
@@ -179,7 +245,6 @@ public partial class MainWindow : Window
         if (value) cancellation = new(); else { cancellation?.Dispose(); cancellation = null; }
         OptionsPanel.IsEnabled = AddButton.IsEnabled = FolderButton.IsEnabled = RemoveButton.IsEnabled = ClearButton.IsEnabled = !value;
         DestinationPanel.IsEnabled = !value;
-        if (!value) QualityCombo.IsEnabled = Format.Id != "FLAC";
         CancelButton.Visibility = value ? Visibility.Visible : Visibility.Collapsed; CancelButton.IsEnabled = true;
         StartButton.Visibility = value ? Visibility.Collapsed : Visibility.Visible;
         ProgressBar.Visibility = value || ProgressBar.Value > 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -205,6 +270,7 @@ public partial class MainWindow : Window
     {
         if (busy) { e.Cancel = true; if (closeAfterCancel || !PreviewDialog.Show(this, T["CloseQuestion"], true)) return; closeAfterCancel = true; cancellation?.Cancel(); SetStatus("Canceling"); return; }
         if (preview) return;
+        StoreOptions();
         settings.English = T.English; settings.Format = Format.Id; settings.OutputDirectory = OutputBox.Text; settings.Quality = Value(QualityCombo); settings.Rate = Value(RateCombo); settings.Channels = Value(ChannelCombo); settings.Tags = TagsCheck.IsChecked == true;
         try { settings.Save(); } catch (Exception error) { App.Log(error); }
     }

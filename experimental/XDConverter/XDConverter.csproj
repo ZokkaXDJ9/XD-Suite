@@ -3,7 +3,9 @@
     <OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework><UseWPF>true</UseWPF>
     <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
     <AssemblyName>XDConverter.Preview</AssemblyName><Product>XD Konverter Vorschau</Product>
-    <Version>0.1.1-preview.1</Version><ApplicationManifest>app.manifest</ApplicationManifest>
+    <SuiteVersion>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)..\..\XDSuite\XDSuite.csproj')), '&lt;Version&gt;([^&lt;]+)&lt;/Version&gt;').Groups[1].Value)</SuiteVersion>
+    <Version>$(SuiteVersion)</Version><InformationalVersion>$(SuiteVersion)-preview+audio-options</InformationalVersion>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets/XDConverter.ico</ApplicationIcon>
     <Description>Lokale Audiokonvertierung - Vorschau</Description>
   </PropertyGroup>
