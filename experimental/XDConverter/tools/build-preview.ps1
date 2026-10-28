@@ -16,6 +16,7 @@ function ProductionSnapshot {
     $result
 }
 $before = ProductionSnapshot
+& (Join-Path $PSScriptRoot 'build-icon.ps1')
 New-Item -ItemType Directory -Path $appRoot -Force | Out-Null
 $engineRoot = & (Join-Path $PSScriptRoot 'get-engine.ps1')
 if (-not (Test-Path -LiteralPath (Join-Path $engineRoot 'bin\ffmpeg.exe'))) { throw 'Verified engine missing.' }

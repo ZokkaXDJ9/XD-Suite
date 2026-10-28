@@ -82,6 +82,8 @@ internal static class SelfTest
             Texts.Current.Set(false);
             var window = new MainWindow(engine, new PreviewSettings(), true); window.Show(); window.SetPreview();
             await window.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
+            IconChecks.VerifyWindowAndExe(window, root);
+            checks.Add("PASS: embedded EXE icon, all nine ICO resolutions and native window/taskbar icon match the converter artwork.");
             var grid = (DataGrid)window.FindName("FilesGrid"); string filename = ((AudioRow)grid.Items[0]).Name;
             Texts.Current.Set(true); await window.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
             Check(window.Title == "XD Converter" && ((Button)window.FindName("StartButton")).Content.ToString() == "Convert", "English UI");

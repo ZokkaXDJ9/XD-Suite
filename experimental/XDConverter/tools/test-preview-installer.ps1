@@ -3,16 +3,17 @@ param()
 $ErrorActionPreference = 'Stop'
 $previewRoot = Split-Path -Parent $PSScriptRoot
 $projectRoot = Split-Path -Parent (Split-Path -Parent $previewRoot)
-$id = '{D22B76B3-3CED-4977-9E12-86CA4C4D237A}_is1'
-foreach ($hive in @('HKCU','HKLM')) {
-    if (Test-Path -LiteralPath ($hive + ':\Software\Microsoft\Windows\CurrentVersion\Uninstall\' + $id)) { throw 'An existing preview installation must not be replaced by this test.' }
-}
+$testGuid = [Guid]::NewGuid().ToString().ToUpperInvariant()
+$id = '{' + $testGuid + '}_is1'
+$testName = 'XD Converter Preview Test ' + $testGuid.Substring(0,8)
 $root = Join-Path $projectRoot ('artifacts\converter-preview\installer-test-' + [Guid]::NewGuid().ToString('N'))
 $target = Join-Path $root 'installed'
 New-Item -ItemType Directory -Path $root -Force | Out-Null
 $script = [System.IO.File]::ReadAllText((Join-Path $previewRoot 'installer\Preview.iss'))
 $script = [regex]::Replace($script,'(?m)^#define Root.*$','#define Root "' + $projectRoot + '\"')
 $script = $script.Replace('PrivilegesRequired=admin','PrivilegesRequired=lowest')
+$script = $script.Replace('D22B76B3-3CED-4977-9E12-86CA4C4D237A',$testGuid).Replace('AppMutex=Local\XDConverter.Preview.App','AppMutex=Local\XDConverter.Preview.Test.' + $testGuid)
+$script = $script.Replace('english.ConverterName=XD Converter Preview','english.ConverterName=' + $testName).Replace('german.ConverterName=XD Konverter Vorschau','german.ConverterName=' + $testName)
 $script = [regex]::Replace($script,'(?m)^OutputDir=.*$','OutputDir=' + $root)
 $script = [regex]::Replace($script,'(?m)^OutputBaseFilename=.*$','OutputBaseFilename=test-setup')
 $source = Join-Path $root 'test.iss'
@@ -30,8 +31,12 @@ try {
     if ($test.ExitCode -ne 0) { throw "Installed application tests failed: $report" }
     $checks.Add('PASS: separate preview installer installs the tested EXE and engine; all actual conversions and bilingual UI tests pass from the installed copy.')
     $key = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\' + $id
-    if (-not (Test-Path -LiteralPath $key) -or -not (Test-Path -LiteralPath (Join-Path ([Environment]::GetFolderPath('Programs')) 'XD Converter Preview.lnk'))) { throw 'Preview registration or English shortcut missing.' }
+    $shortcut = Join-Path ([Environment]::GetFolderPath('Programs')) ($testName + '.lnk')
+    if (-not (Test-Path -LiteralPath $key) -or -not (Test-Path -LiteralPath $shortcut)) { throw 'Preview registration or English shortcut missing.' }
     $checks.Add('PASS: independent preview registration and language-specific Start menu shortcut.')
+    $link = (New-Object -ComObject WScript.Shell).CreateShortcut($shortcut)
+    if ($link.TargetPath -ne $exe -or $link.IconLocation -notin @(($exe + ',0'),($exe + ', 0'))) { throw ('Unexpected shortcut: target=' + $link.TargetPath + '; icon=' + $link.IconLocation) }
+    $checks.Add('PASS: Start menu shortcut explicitly uses the installed converter EXE icon at index zero.')
     [System.IO.File]::WriteAllText((Join-Path $target 'personal-file.txt'),'retain')
 }
 finally {
@@ -42,6 +47,6 @@ finally {
 }
 if ((Test-Path -LiteralPath $key) -or [System.IO.File]::ReadAllText((Join-Path $target 'personal-file.txt')) -ne 'retain') { throw 'Preview uninstall registration or data retention failed.' }
 $checks.Add('PASS: preview test installation removed; unrelated personal file retained.')
-$checks.Add('NOTE: actual local preview payload and setup script; administrator elevation disabled only for this isolated test. Production Suite and Burner installers are never run.')
+$checks.Add('NOTE: actual local preview payload and setup script; isolated AppId and shortcut name, with elevation disabled for this test only. Existing Preview, Suite and Burner installations are not changed.')
 [System.IO.File]::WriteAllLines((Join-Path $projectRoot 'artifacts\converter-preview\installer-test.txt'),$checks)
 $checks

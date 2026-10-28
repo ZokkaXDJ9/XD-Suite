@@ -11,7 +11,7 @@ public sealed class Texts : INotifyPropertyChanged
     public event EventHandler? Changed;
     private static readonly Dictionary<string, (string De, string En)> values = new()
     {
-        ["Title"] = ("XD Konverter", "XD Converter"), ["Preview"] = ("Vorschau · Audio · 0.1.0", "Preview · Audio · 0.1.0"),
+        ["Title"] = ("XD Konverter", "XD Converter"), ["Preview"] = ("Vorschau · Audio · 0.1.1", "Preview · Audio · 0.1.1"),
         ["Intro"] = ("Audiodateien in ein anderes Format umwandeln.", "Convert audio files to another format."),
         ["Files"] = ("Dateien", "Files"), ["Name"] = ("DATEI", "FILE"), ["Duration"] = ("LÄNGE", "DURATION"), ["Source"] = ("QUELLFORMAT", "SOURCE FORMAT"), ["Status"] = ("STATUS", "STATUS"),
         ["Add"] = ("Dateien hinzufügen", "Add files"), ["Folder"] = ("Ordner hinzufügen", "Add folder"), ["Remove"] = ("Entfernen", "Remove"), ["Clear"] = ("Leeren", "Clear"),

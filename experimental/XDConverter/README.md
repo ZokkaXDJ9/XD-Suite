@@ -8,6 +8,8 @@ Die Originaldateien werden nicht verändert. Existiert ein Zielname bereits, erh
 
 ## Lokal bauen und testen
 
+Das Programmsymbol liegt als SVG unter `Assets/` vor. `tools/build-icon.ps1` erzeugt daraus das Windows-Icon mit neun Auflösungen und die Grafik für den Fensterkopf. Der Vorschau-Build führt diesen Schritt automatisch aus. EXE, Fenster, Startmenü und Setup verwenden dasselbe Symbol.
+
 Vom Repository-Verzeichnis aus:
 
 ```powershell
@@ -18,7 +20,7 @@ Vom Repository-Verzeichnis aus:
 Der Build lädt einen festgelegten [BtbN-LGPL-Build](https://github.com/BtbN/FFmpeg-Builds/releases/tag/autobuild-2026-10-28-19-47), prüft SHA-256 und verwendet FFmpeg/ffprobe als getrennte Prozesse. [FFmpeg nennt BtbN als Anbieter von Windows-Builds](https://ffmpeg.org/download.html). Version, Download und Build-Quellen stehen in `engine.lock.json`. Die Lizenz und die mitgelieferte Dokumentation werden in den Vorschau-Ordner kopiert. Es wird kein öffentlicher Binärdownload für den Konverter veröffentlicht.
 
 - Start ohne Installation: `artifacts/converter-preview/app/XDConverter.Preview.exe`.
-- Optionales separates Setup: `artifacts/converter-preview/XD-Konverter-Vorschau-Setup-0.1.0.exe`.
+- Optionales separates Setup: `artifacts/converter-preview/XD-Konverter-Vorschau-Setup-0.1.1.exe`.
 - Testbericht: `artifacts/converter-preview/converter-tests.txt`.
 - Prüfung unveränderter Live-Quellen: `artifacts/converter-preview/isolation-check.txt`.
 - Isolierter Installer-Test: `artifacts/converter-preview/installer-test.txt` (Elevation nur in der Testkopie ausgeschaltet).
