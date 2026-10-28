@@ -422,7 +422,7 @@ public partial class MainWindow : Window
     }
 
     private void Help_Click(object sender, RoutedEventArgs e) => LocalizedDialog.Show(this,
-        "XD Brenner 0.4.0\n\nDaten-CD: Dateien und Ordner hinzufügen und brennen. „Als ISO speichern“ funktioniert auch ohne Brenner.\n\nAudio-CD: MP3/WAV/OGG hinzufügen, Titel per Ziehen oder mit ↑/↓ ordnen. Pause zwischen Titeln auswählbar, auch 0 Sekunden. Kein CD-Text.\n\nISO brennen: Daten-ISO auswählen und brennen.\n\nCD-RW löschen: Schnell oder vollständig löschen. CD-Rs sind nicht löschbar.\n\nNach dem Einlegen einer CD „Aktualisieren“ wählen. Es werden leere CD-R/CD-RW verwendet und abgeschlossene CDs erstellt. Kein Multisession.\n\nLizenz: MIT. Audioumwandlung: NAudio und NVorbis (MIT).\nFehlerprotokolle: %LOCALAPPDATA%\\XDBurner\\Logs.", "Über XD Brenner", MessageBoxButton.OK, MessageBoxImage.Information);
+        "XD Brenner 0.4.1\n\nDaten-CD: Dateien und Ordner hinzufügen und brennen. „Als ISO speichern“ funktioniert auch ohne Brenner.\n\nAudio-CD: MP3/WAV/OGG hinzufügen, Titel per Ziehen oder mit ↑/↓ ordnen. Pause zwischen Titeln auswählbar, auch 0 Sekunden. Kein CD-Text.\n\nISO brennen: Daten-ISO auswählen und brennen.\n\nCD-RW löschen: Schnell oder vollständig löschen. CD-Rs sind nicht löschbar.\n\nNach dem Einlegen einer CD „Aktualisieren“ wählen. Es werden leere CD-R/CD-RW verwendet und abgeschlossene CDs erstellt. Kein Multisession.\n\nLizenz: MIT. Audioumwandlung: NAudio und NVorbis (MIT).\nFehlerprotokolle: %LOCALAPPDATA%\\XDBurner\\Logs.", "Über XD Brenner", MessageBoxButton.OK, MessageBoxImage.Information);
 
     private void Window_Closing(object? sender, CancelEventArgs e)
     {

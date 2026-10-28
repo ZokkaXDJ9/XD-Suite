@@ -16,6 +16,7 @@ internal static class Program
     [STAThread]
     private static void Main(string[] args)
     {
+        Environment.CurrentDirectory = Path.GetTempPath();
         if (Path.GetFileName(Application.ExecutablePath).Equals("XDSuite.exe", StringComparison.OrdinalIgnoreCase))
         {
             // Compatibility forwarder for the first update out of the old per-user directory.
@@ -62,10 +63,12 @@ internal sealed class UpdateWindow : Form
     private readonly Options options;
     private readonly Label status;
     private readonly string log;
+    private readonly string setupLog;
     public UpdateWindow(Options options)
     {
         this.options = options;
         log = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "update.log");
+        setupLog = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "setup.log");
         Text = "XD Suite Update"; ClientSize = new Size(450, 115); FormBorderStyle = FormBorderStyle.FixedDialog;
         StartPosition = FormStartPosition.CenterScreen; ControlBox = false; Font = new Font("Segoe UI", 10);
         status = new Label { Text = T("XD Suite wird beendet …", "Waiting for XD Suite to exit …"), AutoSize = false, Location = new Point(22, 20), Size = new Size(406, 32) };
@@ -84,7 +87,16 @@ internal sealed class UpdateWindow : Form
             await Task.Run(Verify);
             status.Text = T("Update wird installiert …", "Installing update …");
             int exitCode = await Task.Run(Install);
-            if (exitCode != 0 && exitCode != 3010) throw new IOException(T("Das Setup wurde mit Fehlercode ", "Installer exited with error code ") + exitCode + ".");
+            if (exitCode != 0 && exitCode != 3010)
+            {
+                string detail = "";
+                if (File.Exists(setupLog))
+                {
+                    string? line = File.ReadLines(setupLog).LastOrDefault(l => l.Contains("PrepareToInstall failed:"));
+                    if (line != null) detail = "\n\n" + line.Substring(line.IndexOf("PrepareToInstall failed:", StringComparison.Ordinal) + 24).Trim();
+                }
+                throw new IOException(T("Das Setup wurde mit Fehlercode ", "Installer exited with error code ") + exitCode + "." + detail + T("\n\nSetup-Protokoll: ", "\n\nSetup log: ") + setupLog);
+            }
             installed = true;
             if (exitCode == 3010) MessageBox.Show(T("Das Update ist installiert. Windows muss neu gestartet werden.", "The update is installed. Windows needs to be restarted."), Text);
             status.Text = T("XD Suite wird gestartet …", "Starting XD Suite …");
@@ -120,8 +132,8 @@ internal sealed class UpdateWindow : Form
         // Update the current directory through the SAME installer and AppId. No uninstaller is invoked.
         var start = new ProcessStartInfo(options.Setup)
         {
-            UseShellExecute = true, WindowStyle = ProcessWindowStyle.Hidden,
-            Arguments = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /COMPONENTS=suite /LANG=" + options.Language + " /DIR=" + Quote(options.InstallTarget)
+            UseShellExecute = true, WindowStyle = ProcessWindowStyle.Hidden, WorkingDirectory = Path.GetTempPath(),
+            Arguments = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /COMPONENTS=suite /LANG=" + options.Language + " /DIR=" + Quote(options.InstallTarget) + " /LOG=" + Quote(setupLog)
         };
         File.AppendAllText(log, "Starting update setup: " + options.Setup + "\nTarget: " + options.InstallTarget + "\n");
         using (var installer = Process.Start(start) ?? throw new IOException("Installer could not be started.")) { installer.WaitForExit(); return installer.ExitCode; }

@@ -1,4 +1,4 @@
-#define AppVersion "0.4.0"
+#define AppVersion "0.4.1"
 #define Root AddBackslash(SourcePath) + "..\"
 #define ProgramId "{B5AF424C-85D1-47D4-AF62-30A5A15C5094}"
 #define ProgramFolder "XDBurner"
@@ -32,7 +32,7 @@ SetupLogging=yes
 CloseApplications=yes
 RestartApplications=no
 AppMutex=Local\XDBurner.App,Local\KlarBrand.App
-VersionInfoVersion=0.4.0.0
+VersionInfoVersion=0.4.1.0
 VersionInfoDescription=XD Burner Installation
 VersionInfoProductName=XD Brenner / XD Burner
 VersionInfoCopyright=2026 XD Suite contributors
@@ -73,6 +73,8 @@ german.WelcomeLabel2=Dieses Setup installiert XD Brenner.%n%nFunktionen: Daten-C
 english.WelcomeLabel2=This setup installs XD Burner.%n%nFunctions: data CDs, audio CDs, ISO images and CD-RW erasing.%n%nThe language can also be changed in the application.
 
 [CustomMessages]
+german.CopyInstallError=Die vorhandene Installation konnte nicht übernommen werden.%nPfad: %1%n%2%nDie bisherige Installation bleibt erhalten.
+english.CopyInstallError=The existing installation could not be transferred.%nPath: %1%n%2%nThe previous installation has been retained.
 german.MoveInstallError=Der bisherige Programmordner konnte nicht nach Programme verschoben werden. Bitte das Programm schließen und erneut versuchen.
 english.MoveInstallError=The previous application folder could not be moved to Program Files. Close the application and try again.
 german.BurnerName=XD Brenner

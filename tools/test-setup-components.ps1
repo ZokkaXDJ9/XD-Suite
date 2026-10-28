@@ -11,7 +11,7 @@ foreach ($folder in @('installer','dist\XDBurner','dist\XDSuite','XDBurner\Asset
 Copy-Item -LiteralPath (Join-Path $projectRoot 'LICENSE') -Destination $fixtureRoot
 foreach ($app in @('XDBurner','XDSuite')) { Copy-Item -LiteralPath (Join-Path $projectRoot ($app + '\Assets\' + $app + '.ico')) -Destination (Join-Path $fixtureRoot ($app + '\Assets')) }
 $stub = Join-Path $fixtureRoot 'stub.cs'
-[System.IO.File]::WriteAllText($stub,'class Fixture { static void Main(string[] args) { if (args.Length == 2 && args[0] == "--record-uninstall") System.IO.File.WriteAllText(args[1], "uninstalled"); } }',$encoding)
+[System.IO.File]::WriteAllText($stub,'class Fixture { static void Main(string[] args) { if (args.Length == 2 && args[0] == "--record-uninstall") System.IO.File.WriteAllText(args[1], "uninstalled"); if (args.Length == 3 && args[0] == "--hold-directory") { System.IO.File.WriteAllText(args[1], "ready"); while (!System.IO.File.Exists(args[2])) System.Threading.Thread.Sleep(100); } } }',$encoding)
 foreach ($app in @('XDBurner','XDSuite')) {
     & $csc /nologo /target:winexe ('/out:' + (Join-Path $fixtureRoot ('dist\' + $app + '\' + $app + '.exe'))) $stub
     if ($LASTEXITCODE -ne 0) { throw 'Fixture compilation failed.' }
@@ -34,7 +34,7 @@ foreach ($app in @('XDBurner','XDSuite')) {
     & $compiler /Q (Join-Path $fixtureRoot ('installer\' + $app + '.iss'))
     if ($LASTEXITCODE -ne 0) { throw 'Production-script fixture compilation failed.' }
 }
-$suiteSetup = Join-Path $fixtureRoot 'dist\XD-Suite-Setup-0.4.0.exe'
+$suiteSetup = Join-Path $fixtureRoot 'dist\XD-Suite-Setup-0.4.1.exe'
 $suiteDir = Join-Path $fixtureRoot 'installed-XDSuite'
 $burnerDir = Join-Path $fixtureRoot 'installed-XDBurner'
 function Run([string]$file,[string]$arguments) {
@@ -89,10 +89,34 @@ Run (Join-Path $fixtureRoot 'legacy-setup.exe') '/VERYSILENT /SUPPRESSMSGBOXES /
 [System.IO.File]::WriteAllText((Join-Path $legacy 'settings.json'),'{"preserve":true}')
 [System.IO.File]::WriteAllText((Join-Path $legacy 'personal-file.txt'),'preserve this file')
 $before = (Get-FileHash -LiteralPath (Join-Path $legacy 'settings.json')).Hash
-Run $suiteSetup ('/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /LANG=english /COMPONENTS=suite /TASKS="" /DIR="' + $legacy + '"')
+$fileLock = [System.IO.File]::Open((Join-Path $legacy 'personal-file.txt'),[System.IO.FileMode]::Open,[System.IO.FileAccess]::Read,[System.IO.FileShare]::None)
+try {
+    $failedSetup = Start-Process -FilePath $suiteSetup -ArgumentList ('/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /COMPONENTS=suite /TASKS="" /DIR="' + $legacy + '"') -PassThru -Wait -WindowStyle Hidden
+    Check ($failedSetup.ExitCode -eq 7) 'Unreadable source file prevents the update before installation begins.'
+}
+finally { $fileLock.Dispose() }
+Check ((Test-Path -LiteralPath (Join-Path $legacy 'XDSuite.exe')) -and (Get-FileHash -LiteralPath (Join-Path $legacy 'settings.json')).Hash -eq $before) 'Failed preparation leaves the previous application and settings intact.'
+Check (@(Get-ChildItem -LiteralPath $suiteDir -Filter '*.xd-migration*' -Recurse -File).Count -eq 0) 'Failed copies leave no partial destination files.'
+[System.IO.File]::WriteAllText((Join-Path $legacy 'existing-destination.txt'),'old source')
+[System.IO.File]::WriteAllText((Join-Path $suiteDir 'existing-destination.txt'),'retain newer destination')
+$ready = Join-Path $fixtureRoot 'directory-lock-ready.txt'
+$release = Join-Path $fixtureRoot 'directory-lock-release.txt'
+$holder = Start-Process -FilePath (Join-Path $fixtureRoot 'dist\XDSuite\XDSuite.exe') -WorkingDirectory $legacy -ArgumentList ('--hold-directory "' + $ready + '" "' + $release + '"') -PassThru -WindowStyle Hidden
+try {
+    $deadline = [DateTime]::UtcNow.AddSeconds(10)
+    while (-not (Test-Path -LiteralPath $ready)) { if ([DateTime]::UtcNow -gt $deadline) { throw 'Directory-lock fixture did not start.' }; Start-Sleep -Milliseconds 100 }
+    Check (-not $holder.HasExited) 'Previous installation directory is held open throughout the update.'
+    Run $suiteSetup ('/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /LANG=english /COMPONENTS=suite /TASKS="" /DIR="' + $legacy + '"')
+}
+finally {
+    [System.IO.File]::WriteAllText($release,'release')
+    if (-not $holder.WaitForExit(10000)) { throw 'Directory-lock fixture did not exit.' }
+}
+Check (-not $holder.HasExited -or $holder.ExitCode -eq 0) 'Updater working-directory lock fixture closed normally.'
 Check (Test-Path -LiteralPath (Join-Path $suiteDir 'XDSuite.exe')) 'Legacy AppData /DIR is redirected to the new default application directory.'
 Check ((Get-FileHash -LiteralPath (Join-Path $suiteDir 'settings.json')).Hash -eq $before) 'Relocation retains existing settings byte for byte.'
 Check ([System.IO.File]::ReadAllText((Join-Path $suiteDir 'personal-file.txt')) -eq 'preserve this file') 'Relocation retains unrelated user files.'
+Check ([System.IO.File]::ReadAllText((Join-Path $suiteDir 'existing-destination.txt')) -eq 'retain newer destination') 'Retry preserves files already present in the destination.'
 Check (-not (Test-Path -LiteralPath $uninstallMarker)) 'Relocation never invokes the old uninstaller.'
 $key = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{' + $ids['XDSuite'] + '}_is1'
 Check (((Get-ItemProperty -LiteralPath $key).InstallLocation).TrimEnd('\') -eq $suiteDir) 'Installation registration points to the new directory.'

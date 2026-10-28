@@ -1,6 +1,21 @@
 [Code]
 var LegacyPaths: TArrayOfString;
 
+function CopyMigrationFile(ExistingFile, NewFile: String; FailIfExists: Integer): Integer;
+external 'CopyFileW@kernel32.dll stdcall';
+function CommitMigrationFile(ExistingFile, NewFile: String): Integer;
+external 'MoveFileW@kernel32.dll stdcall';
+
+function IsLegacyUninstaller(Name: String): Boolean;
+var I: Integer;
+begin
+  Result := False;
+  if (Length(Name) <> 12) or (Lowercase(Copy(Name, 1, 5)) <> 'unins') then Exit;
+  for I := 6 to 8 do if (Name[I] < '0') or (Name[I] > '9') then Exit;
+  Name := Lowercase(ExtractFileExt(Name));
+  Result := (Name = '.exe') or (Name = '.dat') or (Name = '.msg');
+end;
+
 function IsLegacyDir(Path: String): Boolean;
 begin
   Path := RemoveBackslashUnlessRoot(Path);
@@ -40,20 +55,76 @@ begin
   if IsLegacyDir(WizardDirValue) then WizardForm.DirEdit.Text := DefaultInstallDir('');
 end;
 
+function CopyLegacyFiles(Source, Target: String; var FailedPath: String; var ErrorCode: Integer): Boolean;
+var Search: TFindRec; SourceFile, TargetFile, Staged: String;
+begin
+  Result := False;
+  if not ForceDirectories(Target) then
+  begin
+    ErrorCode := 0; FailedPath := Target; Exit;
+  end;
+  if FindFirst(AddBackslash(Source) + '*', Search) then
+  try
+    repeat
+      if (Search.Name <> '.') and (Search.Name <> '..') then
+      begin
+        SourceFile := AddBackslash(Source) + Search.Name;
+        TargetFile := AddBackslash(Target) + Search.Name;
+        if IsLegacyUninstaller(Search.Name) then
+          Log('Using the new setup uninstaller instead of importing: ' + SourceFile)
+        else if (Search.Attributes and $400) <> 0 then
+          Log('Leaving link in the previous directory: ' + SourceFile)
+        else if (Search.Attributes and FILE_ATTRIBUTE_DIRECTORY) <> 0 then
+        begin
+          if not CopyLegacyFiles(SourceFile, TargetFile, FailedPath, ErrorCode) then Exit;
+        end
+        else if not FileExists(TargetFile) then
+        begin
+          { Copy to a new file first. A failed copy cannot leave a partial destination
+            that a subsequent update would mistake for an existing user file. }
+          Staged := TargetFile + '.xd-migration';
+          while FileExists(Staged) or DirExists(Staged) do Staged := Staged + 'x';
+          if CopyMigrationFile(PathConvertNormalToSuper(SourceFile), PathConvertNormalToSuper(Staged), 1) = 0 then
+          begin
+            ErrorCode := DLLGetLastError; FailedPath := SourceFile;
+            DeleteFile(Staged); Exit;
+          end;
+          if CommitMigrationFile(PathConvertNormalToSuper(Staged), PathConvertNormalToSuper(TargetFile)) = 0 then
+          begin
+            ErrorCode := DLLGetLastError; FailedPath := TargetFile;
+            DeleteFile(Staged); Exit;
+          end;
+        end;
+      end;
+    until not FindNext(Search);
+  finally FindClose(Search); end;
+  Result := True;
+end;
+
 function PrepareToInstall(var NeedsRestart: Boolean): String;
-var I: Integer; Target: String;
+var I, ErrorCode: Integer; Target, FailedPath, Details: String;
 begin
   Result := '';
   Target := RemoveBackslashUnlessRoot(ExpandConstant('{app}'));
   for I := 0 to GetArrayLength(LegacyPaths) - 1 do
-    if DirExists(LegacyPaths[I]) and (CompareText(LegacyPaths[I], Target) <> 0) and not DirExists(Target) then
+    if DirExists(LegacyPaths[I]) and (CompareText(LegacyPaths[I], Target) <> 0) then
     begin
-      { Relocate the existing installation, including its log and any user files.
-        The normal setup then updates it. No uninstaller is executed. }
-      if not RenameFile(LegacyPaths[I], Target) then
+      if Pos(Lowercase(AddBackslash(LegacyPaths[I])), Lowercase(AddBackslash(Target))) = 1 then
       begin
         Result := CustomMessage('MoveInstallError');
         Exit;
+      end;
+      { An older helper may still hold the previous directory as its working directory.
+        Copy without renaming it; keep the source intact until the setup succeeds.
+        New directories inherit Program Files permissions. Existing destination files
+        are retained; the normal setup replaces its own application files afterwards. }
+      Log('Copying previous installation: ' + LegacyPaths[I] + ' -> ' + Target);
+      if not CopyLegacyFiles(LegacyPaths[I], Target, FailedPath, ErrorCode) then
+      begin
+        Details := '';
+        if ErrorCode <> 0 then Details := SysErrorMessage(ErrorCode);
+        Result := FmtMessage(CustomMessage('CopyInstallError'), [FailedPath, Details]);
+        Log(Result); Exit;
       end;
     end;
 end;
@@ -71,8 +142,7 @@ begin
   if FindFirst(AddBackslash(Path) + 'unins*.*', Search) then
   try
     repeat
-      if (Search.Attributes and FILE_ATTRIBUTE_DIRECTORY = 0) and
-        ((CompareText(ExtractFileExt(Search.Name), '.exe') = 0) or (CompareText(ExtractFileExt(Search.Name), '.dat') = 0) or (CompareText(ExtractFileExt(Search.Name), '.msg') = 0)) then DeleteFile(AddBackslash(Path) + Search.Name);
+      if ((Search.Attributes and FILE_ATTRIBUTE_DIRECTORY) = 0) and IsLegacyUninstaller(Search.Name) then DeleteFile(AddBackslash(Path) + Search.Name);
     until not FindNext(Search);
   finally FindClose(Search); end;
   if FindFirst(ExpandConstant('{app}\licenses\*'), Search) then

@@ -4,10 +4,10 @@ XD Brenner ist ein Windows-Programm zum Brennen von CDs. XD Suite verwaltet und 
 
 ## Installation und Sprache
 
-- **`dist/XD-Brenner-Setup-0.4.0.exe`** installiert nur XD Brenner.
-- **`dist/XD-Suite-Setup-0.4.0.exe`** installiert XD Suite und die im Setup ausgewählten Programme. XD Brenner ist enthalten und einzeln abwählbar.
+- **`dist/XD-Brenner-Setup-0.4.1.exe`** installiert nur XD Brenner.
+- **`dist/XD-Suite-Setup-0.4.1.exe`** installiert XD Suite und die im Setup ausgewählten Programme. XD Brenner ist enthalten und einzeln abwählbar.
 
-Beide Setups fordern Administratorrechte an und zeigen eine Sprachauswahl für Deutsch und Englisch. Frische Installationen verwenden `%ProgramFiles%\XDBurner` bzw. `XDSuite`. Ältere Installationen unter AppData werden ohne Deinstaller nach Programme verschoben und dort aktualisiert. Die benötigte .NET-Laufzeit ist enthalten; auch das auswählbare Brenner-Setup benötigt keinen weiteren Download.
+Beide Setups fordern Administratorrechte an und zeigen eine Sprachauswahl für Deutsch und Englisch. Frische Installationen verwenden `%ProgramFiles%\XDBurner` bzw. `XDSuite`. Ältere Installationen unter AppData werden ohne Deinstaller nach Programme übernommen und dort aktualisiert. Auch wenn ein alter Updatehelfer den bisherigen Ordner offen hält, werden vorhandene Dateien übernommen. Die alte Installation bleibt bis zum erfolgreichen Abschluss erhalten; eigene Dateien werden nicht gelöscht. Die benötigte .NET-Laufzeit ist enthalten; auch das auswählbare Brenner-Setup benötigt keinen weiteren Download.
 
 In beiden Apps wechselt **Sprache / Language → Deutsch / English** die Oberfläche direkt. Die Auswahl wird gespeichert und von beiden Apps beim nächsten Start übernommen. Dateinamen und eigene Eingaben bleiben erhalten. Windows-Dateiauswahldialoge folgen der Betriebssystemsprache.
 

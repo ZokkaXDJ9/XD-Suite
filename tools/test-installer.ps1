@@ -15,8 +15,8 @@ foreach ($key in @($burnerKey,$suiteKey,$burnerKey.Replace('HKLM:','HKCU:'),$sui
 $report = [System.Collections.Generic.List[string]]::new()
 $report.Add('XD Suite / XD Burner installation round-trip')
 $report.Add([DateTimeOffset]::Now.ToString('O'))
-$suiteSetup = Join-Path $projectRoot 'dist\XD-Suite-Setup-0.4.0.exe'
-$burnerSetup = Join-Path $projectRoot 'dist\XD-Brenner-Setup-0.4.0.exe'
+$suiteSetup = Join-Path $projectRoot 'dist\XD-Suite-Setup-0.4.1.exe'
+$burnerSetup = Join-Path $projectRoot 'dist\XD-Brenner-Setup-0.4.1.exe'
 $menuRoot = [Environment]::GetFolderPath('CommonPrograms')
 function Run-Process([string]$file,[string[]]$arguments) {
     $p = Start-Process -FilePath $file -ArgumentList $arguments -PassThru -Wait -WindowStyle Hidden

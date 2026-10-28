@@ -54,7 +54,7 @@ public static class SuiteUpdates
         string helper = Path.Combine(directory, "XDUpdateHelper.exe");
         File.Copy(source, helper);
         if (File.Exists(source + ".config")) File.Copy(source + ".config", helper + ".config");
-        var start = new ProcessStartInfo(helper) { UseShellExecute = false, CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden };
+        var start = new ProcessStartInfo(helper) { UseShellExecute = false, CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden, WorkingDirectory = directory };
         foreach (string argument in new[] { "--parent", Environment.ProcessId.ToString(), "--setup", installer, "--target", AppContext.BaseDirectory, "--sha256", package.InstallerSha256, "--language", L10n.Current == UiLanguage.German ? "german" : "english" }) start.ArgumentList.Add(argument);
         using var process = Process.Start(start) ?? throw new IOException("Die Updatekomponente konnte nicht gestartet werden.");
     }
