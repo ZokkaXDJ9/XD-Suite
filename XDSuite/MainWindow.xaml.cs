@@ -113,7 +113,7 @@ public partial class MainWindow : Window
         StatusText.Text = "Verbindung zu GitHub Releases wird hergestellt.";
         try
         {
-            var updated = await transport.FetchCatalog(settings.CatalogUri, cancellation!.Token);
+            var updated = await transport.FetchLatestCatalog(settings.Repository, cancellation!.Token);
             Directory.CreateDirectory(SuiteSettings.DataDirectory);
             string temporary = CachePath + "." + Guid.NewGuid().ToString("N") + ".tmp";
             try { await File.WriteAllTextAsync(temporary, JsonSerializer.Serialize(updated, PackageValidation.JsonOptions)); File.Move(temporary, CachePath, true); }

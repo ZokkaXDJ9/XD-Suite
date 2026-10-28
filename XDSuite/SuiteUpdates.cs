@@ -19,7 +19,7 @@ public static class SuiteUpdates
         SuiteSettings.ValidateRepository(repository);
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
         timeout.CancelAfter(TimeSpan.FromSeconds(15));
-        string json = await ReadText(transport, new($"https://api.github.com/repos/{repository}/releases/latest"), 1_048_576, timeout.Token);
+        string json = await ReadText(transport, LatestReleaseUri(repository), 1_048_576, timeout.Token);
         using var document = JsonDocument.Parse(json);
         var release = document.RootElement;
         if (release.GetProperty("draft").GetBoolean() || release.GetProperty("prerelease").GetBoolean()) return null;
@@ -60,7 +60,8 @@ public static class SuiteUpdates
     }
 
     private static Version Normalize(Version v) => new(v.Major, v.Minor, Math.Max(0, v.Build), Math.Max(0, v.Revision));
-    private static async Task<string> ReadText(PackageTransport transport, Uri uri, int maximum, CancellationToken token)
+    internal static Uri LatestReleaseUri(string repository) => new($"https://api.github.com/repos/{repository}/releases/latest?check={DateTimeOffset.UtcNow.ToUnixTimeSeconds()}");
+    internal static async Task<string> ReadText(PackageTransport transport, Uri uri, int maximum, CancellationToken token)
     {
         using var response = await transport.Get(uri, token);
         if (response.Content.Headers.ContentLength > maximum) throw new InvalidDataException("Die Updatedaten sind zu groß.");

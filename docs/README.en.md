@@ -2,7 +2,7 @@
 
 XD Burner records CDs on Windows. XD Suite manages and launches the individually installable applications. C# / WPF, MIT license.
 
-Install **XD-Brenner-Setup-0.3.0.exe** for the standalone burner, or **XD-Suite-Setup-0.3.0.exe** for the launcher and selectable applications. The suite setup includes XD Burner; deselect it if it is not needed. Both setups request administrator privileges and offer German and English language selection. New installations use Program Files. Existing installations are updated in their current folder. The .NET runtime is included.
+Install **XD-Brenner-Setup-0.3.1.exe** for the standalone burner, or **XD-Suite-Setup-0.3.1.exe** for the launcher and selectable applications. The suite setup includes XD Burner; deselect it if it is not needed. Both setups request administrator privileges and offer German and English language selection. New installations use Program Files. Existing installations are updated in their current folder. The .NET runtime is included.
 
 Use **Sprache / Language → English / Deutsch** in either app to switch language immediately. Your choice is saved and used by both apps at their next launch. Filenames and user-entered disc names are preserved. Native Windows file pickers follow the operating-system language.
 

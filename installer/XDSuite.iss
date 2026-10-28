@@ -5,7 +5,7 @@
 [Setup]
 AppId={{F80CC53F-43F1-4E46-B7F4-61435E75303D}
 AppName=XD Suite
-AppVersion=0.3.0
+AppVersion=0.3.1
 AppPublisher=XD Suite
 DefaultDirName={code:DefaultInstallDir}
 DefaultGroupName=XD Suite
@@ -19,7 +19,7 @@ MinVersion=10.0.17763
 UninstallDisplayName=XD Suite
 UninstallDisplayIcon={app}\XDSuite.exe
 OutputDir={#Root}dist
-OutputBaseFilename=XD-Suite-Setup-0.3.0
+OutputBaseFilename=XD-Suite-Setup-0.3.1
 SetupIconFile={#Root}XDSuite\Assets\XDSuite.ico
 Compression=lzma2/normal
 SolidCompression=yes
@@ -29,7 +29,7 @@ SetupLogging=yes
 CloseApplications=yes
 RestartApplications=no
 AppMutex=Local\XDSuite.App
-VersionInfoVersion=0.3.0.0
+VersionInfoVersion=0.3.1.0
 VersionInfoDescription=XD Suite Installation
 VersionInfoProductName=XD Suite
 LicenseFile={#Root}LICENSE
@@ -46,7 +46,7 @@ Name: "suite"; Description: "XD Suite"; Types: full custom; Flags: fixed
 Name: "burner"; Description: "{cm:BurnerName}"; Types: full
 [Files]
 Source: "{#Root}dist\XDSuite\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#Root}dist\XD-Brenner-Setup-0.3.0.exe"; DestDir: "{tmp}"; Components: burner; Flags: deleteafterinstall
+Source: "{#Root}dist\XD-Brenner-Setup-0.3.1.exe"; DestDir: "{tmp}"; Components: burner; Flags: deleteafterinstall
 [Icons]
 Name: "{autoprograms}\XD Suite"; Filename: "{app}\XDSuite.exe"; WorkingDir: "{app}"
 Name: "{autodesktop}\XD Suite"; Filename: "{app}\XDSuite.exe"; WorkingDir: "{app}"; Tasks: desktopicon
@@ -74,7 +74,7 @@ begin
   begin
     if WizardIsComponentSelected('burner') then
     begin
-      if not Exec(ExpandConstant('{tmp}\XD-Brenner-Setup-0.3.0.exe'), '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /LANG=' + ActiveLanguage, '', SW_HIDE, ewWaitUntilTerminated, ExitCode) then
+      if not Exec(ExpandConstant('{tmp}\XD-Brenner-Setup-0.3.1.exe'), '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /LANG=' + ActiveLanguage, '', SW_HIDE, ewWaitUntilTerminated, ExitCode) then
         RaiseException(FmtMessage(CustomMessage('ToolInstallError'), [IntToStr(ExitCode)]));
       if (ExitCode <> 0) and (ExitCode <> 3010) then
         RaiseException(FmtMessage(CustomMessage('ToolInstallError'), [IntToStr(ExitCode)]));

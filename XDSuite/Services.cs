@@ -39,7 +39,7 @@ public sealed class PackageTransport : IDisposable
     public PackageTransport(HttpMessageHandler? handler = null)
     {
         client = new(handler ?? new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromMinutes(10) };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("XD-Suite/0.3.0");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("XD-Suite/0.3.1");
     }
     internal async Task<HttpResponseMessage> Get(Uri uri, CancellationToken token)
     {
@@ -75,6 +75,19 @@ public sealed class PackageTransport : IDisposable
             buffer.Write(chunk, 0, read);
         }
         return PackageValidation.Parse(System.Text.Encoding.UTF8.GetString(buffer.ToArray()));
+    }
+    public async Task<Catalog> FetchLatestCatalog(string repository, CancellationToken token)
+    {
+        SuiteSettings.ValidateRepository(repository);
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
+        timeout.CancelAfter(TimeSpan.FromSeconds(20));
+        string json = await SuiteUpdates.ReadText(this, SuiteUpdates.LatestReleaseUri(repository), 1_048_576, timeout.Token);
+        using var release = JsonDocument.Parse(json);
+        if (release.RootElement.GetProperty("draft").GetBoolean() || release.RootElement.GetProperty("prerelease").GetBoolean()) throw new InvalidDataException("Dieser Programmkatalog wird nicht unterstützt.");
+        var asset = release.RootElement.GetProperty("assets").EnumerateArray().SingleOrDefault(a => a.GetProperty("name").GetString() == "catalog.json");
+        if (asset.ValueKind == JsonValueKind.Undefined) throw new InvalidDataException("Der Programmkatalog ist leer.");
+        // Resolve the immutable asset URL; GitHub's latest/download redirect can be cached for an older release.
+        return await FetchCatalog(new(asset.GetProperty("browser_download_url").GetString()!), timeout.Token);
     }
     public async Task<string> Download(AppPackage app, string cacheDirectory, IProgress<DownloadProgress> progress, CancellationToken token)
     {

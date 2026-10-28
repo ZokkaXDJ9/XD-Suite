@@ -34,7 +34,7 @@ foreach ($app in @('XDBurner','XDSuite')) {
     & $compiler /Q (Join-Path $fixtureRoot ('installer\' + $app + '.iss'))
     if ($LASTEXITCODE -ne 0) { throw 'Production-script fixture compilation failed.' }
 }
-$suiteSetup = Join-Path $fixtureRoot 'dist\XD-Suite-Setup-0.3.0.exe'
+$suiteSetup = Join-Path $fixtureRoot 'dist\XD-Suite-Setup-0.3.1.exe'
 $suiteDir = Join-Path $fixtureRoot 'installed-XDSuite'
 $burnerDir = Join-Path $fixtureRoot 'installed-XDBurner'
 function Run([string]$file,[string]$arguments) {

@@ -28,6 +28,11 @@ internal static class SelfTest
             SuiteSettings.ValidateRepository("ZokkaXDJ9/XD-Suite");
             await Reject(() => Task.Run(() => SuiteSettings.ValidateRepository("../bad/repo")), "Invalid repository");
             lines.Add("PASS: catalog parsing, bilingual app names, duplicate IDs, executable traversal, HTTPS and repository validation");
+            string releaseCatalog = JsonSerializer.Serialize(catalog, PackageValidation.JsonOptions);
+            string releaseWithCatalog = JsonSerializer.Serialize(new { draft = false, prerelease = false, assets = new[] { new { name = "catalog.json", browser_download_url = "https://example.test/releases/v9/catalog.json" } } });
+            using var catalogTransport = new PackageTransport(new FakeHandler(request => new(HttpStatusCode.OK) { Content = new StringContent(request.RequestUri!.AbsolutePath.EndsWith("/releases/latest") ? releaseWithCatalog : request.RequestUri.AbsolutePath == "/releases/v9/catalog.json" ? releaseCatalog : throw new InvalidOperationException("Mutable latest/download URL must not be requested.")) }));
+            Check((await catalogTransport.FetchLatestCatalog("ZokkaXDJ9/XD-Suite", CancellationToken.None)).Apps.Single().Id == "xd-burner", "Catalog resolved from current release's immutable asset URL");
+            lines.Add("PASS: latest catalog uses the release API and immutable asset URL, bypassing stale latest/download redirects");
 
             byte[] payload = Enumerable.Range(0, 210123).Select(i => (byte)(i * 7)).ToArray();
             string hash = Convert.ToHexString(SHA256.HashData(payload));

@@ -6,15 +6,15 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$tag = 'v0.3.0'
+$tag = 'v0.3.1'
 if ($Repository -notmatch '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$') { throw 'Invalid repository.' }
 Push-Location $projectRoot
 try {
-    $assets = @('dist\XD-Suite-Setup-0.3.0.exe','dist\XD-Brenner-Setup-0.3.0.exe','dist\catalog.json','dist\SHA256SUMS.txt')
+    $assets = @('dist\XD-Suite-Setup-0.3.1.exe','dist\XD-Brenner-Setup-0.3.1.exe','dist\catalog.json','dist\SHA256SUMS.txt')
     foreach ($asset in $assets) { if (-not (Test-Path -LiteralPath $asset)) { throw "Missing release asset: $asset" } }
     $catalog = [System.IO.File]::ReadAllText((Join-Path $projectRoot 'dist\catalog.json')) | ConvertFrom-Json
     $burner = $catalog.apps | Where-Object id -eq 'xd-burner'
-    if ($burner.installerSha256 -ne (Get-FileHash -LiteralPath 'dist\XD-Brenner-Setup-0.3.0.exe').Hash -or $burner.installerUrl -notlike "https://github.com/$Repository/releases/download/$tag/*") { throw 'Catalog does not match the release assets or target repository.' }
+    if ($burner.installerSha256 -ne (Get-FileHash -LiteralPath 'dist\XD-Brenner-Setup-0.3.1.exe').Hash -or $burner.installerUrl -notlike "https://github.com/$Repository/releases/download/$tag/*") { throw 'Catalog does not match the release assets or target repository.' }
     if ($CreateRepository) {
         if (Test-Path -LiteralPath '.git') { throw 'A repository already exists. Refusing to initialize or switch branches.' }
         & gh repo create $Repository --public --description 'Windows CD burner and application launcher with German and English interfaces.'
@@ -33,10 +33,10 @@ try {
     & git diff --cached --check
     if ($LASTEXITCODE -ne 0) { throw 'Staged diff checks failed.' }
     & git diff --cached --quiet
-    if ($LASTEXITCODE -eq 1) { & git commit -m 'Add in-place suite updates, admin component setup and disc capacity details'; if ($LASTEXITCODE -ne 0) { throw 'Commit failed.' } }
+    if ($LASTEXITCODE -eq 1) { & git commit -m 'Resolve the current release catalog through the GitHub API'; if ($LASTEXITCODE -ne 0) { throw 'Commit failed.' } }
     & git push -u origin $branch
     if ($LASTEXITCODE -ne 0) { throw 'Push failed.' }
-    $releaseArgs = @('release','create',$tag,'--repo',$Repository,'--target',$branch,'--title','XD Suite & XD Burner 0.3.0','--notes-file','docs\release-notes-0.3.0.md')
+    $releaseArgs = @('release','create',$tag,'--repo',$Repository,'--target',$branch,'--title','XD Suite & XD Burner 0.3.1','--notes-file','docs\release-notes-0.3.1.md')
     if (-not $Publish) { $releaseArgs += '--draft' }
     $releaseArgs += $assets
     & gh @releaseArgs
