@@ -38,9 +38,10 @@ try {
     # A new draft has no public tag yet; resolve it through the authenticated release list.
     $remoteJson = & gh api "repos/$Repository/releases?per_page=100"
     if ($LASTEXITCODE -ne 0) { throw 'Draft release verification failed.' }
-    $matches = @($remoteJson | ConvertFrom-Json | Where-Object { $_.tag_name -eq $tag -and $_.draft -and $_.target_commitish -eq $commit })
-    if ($matches.Count -ne 1) { throw 'Expected exactly one unpublished draft for the tested commit.' }
-    $remote = $matches[0]
+    $releaseList = $remoteJson | ConvertFrom-Json
+    $draftMatches = @($releaseList | Where-Object { $_.tag_name -eq $tag -and $_.draft -and $_.target_commitish -eq $commit })
+    if ($draftMatches.Count -ne 1) { throw 'Expected exactly one unpublished draft for the tested commit.' }
+    $remote = $draftMatches[0]
     foreach ($asset in $assets) {
         $name = [IO.Path]::GetFileName($asset)
         $found = @($remote.assets | Where-Object name -eq $name)
