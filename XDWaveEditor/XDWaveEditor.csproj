@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework><UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
+    <Version>0.5.1</Version><InformationalVersion>$(Version)-preview+wave-editor.1</InformationalVersion>
+    <AssemblyName>XDWaveEditor.Preview</AssemblyName><RootNamespace>XDWaveEditor</RootNamespace>
+    <Product>XD Wave Editor Preview</Product><Description>Audiodateien bearbeiten und Stille entfernen.</Description>
+    <ApplicationManifest>app.manifest</ApplicationManifest><ApplicationIcon>Assets/XDWaveEditor.ico</ApplicationIcon>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+  <ItemGroup><Resource Include="Assets/XDWaveEditor.ico"/></ItemGroup>
+  <Target Name="ValidateSuiteVersion" BeforeTargets="BeforeBuild">
+    <PropertyGroup><SuiteVersion>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)..\XDSuite\XDSuite.csproj')), '&lt;Version&gt;([^&lt;]+)&lt;/Version&gt;').Groups[1].Value)</SuiteVersion></PropertyGroup>
+    <Error Condition="'$(Version)' != '$(SuiteVersion)'" Text="A new editor version must match the current suite working version."/>
+  </Target>
+</Project>
