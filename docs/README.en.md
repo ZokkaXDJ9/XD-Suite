@@ -2,9 +2,11 @@
 
 XD Burner records CDs on Windows. XD Suite manages and launches the individually installable applications. C# / WPF, MIT license.
 
-Install **XD-Brenner-Setup-0.4.1.exe** for the standalone burner, or **XD-Suite-Setup-0.5.0.exe** for the launcher and selectable applications. The suite setup includes XD Burner 0.4.1 and XD Converter 0.5.0; both are selectable. Unchanged applications retain their own version and original installer. Both setups request administrator privileges and offer German and English language selection. New installations use Program Files. Older AppData installations are transferred to Program Files without running an uninstaller, including when an older helper holds the previous folder open. The previous installation remains intact until setup succeeds; personal files are retained. The .NET runtime is included.
+Install **XD-Brenner-Setup-0.4.1.exe** for the standalone burner, or **XD-Suite-Setup-0.5.1.exe** for the launcher and selectable applications. The suite setup includes XD Burner 0.4.1 and XD Converter 0.5.0; both are selectable. Unchanged applications retain their own version and original installer. Both setups request administrator privileges and offer German and English language selection. New installations use Program Files. Older AppData installations are transferred to Program Files without running an uninstaller, including when an older helper holds the previous folder open. The previous installation remains intact until setup succeeds; personal files are retained. The .NET runtime is included.
 
 Use **Sprache / Language → English / Deutsch** in either app to switch language immediately. Your choice is saved and used by both apps at their next launch. Filenames and user-entered disc names are preserved. Native Windows file pickers follow the operating-system language.
+
+Use **Uninstall** in the suite to remove the selected installed application through its registered uninstaller, after confirmation. Cancelling keeps it installed; the suite refreshes its status afterwards.
 
 Each app has its own EXE, installer, Start menu shortcut and uninstaller. Removing the suite does not remove other apps. They run independently of the launcher. Keep portable application folders intact, including the suite catalog and update helper.
 

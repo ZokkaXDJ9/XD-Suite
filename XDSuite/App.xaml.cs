@@ -19,6 +19,12 @@ public partial class App : Application
         if (e.Args.Contains("--german")) L10n.Set(UiLanguage.German, false);
         try
         {
+            if (e.Args.Contains("--test-uninstall"))
+            {
+                ShutdownMode = ShutdownMode.OnExplicitShutdown;
+                await UninstallChecks.RunRealFixture(Argument(e.Args, "--test-uninstall")!, Argument(e.Args, "--report")!);
+                Shutdown(0); return;
+            }
             if (e.Args.Contains("--test-install"))
             {
                 ShutdownMode = ShutdownMode.OnExplicitShutdown;
@@ -53,6 +59,7 @@ public partial class App : Application
                 string report = Argument(e.Args, "--report") ?? "suite-self-test.txt";
                 await SelfTest.Run(report);
                 LocalizationChecks.Run();
+                await UninstallChecks.Run(report);
                 File.AppendAllText(report, "PASS: live German/English UI switching, dynamic messages, menu text and user-data protection\n");
                 Shutdown(0); return;
             }

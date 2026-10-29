@@ -6,11 +6,13 @@ XD Brenner ist ein Windows-Programm zum Brennen von CDs. XD Suite verwaltet und 
 
 - **`dist/XD-Konverter-Setup-0.5.0.exe`** installiert nur XD Konverter.
 - **`dist/XD-Brenner-Setup-0.4.1.exe`** installiert nur XD Brenner.
-- **`dist/XD-Suite-Setup-0.5.0.exe`** installiert XD Suite und die im Setup ausgewählten Programme. XD Brenner 0.4.1 und XD Konverter 0.5.0 sind enthalten und einzeln abwählbar.
+- **`dist/XD-Suite-Setup-0.5.1.exe`** installiert XD Suite und die im Setup ausgewählten Programme. XD Brenner 0.4.1 und XD Konverter 0.5.0 sind enthalten und einzeln abwählbar.
 
 Alle Setups fordern Administratorrechte an und zeigen eine Sprachauswahl für Deutsch und Englisch. Frische Installationen verwenden `%ProgramFiles%\XDBurner` bzw. `XDSuite`. Ältere Installationen unter AppData werden ohne Deinstaller nach Programme übernommen und dort aktualisiert. Auch wenn ein alter Updatehelfer den bisherigen Ordner offen hält, werden vorhandene Dateien übernommen. Die alte Installation bleibt bis zum erfolgreichen Abschluss erhalten; eigene Dateien werden nicht gelöscht. Die benötigte .NET-Laufzeit ist enthalten; auch das auswählbare Brenner-Setup benötigt keinen weiteren Download.
 
 In den Apps wechselt **Sprache / Language → Deutsch / English** die Oberfläche direkt. Die Auswahl wird gespeichert. Die Suite und der Brenner teilen ihre Sprachpräferenz; beim Start des Konverters aus der Suite wird deren aktuelle Sprache übernommen. Dateinamen und eigene Eingaben bleiben erhalten. Windows-Dateiauswahldialoge folgen der Betriebssystemsprache.
+
+In der Suite entfernt **Deinstallieren** das ausgewählte installierte Programm nach einer Rückfrage über dessen eigenen Deinstaller. Ein Abbruch lässt es installiert; danach wird die Anzeige aktualisiert.
 
 Jede App hat eine eigene EXE, einen eigenen Startmenü-Eintrag und einen eigenen Deinstallationseintrag. Sie läuft unabhängig vom Launcher. **Die Deinstallation der Suite entfernt keine einzeln installierten Programme.** Die Programme können auch direkt aus `dist/XDBurner` und `dist/XDSuite` gestartet werden. Die Ordner zusammenhalten; zur Suite gehören auch `catalog.json` und `XDUpdateHelper.exe`.
 

@@ -15,7 +15,7 @@ public sealed record AppPackage(string Id, LocalText Name, LocalText Description
     string InstallerUrl, string InstallerSha256, long InstallerSizeBytes, string Executable, string RegistryId,
     string InstallFolder, List<LocalText> Features);
 public sealed record Catalog(int SchemaVersion, List<AppPackage> Apps);
-public sealed record InstalledApp(string Executable, string Version);
+public sealed record InstalledApp(string Executable, string Version, string? Uninstaller = null);
 public sealed record DownloadProgress(long Bytes, long Total, string Message)
 {
     public double Percent => Total > 0 ? Math.Clamp(Bytes * 100d / Total, 0, 100) : 0;
@@ -66,7 +66,8 @@ public static class InstallationDiscovery
             using var root = RegistryKey.OpenBaseKey(hive, view);
             using var key = root.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\" + app.RegistryId);
             string? path = key?.GetValue("InstallLocation") as string ?? key?.GetValue("Inno Setup: App Path") as string;
-            if (path != null && TryAt(Path.Combine(path, app.Executable)) is { } found) return found;
+            if (path != null && TryAt(Path.Combine(path, app.Executable)) is { } found)
+                return found with { Uninstaller = PackageUninstaller.Resolve(key?.GetValue("UninstallString") as string, found.Executable) };
         }
         return TryAt(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", app.InstallFolder, app.Executable));
     }

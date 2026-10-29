@@ -14,7 +14,7 @@ $stub = Join-Path $fixtureRoot 'stub.cs'
 [System.IO.File]::WriteAllText($stub,'class Fixture { static void Main(string[] args) { if (args.Length == 2 && args[0] == "--record-uninstall") System.IO.File.WriteAllText(args[1], "uninstalled"); if (args.Length == 3 && args[0] == "--hold-directory") { System.IO.File.WriteAllText(args[1], "ready"); while (!System.IO.File.Exists(args[2])) System.Threading.Thread.Sleep(100); } } }',$encoding)
 foreach ($app in @('XDBurner','XDConverter','XDSuite')) {
     $appStub = Join-Path $fixtureRoot ($app + '.cs')
-    $appVersion = if ($app -eq 'XDBurner') { '0.4.1.0' } else { '0.5.0.0' }
+    $appVersion = if ($app -eq 'XDBurner') { '0.4.1.0' } elseif ($app -eq 'XDConverter') { '0.5.0.0' } else { '0.5.1.0' }
     [IO.File]::WriteAllText($appStub,('[assembly: System.Reflection.AssemblyFileVersion("' + $appVersion + '")]' + [IO.File]::ReadAllText($stub)),$encoding)
     & $csc /nologo /target:winexe ('/out:' + (Join-Path $fixtureRoot ('dist\' + $app + '\' + $app + '.exe'))) $appStub
     if ($LASTEXITCODE -ne 0) { throw 'Fixture compilation failed.' }
@@ -39,7 +39,7 @@ foreach ($app in @('XDBurner','XDConverter','XDSuite')) {
     & $compiler /Q (Join-Path $fixtureRoot ('installer\' + $app + '.iss'))
     if ($LASTEXITCODE -ne 0) { throw 'Production-script fixture compilation failed.' }
 }
-$suiteSetup = Join-Path $fixtureRoot 'dist\XD-Suite-Setup-0.5.0.exe'
+$suiteSetup = Join-Path $fixtureRoot 'dist\XD-Suite-Setup-0.5.1.exe'
 $suiteDir = Join-Path $fixtureRoot 'installed-XDSuite'
 $burnerDir = Join-Path $fixtureRoot 'installed-XDBurner'
 $converterDir = Join-Path $fixtureRoot 'installed-XDConverter'

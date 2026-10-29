@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Text.Json;
@@ -14,6 +15,8 @@ public partial class MainWindow : Window
     private readonly PackageTransport transport = new();
     private string filter = "all";
     private bool busy, installing;
+    private (LocalText Title, LocalText Detail)? operationStatus;
+    private Func<ProcessStartInfo, Task<int>>? uninstallRunner;
     private CancellationTokenSource? cancellation;
     private readonly CancellationTokenSource lifetime = new();
     private AppCard? Selected => AppList.SelectedItem as AppCard;
@@ -34,6 +37,12 @@ public partial class MainWindow : Window
             if (updateCompleted) { StatusTitle.Text = "Update abgeschlossen."; StatusText.Text = "XD Suite " + SuiteUpdates.VersionText; }
             if (!skipUpdateCheck && IsVisible) await CheckSuiteUpdate();
         };
+    }
+    internal MainWindow(Catalog testCatalog, Func<ProcessStartInfo, Task<int>> runner) : this(preview: true)
+    {
+        catalog = testCatalog;
+        uninstallRunner = runner;
+        Rebuild();
     }
     private async Task CheckSuiteUpdate()
     {
@@ -96,6 +105,10 @@ public partial class MainWindow : Window
         ActionButton.IsEnabled = !busy && selected != null;
         LaunchButton.Visibility = selected?.HasUpdate == true ? Visibility.Visible : Visibility.Collapsed;
         LaunchButton.IsEnabled = !busy;
+        UninstallButton.Content = SuiteText.Uninstall.ToString();
+        UninstallButton.Visibility = selected?.Installed != null ? Visibility.Visible : Visibility.Collapsed;
+        UninstallButton.IsEnabled = !busy && selected?.Installed?.Uninstaller != null;
+        UninstallButton.ToolTip = selected?.Installed?.Uninstaller == null ? SuiteText.NoUninstaller.ToString() : null;
         PackageSizeText.Text = selected == null || selected.Installed != null && !selected.HasUpdate ? "" : "Setup · " + selected.Size;
     }
     private void Filter_Checked(object sender, RoutedEventArgs e) { if (AppList == null) return; filter = (string)((RadioButton)sender).Tag; Rebuild(); }
@@ -160,8 +173,42 @@ public partial class MainWindow : Window
         finally { installing = false; SetBusy(false); Rebuild(); }
     }
     private void Launch_Click(object sender, RoutedEventArgs e) { if (Selected is { } selected) Launch(selected); }
+    private async void Uninstall_Click(object sender, RoutedEventArgs e) => await UninstallSelected();
+    internal async Task UninstallSelected()
+    {
+        if (busy || Selected is not { Installed.Uninstaller: not null } selected) return;
+        if (LocalizedDialog.Show(this, SuiteText.Confirm(selected.Package).ToString(), SuiteText.UninstallTitle.ToString(),
+            MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+        SetBusy(true);
+        installing = true;
+        CancelButton.Visibility = Visibility.Collapsed;
+        ProgressBar.Visibility = Visibility.Visible;
+        ProgressBar.IsIndeterminate = true;
+        SetOperationStatus(SuiteText.Uninstalling, SuiteText.FinishUninstall);
+        try
+        {
+            bool removed = await PackageUninstaller.Uninstall(selected.Package, selected.Installed, cancellation!.Token, uninstallRunner);
+            SetOperationStatus(removed ? SuiteText.Completed : SuiteText.Incomplete,
+                removed ? selected.Package.Name : InstallationDiscovery.Find(selected.Package) != null ? SuiteText.StillInstalled : SuiteText.CheckInstallation);
+        }
+        catch (Exception ex) { ShowError(ex); }
+        finally
+        {
+            installing = false;
+            ProgressBar.IsIndeterminate = false;
+            ProgressBar.Visibility = Visibility.Collapsed;
+            SetBusy(false);
+            Rebuild();
+        }
+    }
+    private void SetOperationStatus(LocalText title, LocalText detail)
+    {
+        operationStatus = (title, detail);
+        StatusTitle.Text = title.ToString(); StatusText.Text = detail.ToString();
+    }
     private void Launch(AppCard card)
     {
+        operationStatus = null;
         try
         {
             var installed = InstallationDiscovery.Find(card.Package) ?? throw new FileNotFoundException("Das Programm wurde nicht gefunden. Bitte neu installieren.");
@@ -173,7 +220,7 @@ public partial class MainWindow : Window
     private void SetBusy(bool value)
     {
         busy = value;
-        if (value) cancellation = new CancellationTokenSource();
+        if (value) { operationStatus = null; cancellation = new CancellationTokenSource(); }
         else { cancellation?.Dispose(); cancellation = null; }
         RefreshButton.IsEnabled = !value;
         CancelButton.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
@@ -188,9 +235,11 @@ public partial class MainWindow : Window
     {
         GermanMenu.IsChecked = L10n.Current == UiLanguage.German; EnglishMenu.IsChecked = L10n.Current == UiLanguage.English;
         Rebuild();
+        if (operationStatus is { } status) SetOperationStatus(status.Title, status.Detail);
     }
     private void ShowError(Exception ex)
     {
+        operationStatus = null;
         App.Log(ex); StatusTitle.Text = "Vorgang fehlgeschlagen.";
         StatusText.Text = ex is HttpRequestException ? "Der Download ist gerade nicht erreichbar. Bitte die Internetverbindung prüfen." : ex.Message;
         LocalizedDialog.Show(this, StatusText.Text, "XD Suite");
@@ -198,6 +247,6 @@ public partial class MainWindow : Window
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
         if (!busy) return;
-        e.Cancel = true; LocalizedDialog.Show(this, installing ? "Bitte die laufende Installation abschließen lassen." : "Bitte den Download oder die Aktualisierung zuerst beenden oder abbrechen.", "XD Suite");
+        e.Cancel = true; LocalizedDialog.Show(this, installing ? SuiteText.FinishSetup.ToString() : "Bitte den Download oder die Aktualisierung zuerst beenden oder abbrechen.", "XD Suite");
     }
 }
