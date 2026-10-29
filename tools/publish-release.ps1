@@ -35,10 +35,12 @@ try {
     $commit = (& git rev-parse HEAD).Trim()
     & gh release create $tag --repo $Repository --target $commit --title "XD Suite $version" --notes-file "docs\release-notes-$version.md" --draft @assets
     if ($LASTEXITCODE -ne 0) { throw 'Release creation failed. Existing releases are not overwritten.' }
-    $remoteJson = & gh api "repos/$Repository/releases/tags/$tag"
+    # A new draft has no public tag yet; resolve it through the authenticated release list.
+    $remoteJson = & gh api "repos/$Repository/releases?per_page=100"
     if ($LASTEXITCODE -ne 0) { throw 'Draft release verification failed.' }
-    $remote = $remoteJson | ConvertFrom-Json
-    if (-not $remote.draft) { throw 'Expected an unpublished draft.' }
+    $matches = @($remoteJson | ConvertFrom-Json | Where-Object { $_.tag_name -eq $tag -and $_.draft -and $_.target_commitish -eq $commit })
+    if ($matches.Count -ne 1) { throw 'Expected exactly one unpublished draft for the tested commit.' }
+    $remote = $matches[0]
     foreach ($asset in $assets) {
         $name = [IO.Path]::GetFileName($asset)
         $found = @($remote.assets | Where-Object name -eq $name)
@@ -47,7 +49,7 @@ try {
         if ($found[0].digest -ne $digest) { throw "Uploaded release digest mismatch: $name" }
     }
     if ($Publish) {
-        & gh release edit $tag --repo $Repository --draft=false --latest
+        & gh api --method PATCH "repos/$Repository/releases/$($remote.id)" -F draft=false -f make_latest=true --jq .html_url
         if ($LASTEXITCODE -ne 0) { throw 'Release publication failed; draft retained.' }
     }
 }
