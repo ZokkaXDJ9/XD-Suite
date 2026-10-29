@@ -11,7 +11,7 @@ if (-not $ToolsRoot) {
     }
     $ToolsRoot = Join-Path (Split-Path -Parent $commonGit) '.tools'
 }
-$outputRoot = Join-Path $projectRoot 'artifacts\wave-editor-preview'
+$outputRoot = Join-Path $projectRoot 'artifacts\wave-editor-preview-test2'
 $appRoot = Join-Path $outputRoot 'app'
 $production = @('XDSuite','XDBurner','XDConverter','XD.Common','XD.UpdateHelper','catalog','installer','build-release.ps1','tools\publish-release.ps1')
 function Snapshot {
@@ -50,7 +50,7 @@ Get-ChildItem -LiteralPath (Join-Path $projectRoot 'licenses') -File | Where-Obj
 $exe = Join-Path $appRoot 'XDWaveEditor.Preview.exe'
 $suiteVersion = ([xml][IO.File]::ReadAllText((Join-Path $projectRoot 'XDSuite\XDSuite.csproj'))).Project.PropertyGroup.Version | Where-Object { $_ }
 $version = [Diagnostics.FileVersionInfo]::GetVersionInfo($exe)
-if ($version.FileVersion -ne ($suiteVersion + '.0') -or $version.ProductVersion -ne ($suiteVersion + '-preview+wave-editor.1')) { throw 'Preview version differs from suite working version.' }
+if ($version.FileVersion -ne ($suiteVersion + '.0') -or $version.ProductVersion -ne ($suiteVersion + '-preview+wave-editor.2')) { throw 'Preview version differs from suite working version.' }
 $report = Join-Path $outputRoot 'wave-editor-tests.txt'
 $test = Start-Process -FilePath $exe -ArgumentList @('--self-test','--report',('"' + $report + '"')) -PassThru -Wait -WindowStyle Hidden
 if ($test.ExitCode -ne 0) { throw "Wave editor tests failed: $report" }

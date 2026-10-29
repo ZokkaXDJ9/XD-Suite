@@ -8,7 +8,7 @@ public readonly record struct FrameRange(long Start, long End)
 {
     public long Length => Math.Max(0, End - Start);
 }
-public readonly record struct Piece(long SourceStart, long Length);
+public readonly record struct Piece(long SourceStart, long Length, PcmSource? Audio = null);
 public readonly record struct Peak(float Min, float Max);
 
 // Decoded audio stays on disk. Editing and undo retain only lists of source ranges.
@@ -21,6 +21,7 @@ public sealed class PcmSource : IDisposable
     public int Rate { get; }
     public int Channels { get; }
     public long Frames { get; }
+    public float MaxAmplitude { get; private set; }
     public PcmSource(string path, int rate, int channels)
     {
         Path = path; Rate = rate; Channels = channels;
@@ -51,6 +52,11 @@ public sealed class PcmSource : IDisposable
         {
             token.ThrowIfCancellationRequested();
             var values = Read((long)block * PeakFrames, (int)Math.Min(PeakFrames, Frames - (long)block * PeakFrames));
+            foreach (float value in values)
+            {
+                if (!float.IsFinite(value)) throw new EditorError("InvalidAudio");
+                MaxAmplitude = Math.Max(MaxAmplitude, Math.Abs(value));
+            }
             for (int channel = 0; channel < Channels; channel++) result[channel][block] = Measure(values, channel);
         }
         peaks = result;
@@ -79,15 +85,20 @@ public sealed class PcmSource : IDisposable
     public void Dispose() { handle.Dispose(); if (File.Exists(Path)) File.Delete(Path); }
 }
 
-public sealed class AudioDocument(PcmSource source, string original)
+public sealed class AudioDocument(PcmSource source, string original) : IDisposable
 {
     private sealed record State(Piece[] Pieces, Guid Id, FrameRange Selection, long Cursor);
     private readonly Stack<State> undo = new(), redo = new();
     private List<Piece> pieces = [new(0, source.Frames)];
     private Piece[] clipboard = [];
+    private readonly List<PcmSource> sources = [source];
+    private readonly HashSet<string> originals = new(StringComparer.OrdinalIgnoreCase) { System.IO.Path.GetFullPath(original) };
     private Guid stateId = Guid.NewGuid(), savedId;
     public PcmSource Source { get; } = source;
     public string Original { get; } = original;
+    internal Guid Revision => stateId;
+    internal bool OwnsMaterial(string path) => sources.Any(s => s.Path == path);
+    public bool IsOriginal(string path) => originals.Contains(System.IO.Path.GetFullPath(path));
     public IReadOnlyList<Piece> Pieces => pieces;
     public long Frames => pieces.Sum(p => p.Length);
     public double Seconds => Frames / (double)Source.Rate;
@@ -112,11 +123,11 @@ public sealed class AudioDocument(PcmSource source, string original)
     {
         pieces = state.Pieces.ToList(); stateId = state.Id; Selection = state.Selection; Cursor = state.Cursor; Edited?.Invoke();
     }
-    private void Commit(List<Piece> result, long cursor)
+    private void Commit(List<Piece> result, long cursor, FrameRange? selection = null)
     {
         if (result.SequenceEqual(pieces)) return;
         undo.Push(Snapshot()); redo.Clear(); pieces = result; stateId = Guid.NewGuid();
-        Cursor = Math.Clamp(cursor, 0, Frames); Selection = new(Cursor, Cursor); Edited?.Invoke();
+        Cursor = Math.Clamp(cursor, 0, Frames); Selection = selection ?? new(Cursor, Cursor); Edited?.Invoke();
     }
     public void Undo() { if (!CanUndo) return; redo.Push(Snapshot()); Restore(undo.Pop()); }
     public void Redo() { if (!CanRedo) return; undo.Push(Snapshot()); Restore(redo.Pop()); }
@@ -126,7 +137,7 @@ public sealed class AudioDocument(PcmSource source, string original)
         foreach (var piece in pieces)
         {
             long first = Math.Max(start, offset), last = Math.Min(end, offset + piece.Length);
-            if (last > first) yield return new(piece.SourceStart + first - offset, last - first);
+            if (last > first) yield return piece with { SourceStart = piece.SourceStart + first - offset, Length = last - first };
             offset += piece.Length;
         }
     }
@@ -141,6 +152,28 @@ public sealed class AudioDocument(PcmSource source, string original)
         long end = Selection.Length > 0 ? Selection.End : start;
         var result = Slice(0, start).Concat(clipboard).Concat(Slice(end, Frames)).ToList();
         Commit(result, start + ClipboardFrames);
+    }
+    public void Repeat(FrameRange range, int totalCopies)
+    {
+        ValidateRange(range);
+        if (totalCopies is < 2 or > 20) throw new EditorError("InvalidEffect");
+        var part = Slice(range.Start, range.End).ToArray();
+        var result = Slice(0, range.Start).Concat(Enumerable.Range(0, totalCopies).SelectMany(_ => part)).Concat(Slice(range.End, Frames)).ToList();
+        long end = checked(range.Start + range.Length * totalCopies);
+        Commit(result, range.Start, new(range.Start, end));
+    }
+    internal void ValidateRange(FrameRange range)
+    {
+        if (range.Start < 0 || range.End > Frames || range.Length <= 0) throw new EditorError("EmptySelection");
+    }
+    internal void Replace(FrameRange range, PcmSource audio, Guid expectedRevision, string? importedFile = null)
+    {
+        if (expectedRevision != stateId) throw new EditorError("DocumentChanged");
+        if (range.Start < 0 || range.End < range.Start || range.End > Frames || audio.Rate != Source.Rate || audio.Channels != Source.Channels) throw new EditorError("InvalidAudio");
+        var result = Slice(0, range.Start).Append(new Piece(0, audio.Frames, audio)).Concat(Slice(range.End, Frames)).ToList();
+        sources.Add(audio);
+        if (importedFile != null) originals.Add(System.IO.Path.GetFullPath(importedFile));
+        Commit(result, range.Start, new(range.Start, range.Start + audio.Frames));
     }
     public void Remove(IEnumerable<FrameRange> ranges)
     {
@@ -163,7 +196,7 @@ public sealed class AudioDocument(PcmSource source, string original)
             long first = Math.Max(start, position), last = Math.Min(end, position + piece.Length);
             if (last > first)
             {
-                var peak = Source.GetPeak(piece.SourceStart + first - position, last - first, channel);
+                var peak = (piece.Audio ?? Source).GetPeak(piece.SourceStart + first - position, last - first, channel);
                 min = Math.Min(min, peak.Min); max = Math.Max(max, peak.Max);
             }
             position += piece.Length;
@@ -179,8 +212,13 @@ public sealed class AudioDocument(PcmSource source, string original)
         {
             token.ThrowIfCancellationRequested();
             int count = (int)Math.Min(16384, piece.Length - read);
-            visit(position, Source.Read(piece.SourceStart + read, count));
+            visit(position, (piece.Audio ?? Source).Read(piece.SourceStart + read, count));
             read += count; position += count;
         }
+    }
+    public void Dispose()
+    {
+        foreach (var audio in sources) audio.Dispose();
+        sources.Clear();
     }
 }

@@ -62,7 +62,7 @@ internal static class SelfTest
                     var a = Read(doc); var b = Read(decoded);
                     Check(a.Length == b.Length && a.Zip(b).All(v => Math.Abs(v.First - v.Second) < .000001), extension + " preserves retained samples at 24-bit precision");
                 }
-                decoded.Source.Dispose();
+                decoded.Dispose();
                 await Reject(() => engine.Export(doc, path, false, CancellationToken.None), "TargetExists");
             }
             Check(originalHash == Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(original))), "source file remains byte-identical");
@@ -72,7 +72,7 @@ internal static class SelfTest
             Check(mono.Source.Channels == 1 && mono.Source.Rate == 44100, "common mono input");
             mono.Select(4410, 8820); mono.CutSelection(); mono.Paste();
             Check(mono.Frames == 22050, "mono cut and paste retain duration");
-            await engine.Export(mono, Path.Combine(root, "mono-edited.wav"), false, CancellationToken.None); mono.Source.Dispose();
+            await engine.Export(mono, Path.Combine(root, "mono-edited.wav"), false, CancellationToken.None); mono.Dispose();
             using (var cancel = new CancellationTokenSource())
             {
                 cancel.Cancel();
@@ -118,6 +118,7 @@ internal static class SelfTest
             await CheckPlayback(preview, doc.Seconds);
             doc.MarkSaved(); window.Close();
             lines.Add("PASS: live bilingual WPF controls, editing buttons, waveform mapping/zoom/scroll, and muted Windows MediaPlayer open, duration, seek and playback clock");
+            await AdvancedChecks.Run(engine, root, lines);
             lines.Add("NOTE: Playback checks are muted; audible output on the user's speakers remains a manual check. Original audio metadata is not copied into exports.");
             lines.Add("ALL WAVE EDITOR CHECKS PASSED");
         }

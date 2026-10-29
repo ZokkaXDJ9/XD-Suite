@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework><UseWPF>true</UseWPF>
     <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
-    <Version>0.5.1</Version><InformationalVersion>$(Version)-preview+wave-editor.1</InformationalVersion>
+    <Version>0.5.1</Version><InformationalVersion>$(Version)-preview+wave-editor.2</InformationalVersion>
     <AssemblyName>XDWaveEditor.Preview</AssemblyName><RootNamespace>XDWaveEditor</RootNamespace>
     <Product>XD Wave Editor Preview</Product><Description>Audiodateien bearbeiten und Stille entfernen.</Description>
     <ApplicationManifest>app.manifest</ApplicationManifest><ApplicationIcon>Assets/XDWaveEditor.ico</ApplicationIcon>

@@ -44,6 +44,12 @@ public partial class App : Application
                         var bitmap = new RenderTargetBitmap((int)window.ActualWidth, (int)window.ActualHeight, 96, 96, PixelFormats.Pbgra32); bitmap.Render(window);
                         var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
                         using (var file = File.Create(Path.Combine(directory, english ? "Wave-English.png" : "Wave-German.png"))) encoder.Save(file);
+                        var effects = new EffectDialog(engine, doc, EffectKind.Equalizer) { Owner = window }; effects.Show();
+                        await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle); effects.UpdateLayout();
+                        var effectBitmap = new RenderTargetBitmap((int)effects.ActualWidth, (int)effects.ActualHeight, 96, 96, PixelFormats.Pbgra32); effectBitmap.Render(effects);
+                        var effectEncoder = new PngBitmapEncoder(); effectEncoder.Frames.Add(BitmapFrame.Create(effectBitmap));
+                        using (var file = File.Create(Path.Combine(directory, english ? "Effects-English.png" : "Effects-German.png"))) effectEncoder.Save(file);
+                        effects.Close();
                         window.Close();
                     }
                 }

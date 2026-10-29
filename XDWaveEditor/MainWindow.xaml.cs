@@ -13,38 +13,48 @@ namespace XDWaveEditor;
 public partial class MainWindow : Window
 {
     private readonly AudioEngine engine;
-    private readonly MediaPlayer player = new();
+    private readonly MediaPlayer player;
     private readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromMilliseconds(35) };
     private AudioDocument? document;
     private CancellationTokenSource? operation;
     private bool busy, playing, mediaReady, updatingScroll;
     private string? previewPath;
-    private long playbackEnd, pendingStart, previousFrames;
+    private long playbackEnd, pendingStart, loopStart, previousFrames;
     private string statusKey = "Ready", statusDetail = "";
+    private EffectKind lastEffect = EffectKind.Normalize;
     private Texts T => Texts.Current;
     internal AudioDocument? Document => document;
-    public MainWindow(AudioEngine engine)
+    public MainWindow(AudioEngine engine, MediaPlayer? playback = null)
     {
-        this.engine = engine; InitializeComponent();
+        this.engine = engine; player = playback ?? new(); InitializeComponent();
         Wave.ViewChanged += RefreshScroll;
         T.PropertyChanged += LanguageChanged;
         timer.Tick += (_, _) =>
         {
             if (!playing || !mediaReady || document == null) return;
             document.Cursor = Math.Clamp((long)(player.Position.TotalSeconds * document.Source.Rate), 0, document.Frames);
-            if (document.Cursor >= playbackEnd) { StopPlayback(); document.Cursor = playbackEnd; }
+            if (document.Cursor >= playbackEnd)
+            {
+                if (LoopPlayback.IsChecked == true) { player.Position = TimeSpan.FromSeconds(loopStart / (double)document.Source.Rate); document.Cursor = loopStart; }
+                else { StopPlayback(); document.Cursor = playbackEnd; }
+            }
             PositionText.Text = Texts.Time(document.Cursor, document.Source.Rate); Wave.InvalidateVisual();
         };
         player.MediaOpened += (_, _) => { mediaReady = true; if (playing && document != null) { player.Position = TimeSpan.FromSeconds(pendingStart / (double)document.Source.Rate); player.Play(); timer.Start(); } };
-        player.MediaEnded += (_, _) => { StopPlayback(); RefreshInfo(); };
+        player.MediaEnded += (_, _) =>
+        {
+            if (playing && LoopPlayback.IsChecked == true && document != null) { player.Position = TimeSpan.FromSeconds(loopStart / (double)document.Source.Rate); player.Play(); }
+            else StopPlayback();
+            RefreshInfo();
+        };
         player.MediaFailed += (_, _) => { StopPlayback(); SetStatus("PlaybackFailed"); RefreshInfo(); };
-        Closed += (_, _) => { T.PropertyChanged -= LanguageChanged; InvalidatePlayback(); document?.Source.Dispose(); };
+        Closed += (_, _) => { T.PropertyChanged -= LanguageChanged; InvalidatePlayback(); document?.Dispose(); };
         RefreshLanguage(); RefreshInfo();
     }
     internal void LoadDocument(AudioDocument loaded)
     {
         InvalidatePlayback();
-        if (document != null) { document.Edited -= DocumentEdited; document.SelectionChanged -= SelectionChanged; document.Source.Dispose(); }
+        if (document != null) { document.Edited -= DocumentEdited; document.SelectionChanged -= SelectionChanged; document.Dispose(); }
         document = loaded; document.Edited += DocumentEdited; document.SelectionChanged += SelectionChanged;
         Wave.Document = loaded; previousFrames = loaded.Frames; SetStatus("Ready"); RefreshInfo();
     }
@@ -74,6 +84,7 @@ public partial class MainWindow : Window
     {
         bool loaded = document != null, audio = document?.Frames > 0, selection = document?.Selection.Length > 0;
         OpenButton.IsEnabled = !busy; ExportButton.IsEnabled = ExportMenu.IsEnabled = !busy && audio;
+        ToolsButton.IsEnabled = EffectsMenu.IsEnabled = ImportMenu.IsEnabled = PreciseMenu.IsEnabled = !busy && loaded;
         PlayButton.IsEnabled = StopButton.IsEnabled = !busy && audio;
         PlayButton.Content = T[playing ? "Pause" : "Play"];
         SelectButton.IsEnabled = !busy && audio;
@@ -133,6 +144,26 @@ public partial class MainWindow : Window
         if (await RunBusy("Exporting", token => engine.Export(document, dialog.FileName, true, token))) SetStatus("Saved", dialog.FileName);
     }
     private void Copy_Click(object sender, RoutedEventArgs e) { if (!busy) { document?.CopySelection(); RefreshInfo(); } }
+    private void Tools_Click(object sender, RoutedEventArgs e)
+    {
+        if (busy || document == null) return;
+        StopPlayback();
+        var dialog = new EffectDialog(engine, document, lastEffect) { Owner = this };
+        dialog.ShowDialog(); lastEffect = dialog.SelectedKind; RefreshInfo();
+    }
+    private void Precise_Click(object sender, RoutedEventArgs e)
+    {
+        if (busy || document == null) return;
+        StopPlayback(); new SelectionDialog(document) { Owner = this }.ShowDialog();
+    }
+    private async void Import_Click(object sender, RoutedEventArgs e)
+    {
+        if (busy || document == null) return;
+        var dialog = new OpenFileDialog { Filter = "Audio|*.wav;*.wave;*.mp3;*.flac;*.ogg;*.m4a;*.aac;*.opus;*.wma;*.aif;*.aiff", Multiselect = false };
+        if (dialog.ShowDialog(this) != true) return;
+        StopPlayback();
+        await RunBusy("Processing", token => engine.InsertAudio(document, dialog.FileName, token));
+    }
     private void Cut_Click(object sender, RoutedEventArgs e) { if (!busy) document?.CutSelection(); }
     private void Paste_Click(object sender, RoutedEventArgs e) { if (!busy) document?.Paste(); }
     private void Delete_Click(object sender, RoutedEventArgs e) { if (!busy) document?.DeleteSelection(); }
@@ -155,6 +186,7 @@ public partial class MainWindow : Window
             previewPath = cache;
         }
         pendingStart = document.Cursor;
+        loopStart = document.Selection.Length > 0 ? document.Selection.Start : 0;
         if (document.Selection.Length > 0)
         {
             if (pendingStart < document.Selection.Start || pendingStart >= document.Selection.End) pendingStart = document.Selection.Start;
@@ -199,7 +231,7 @@ public partial class MainWindow : Window
         if (Keyboard.FocusedElement is TextBox or ComboBox || busy) return;
         if (Keyboard.Modifiers == ModifierKeys.Control)
         {
-            switch (e.Key) { case Key.O: Open_Click(this, e); break; case Key.S: Export_Click(this, e); break; case Key.A: SelectAll_Click(this, e); break; case Key.X: Cut_Click(this, e); break; case Key.C: Copy_Click(this, e); break; case Key.V: Paste_Click(this, e); break; case Key.Z: Undo_Click(this, e); break; case Key.Y: Redo_Click(this, e); break; default: return; }
+            switch (e.Key) { case Key.O: Open_Click(this, e); break; case Key.S: Export_Click(this, e); break; case Key.I: Import_Click(this, e); break; case Key.G: Precise_Click(this, e); break; case Key.A: SelectAll_Click(this, e); break; case Key.X: Cut_Click(this, e); break; case Key.C: Copy_Click(this, e); break; case Key.V: Paste_Click(this, e); break; case Key.Z: Undo_Click(this, e); break; case Key.Y: Redo_Click(this, e); break; default: return; }
         }
         else if (Keyboard.Modifiers == ModifierKeys.None)
         {

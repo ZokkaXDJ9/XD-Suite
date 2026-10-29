@@ -8,7 +8,7 @@ using System.Text.Json;
 namespace XDWaveEditor;
 
 public sealed class EditorError(string key, string detail = "") : Exception(detail) { public string Key { get; } = key; }
-public sealed class AudioEngine(string directory)
+public sealed partial class AudioEngine(string directory)
 {
     public string DirectoryPath { get; } = Path.GetFullPath(directory);
     public string Ffmpeg => Path.Combine(DirectoryPath, "ffmpeg.exe");
@@ -44,7 +44,7 @@ public sealed class AudioEngine(string directory)
     public async Task Export(AudioDocument document, string filename, bool overwrite, CancellationToken token)
     {
         string target = Path.GetFullPath(filename), extension = Path.GetExtension(target).ToLowerInvariant();
-        if (target.Equals(Path.GetFullPath(document.Original), StringComparison.OrdinalIgnoreCase)) throw new EditorError("OriginalProtected");
+        if (document.IsOriginal(target)) throw new EditorError("OriginalProtected");
         if (!ExportExtensions.Contains(extension)) throw new EditorError("UnsupportedExport");
         if (document.Frames == 0) throw new EditorError("EmptySelection");
         if (File.Exists(target) && !overwrite) throw new EditorError("TargetExists");

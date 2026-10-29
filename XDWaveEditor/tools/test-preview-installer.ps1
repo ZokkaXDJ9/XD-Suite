@@ -32,12 +32,12 @@ $shortcut = $shell.CreateShortcut((Join-Path $fixture 'EditorShortcut.lnk'))
 if ($shortcut.TargetPath -ne $exe -or $shortcut.IconLocation -ne ($exe + ',0')) { throw 'Shortcut or icon is incorrect.' }
 $key = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{' + $id + '}_is1'
 if ((Get-ItemProperty -LiteralPath $key).'Inno Setup: Language' -ne 'english') { throw 'Setup language not forwarded.' }
-$report = Join-Path $projectRoot 'artifacts\wave-editor-preview\installed-tests.txt'
+$report = Join-Path $projectRoot 'artifacts\wave-editor-preview-test2\installed-tests.txt'
 $test = Start-Process -FilePath $exe -ArgumentList @('--self-test','--report',('"' + $report + '"')) -PassThru -Wait -WindowStyle Hidden
 if ($test.ExitCode -ne 0) { throw "Installed editor tests failed: $report" }
 $personal = Join-Path $target 'personal-note.txt'; [IO.File]::WriteAllText($personal,'Keep user data.')
 $uninstall = Start-Process -FilePath (Join-Path $target 'unins000.exe') -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART' -PassThru -Wait -WindowStyle Hidden
 if ($uninstall.ExitCode -ne 0 -or (Test-Path -LiteralPath $exe) -or (Test-Path -LiteralPath $key) -or -not (Test-Path -LiteralPath $personal)) { throw 'Isolated uninstall or user data preservation failed.' }
 $lines = @('PASS: real editor payload installed under isolated per-user AppId.', 'PASS: English setup language, application shortcut and embedded icon verified.', 'PASS: full audio, editing, WPF and muted playback tests passed from installed copy.', 'PASS: independent uninstall removed only the fixture and retained its personal note.', 'NOTE: only the fixture disables elevation; the real setup requests admin rights and uses Program Files. No live product was installed or removed.')
-$lines | Set-Content -LiteralPath (Join-Path $projectRoot 'artifacts\wave-editor-preview\installer-tests.txt') -Encoding UTF8
+$lines | Set-Content -LiteralPath (Join-Path $projectRoot 'artifacts\wave-editor-preview-test2\installer-tests.txt') -Encoding UTF8
 $lines
