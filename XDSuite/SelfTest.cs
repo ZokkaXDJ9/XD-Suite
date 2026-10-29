@@ -20,6 +20,9 @@ internal static class SelfTest
             var catalog = PackageValidation.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "catalog.json")));
             Check(catalog.Apps.Count > 0, "Bundled catalog");
             var burner = catalog.Apps.Single(p => p.Id == "xd-burner");
+            var converter = catalog.Apps.Single(p => p.Id == "xd-converter");
+            Check(converter.Executable == "XDConverter.exe" && converter.InstallFolder == "XDConverter" && converter.Name.De == "XD Konverter" && converter.Name.En == "XD Converter", "Standalone converter catalog entry");
+            Check(catalog.Apps.All(p => System.Version.Parse(p.Version) <= SuiteUpdates.CurrentVersion), "Application versions never exceed the suite");
             Check(burner.Name.De == "XD Brenner" && burner.Name.En == "XD Burner", "Branding in both languages");
             var bad = burner with { Executable = "../outside.exe" };
             await Reject(() => Task.Run(() => PackageValidation.Parse(JsonSerializer.Serialize(new Catalog(1, [bad]), PackageValidation.JsonOptions))), "Catalog path traversal");
@@ -31,7 +34,7 @@ internal static class SelfTest
             string releaseCatalog = JsonSerializer.Serialize(catalog, PackageValidation.JsonOptions);
             string releaseWithCatalog = JsonSerializer.Serialize(new { draft = false, prerelease = false, assets = new[] { new { name = "catalog.json", browser_download_url = "https://example.test/releases/v9/catalog.json" } } });
             using var catalogTransport = new PackageTransport(new FakeHandler(request => new(HttpStatusCode.OK) { Content = new StringContent(request.RequestUri!.AbsolutePath.EndsWith("/releases/latest") ? releaseWithCatalog : request.RequestUri.AbsolutePath == "/releases/v9/catalog.json" ? releaseCatalog : throw new InvalidOperationException("Mutable latest/download URL must not be requested.")) }));
-            Check((await catalogTransport.FetchLatestCatalog("ZokkaXDJ9/XD-Suite", CancellationToken.None)).Apps.Single().Id == "xd-burner", "Catalog resolved from current release's immutable asset URL");
+            Check((await catalogTransport.FetchLatestCatalog("ZokkaXDJ9/XD-Suite", CancellationToken.None)).Apps.Select(p => p.Id).SequenceEqual(catalog.Apps.Select(p => p.Id)), "Full catalog resolved from current release's immutable asset URL");
             lines.Add("PASS: latest catalog uses the release API and immutable asset URL, bypassing stale latest/download redirects");
 
             byte[] payload = Enumerable.Range(0, 210123).Select(i => (byte)(i * 7)).ToArray();

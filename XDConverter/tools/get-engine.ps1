@@ -2,7 +2,7 @@
 param()
 $ErrorActionPreference = 'Stop'
 $previewRoot = Split-Path -Parent $PSScriptRoot
-$projectRoot = Split-Path -Parent (Split-Path -Parent $previewRoot)
+$projectRoot = Split-Path -Parent $previewRoot
 $lock = [System.IO.File]::ReadAllText((Join-Path $previewRoot 'engine.lock.json')) | ConvertFrom-Json
 if ($lock.sha256 -notmatch '^[a-f0-9]{64}$' -or $lock.url -notlike 'https://github.com/BtbN/FFmpeg-Builds/releases/download/*') { throw 'Invalid engine lock file.' }
 $root = Join-Path $projectRoot ('.tools\converter-engine\' + $lock.sha256.Substring(0,12))

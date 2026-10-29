@@ -16,7 +16,7 @@ internal static class SelfTest
     {
         report = Path.GetFullPath(report); Directory.CreateDirectory(Path.GetDirectoryName(report)!);
         string root = Path.Combine(Path.GetDirectoryName(report)!, "conversion-test-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(root);
-        var checks = new List<string> { "XD Converter local preview tests", DateTimeOffset.Now.ToString("O") };
+        var checks = new List<string> { "XD Converter integration tests", DateTimeOffset.Now.ToString("O") };
         try
         {
             checks.Add("Engine: " + await engine.Check(CancellationToken.None));
@@ -82,7 +82,7 @@ internal static class SelfTest
             checks.Add("PASS: corrupt audio, video disguised as audio and invalid settings rejected; real conversion progress cancellation leaves no partial files or modified sources.");
 
             Texts.Current.Set(false);
-            var window = new MainWindow(engine, new PreviewSettings(), true); window.Show(); window.SetPreview();
+            var window = new MainWindow(engine, new ConverterSettings(), true); window.Show(); window.SetPreview();
             await window.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
             IconChecks.VerifyWindowAndExe(window, root);
             checks.Add("PASS: embedded EXE icon, all nine ICO resolutions and native window/taskbar icon match the converter artwork.");
@@ -146,11 +146,11 @@ internal static class SelfTest
             var completed = (AudioRow)grid.Items[0];
             Check(File.Exists(completed.Output) && before.SequenceEqual(SHA256.HashData(File.ReadAllBytes(tagged))), "GUI conversion and source protection");
             window.Close();
-            Check(PreviewSettings.DataDirectory.EndsWith("XDConverterPreview", StringComparison.Ordinal) && !typeof(App).Assembly.GetReferencedAssemblies().Any(a => a.Name is "XDSuite" or "XDBurner" or "XD.Common"), "Preview has independent settings and no live application dependencies");
-            checks.Add("PASS: live German/English switching, original filenames retained, independent preview settings and no shared production application dependency.");
+            Check(ConverterSettings.DataDirectory.EndsWith(BuildInfo.DataFolder, StringComparison.Ordinal) && !typeof(App).Assembly.GetReferencedAssemblies().Any(a => a.Name is "XDSuite" or "XDBurner" or "XD.Common"), "Converter has independent settings and no launcher dependency");
+            checks.Add("PASS: live German/English switching, original filenames retained, independent converter settings and no shared production application dependency.");
             checks.Add("PASS: actual WPF file drop, async inspection, language change during inspection, Convert button and completed MP3 output with unchanged source hash.");
             checks.Add("Fixtures and outputs retained for inspection: " + root);
-            checks.Add("ALL CONVERTER PREVIEW TESTS PASSED");
+            checks.Add("ALL CONVERTER TESTS PASSED");
         }
         catch (Exception error) { checks.Add("FAIL: " + error); throw; }
         finally { File.WriteAllLines(report, checks); }

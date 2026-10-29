@@ -2,7 +2,7 @@
 param([switch]$SkipInstaller)
 $ErrorActionPreference = 'Stop'
 $previewRoot = Split-Path -Parent $PSScriptRoot
-$projectRoot = Split-Path -Parent (Split-Path -Parent $previewRoot)
+$projectRoot = Split-Path -Parent $previewRoot
 $artifactRoot = Join-Path $projectRoot 'artifacts\converter-preview'
 $appRoot = Join-Path $artifactRoot 'app'
 $sourcePaths = @('XDSuite','XDBurner','XD.Common','XD.UpdateHelper','catalog','installer','build-release.ps1','tools\publish-release.ps1')
@@ -20,7 +20,7 @@ $before = ProductionSnapshot
 New-Item -ItemType Directory -Path $appRoot -Force | Out-Null
 $engineRoot = & (Join-Path $PSScriptRoot 'get-engine.ps1')
 if (-not (Test-Path -LiteralPath (Join-Path $engineRoot 'bin\ffmpeg.exe'))) { throw 'Verified engine missing.' }
-& dotnet publish (Join-Path $previewRoot 'XDConverter.csproj') -c Release -r win-x64 --self-contained true -o $appRoot '-p:PublishSingleFile=true' '-p:IncludeNativeLibrariesForSelfExtract=true' '-p:DebugType=embedded' '-p:RuntimeFrameworkVersion=8.0.33'
+& dotnet publish (Join-Path $previewRoot 'XDConverter.csproj') -c Release -r win-x64 --self-contained true -o $appRoot '-p:PreviewBuild=true' '-p:PublishSingleFile=true' '-p:IncludeNativeLibrariesForSelfExtract=true' '-p:DebugType=embedded' '-p:RuntimeFrameworkVersion=8.0.33'
 if ($LASTEXITCODE -ne 0) { throw 'Preview build failed.' }
 New-Item -ItemType Directory -Path (Join-Path $appRoot 'engine') -Force | Out-Null
 Copy-Item -Path (Join-Path $engineRoot 'bin\*') -Destination (Join-Path $appRoot 'engine') -Force
@@ -30,9 +30,9 @@ Copy-Item -LiteralPath (Join-Path $previewRoot 'engine.lock.json'),(Join-Path $p
 New-Item -ItemType Directory -Path (Join-Path $appRoot 'licenses') -Force | Out-Null
 Get-ChildItem -LiteralPath (Join-Path $projectRoot 'licenses') -File | Where-Object Name -Match '^(dotnet|wpf)' | Copy-Item -Destination (Join-Path $appRoot 'licenses') -Force
 $exe = Join-Path $appRoot 'XDConverter.Preview.exe'
-$suiteVersion = ([xml][System.IO.File]::ReadAllText((Join-Path $projectRoot 'XDSuite\XDSuite.csproj'))).Project.PropertyGroup.Version | Where-Object { $_ }
+$programVersion = ([xml][System.IO.File]::ReadAllText((Join-Path $projectRoot 'XDConverter\XDConverter.csproj'))).Project.PropertyGroup.Version | Where-Object { $_ }
 $appVersion = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($exe)
-if ($appVersion.FileVersion -ne ($suiteVersion + '.0') -or -not $appVersion.ProductVersion.StartsWith($suiteVersion + '-preview+')) { throw 'Preview product version must match the current suite version; distinguish test builds through metadata only.' }
+if ($appVersion.FileVersion -ne ($programVersion + '.0') -or -not $appVersion.ProductVersion.StartsWith($programVersion + '-preview+')) { throw 'Preview product version must match its declared application version; distinguish test builds through metadata only.' }
 $report = Join-Path $artifactRoot 'converter-tests.txt'
 $test = Start-Process -FilePath $exe -ArgumentList @('--self-test','--report',('"' + $report + '"')) -PassThru -Wait -WindowStyle Hidden
 if ($test.ExitCode -ne 0) { throw "Preview integration tests failed: $report" }

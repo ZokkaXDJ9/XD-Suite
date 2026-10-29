@@ -26,7 +26,7 @@ public partial class App : Application
                 string setup = Argument(e.Args, "--setup")!;
                 string report = Argument(e.Args, "--report")!;
                 var catalog = PackageValidation.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "catalog.json")));
-                var package = catalog.Apps.Single(p => p.Id == "xd-burner");
+                var package = catalog.Apps.Single(p => p.Id == (Argument(e.Args, "--app") ?? "xd-burner"));
                 if (InstallationDiscovery.Find(package) != null || Directory.Exists(target)) throw new InvalidOperationException("An existing burner installation must not be replaced by the integration test.");
                 await PackageInstaller.Install(setup, package, () => { }, CancellationToken.None, target);
                 var installed = InstallationDiscovery.Find(package)!;
@@ -38,7 +38,7 @@ public partial class App : Application
             {
                 ShutdownMode = ShutdownMode.OnExplicitShutdown;
                 var catalog = PackageValidation.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "catalog.json")));
-                var installed = InstallationDiscovery.Find(catalog.Apps.Single(p => p.Id == "xd-burner")) ?? throw new FileNotFoundException("Installed burner not found.");
+                var installed = InstallationDiscovery.Find(catalog.Apps.Single(p => p.Id == (Argument(e.Args, "--app") ?? "xd-burner"))) ?? throw new FileNotFoundException("Installed application not found.");
                 using var child = InstallationDiscovery.Launch(installed);
                 await Task.Delay(1800);
                 child.Refresh();

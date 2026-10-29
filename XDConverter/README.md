@@ -1,4 +1,4 @@
-# XD Konverter - lokale Audiovorschau
+# XD Konverter
 
 Entwicklung auf `app/xd-converter`. Diese Vorschau gehört nicht zum Live-Katalog oder zum Suite-Setup. Video ist für einen späteren Schritt vorgesehen.
 
@@ -23,7 +23,7 @@ Die verfügbaren Bitraten hängen von Abtastrate und Kanalzahl ab. Automatische 
 
 Jedes Zielformat speichert seine eigenen Einstellungen. Alle FLAC-Kompressionsstufen erhalten dieselben PCM-Samples, solange Bittiefe, Abtastrate und Kanalzahl beibehalten werden. Höhere Abtastraten oder Bittiefen stellen verlorene Quelldetails nicht wieder her. [Encoderoptionen in der FFmpeg-Dokumentation](https://ffmpeg.org/ffmpeg-codecs.html).
 
-Die Produktversion folgt automatisch `XDSuite/XDSuite.csproj` (aktuell 0.4.1). Dieser lokale Teststand trägt die Build-Kennung `automatic-defaults`. Einzelprogramme erhalten keine eigenen Versionssprünge.
+Die Suite gibt den Versionsstand für geänderte Programme vor (aktuell 0.5.0). Unveränderte Programme behalten ihre bisherigen Versionen und Setups. Lokale Teststände tragen zusätzlich eine Build-Kennung. Einzelprogramme erhalten keine eigenen Versionssprünge.
 
 Die Originaldateien werden nicht verändert. Existiert ein Zielname bereits, erhält das neue Ergebnis einen anderen Namen. Ergebnisse werden zuerst temporär geschrieben; Abbruch und Fehler entfernen die unvollständige Datei. Bereits fertige Ergebnisse bleiben erhalten.
 
@@ -34,14 +34,14 @@ Das Programmsymbol liegt als SVG unter `Assets/` vor. `tools/build-icon.ps1` erz
 Vom Repository-Verzeichnis aus:
 
 ```powershell
-.\experimental\XDConverter\tools\build-preview.ps1
-.\experimental\XDConverter\tools\test-preview-installer.ps1
+.\XDConverter\tools\build-preview.ps1
+.\XDConverter\tools\test-preview-installer.ps1
 ```
 
 Der Build lädt einen festgelegten [BtbN-LGPL-Build](https://github.com/BtbN/FFmpeg-Builds/releases/tag/autobuild-2026-10-28-19-47), prüft SHA-256 und verwendet FFmpeg/ffprobe als getrennte Prozesse. [FFmpeg nennt BtbN als Anbieter von Windows-Builds](https://ffmpeg.org/download.html). Version, Download und Build-Quellen stehen in `engine.lock.json`. Die Lizenz und die mitgelieferte Dokumentation werden in den Vorschau-Ordner kopiert. Es wird kein öffentlicher Binärdownload für den Konverter veröffentlicht.
 
 - Start ohne Installation: `artifacts/converter-preview/app/XDConverter.Preview.exe`.
-- Optionales separates Setup: `artifacts/converter-preview/XD-Konverter-Vorschau-Setup-0.4.1.exe`.
+- Optionales separates Setup: `artifacts/converter-preview/XD-Konverter-Vorschau-Setup-0.5.0.exe`.
 - Testbericht: `artifacts/converter-preview/converter-tests.txt`.
 - Prüfung unveränderter Live-Quellen: `artifacts/converter-preview/isolation-check.txt`.
 - Isolierter Installer-Test: `artifacts/converter-preview/installer-test.txt` (Elevation nur in der Testkopie ausgeschaltet).

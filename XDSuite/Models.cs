@@ -25,6 +25,7 @@ public sealed class AppCard(AppPackage package, InstalledApp? installed)
     public AppPackage Package { get; } = package;
     public InstalledApp? Installed { get; } = installed;
     public string Name => Package.Name.ToString();
+    public string Icon => "pack://application:,,,/XDSuite;component/Assets/" + (Package.Id == "xd-converter" ? "XDConverter.ico" : "XDBurner.ico");
     public string Description => Package.Description.ToString();
     public string Category => Package.Category.ToString();
     public string Features => string.Join("\n", Package.Features.Select(f => "✓  " + f));
@@ -75,5 +76,10 @@ public static class InstallationDiscovery
         var info = FileVersionInfo.GetVersionInfo(path);
         return new(Path.GetFullPath(path), info.ProductVersion ?? info.FileVersion ?? "0.0.0");
     }
-    public static Process Launch(InstalledApp app) => Process.Start(new ProcessStartInfo(app.Executable) { UseShellExecute = true, WorkingDirectory = Path.GetDirectoryName(app.Executable)! }) ?? throw new IOException("Das Programm wurde nicht gefunden. Bitte neu installieren.");
+    public static Process Launch(InstalledApp app)
+    {
+        var start = new ProcessStartInfo(app.Executable) { UseShellExecute = true, WorkingDirectory = Path.GetDirectoryName(app.Executable)! };
+        if (Path.GetFileName(app.Executable).Equals("XDConverter.exe", StringComparison.OrdinalIgnoreCase)) start.ArgumentList.Add(L10n.Current == UiLanguage.German ? "--german" : "--english");
+        return Process.Start(start) ?? throw new IOException("Das Programm wurde nicht gefunden. Bitte neu installieren.");
+    }
 }

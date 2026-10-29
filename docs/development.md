@@ -1,8 +1,8 @@
 # Entwicklung und lokale Tests
 
-Die Versionsnummer der Hauptsuite ist die gemeinsame Produktversion. Einzelprogramme übernehmen diesen Stand und erhalten keine eigenen Versionssprünge. Erst wenn die Version der Hauptsuite erhöht wird, dürfen sich die Produktversionen der Programme ändern. Lokale Teststände werden über eine Build-Kennung unterschieden; sie erzeugen keine neuen öffentlichen Programmversionen.
+Die Hauptsuite legt den Versionsstand fest, an dem gearbeitet wird. Nur tatsächlich geänderte Programme übernehmen diesen Stand. Unveränderte Programme behalten ihre Version und ihr bereits veröffentlichtes Setup. Eine Suite-Version löst keinen automatischen Versionssprung anderer Programme aus. Lokale Teststände werden über Build-Kennungen unterschieden.
 
-Der Konverter liest seine Produktversion beim Build aus `XDSuite/XDSuite.csproj`. Oberfläche und Installer übernehmen diese Nummer aus der gebauten Anwendung. Dadurch bleiben lokale Änderungen automatisch auf dem aktuellen Suite-Stand.
+Aktuell: Suite 0.5.0, Konverter 0.5.0, Brenner unverändert 0.4.1. Der Build verwendet das originale Brenner-Setup samt bisheriger Prüfsumme und Downloadadresse. Bereits aktuelle Tools werden vom Suite-Setup übersprungen.
 
 | Branch | Zuständigkeit |
 | --- | --- |
@@ -14,6 +14,6 @@ Jeder Programm-Branch enthält das Repository als Arbeitsgrundlage. Änderungen 
 
 `tools/publish-release.ps1` verweigert Veröffentlichungen außerhalb von `main`. Ein Push auf einen Programm-Branch erzeugt kein Release und verändert den Live-Katalog nicht. Die vorhandenen Setups werden durch einen Quellcode-Push nicht ersetzt.
 
-Der Audiokonverter wird unter `experimental/XDConverter/` entwickelt. Seine lokalen Builds liegen unter `artifacts/converter-preview/`. Er verwendet einen eigenen Programmnamen, eigene Einstellungen und einen eigenen Installer. Er ist nicht Bestandteil von `build-release.ps1`, der Suite-Installation oder `catalog/catalog.json`.
+Der Audiokonverter liegt unter `XDConverter/` und ist seit Suite 0.5.0 für Katalog und Suite-Setup freigegeben. Er besitzt ein eigenes Setup, Programmsymbol und Einstellungsverzeichnis. Tests auf `app/xd-converter` können weiterhin mit `XDConverter/tools/build-preview.ps1` erfolgen. `PreviewBuild=true` verwendet eine getrennte EXE, Installationskennung, Mutex und Einstellungen; Vorschau-Builds sind kein Teil des veröffentlichten Katalogs.
 
 Branch-Wechsel nur mit geklärtem Arbeitsstand durchführen. Änderungen an der Suite und an gemeinsamen Komponenten werden auf `main` gepflegt; Programm-Branches können diesen freigegebenen Stand anschließend übernehmen.

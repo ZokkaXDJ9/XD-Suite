@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework><UseWPF>true</UseWPF>
-    <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><Version>0.4.1</Version>
+    <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><Version>0.5.0</Version>
     <ApplicationManifest>../XDBurner/app.manifest</ApplicationManifest>
     <AssemblyName>XDSuite</AssemblyName><Product>XD Suite</Product><Description>Programme installieren, aktualisieren und starten.</Description>
     <ApplicationIcon>Assets/XDSuite.ico</ApplicationIcon>
@@ -10,6 +10,8 @@
   <ItemGroup>
     <ProjectReference Include="../XD.Common/XD.Common.csproj" />
     <Resource Include="Assets/XDSuite.ico" />
+    <Resource Include="../XDConverter/Assets/XDConverter.ico" Link="Assets/XDConverter.ico" />
+    <Resource Include="../XDBurner/Assets/XDBurner.ico" Link="Assets/XDBurner.ico" />
     <Content Include="../catalog/catalog.json" Link="catalog.json" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
   </ItemGroup>
 </Project>

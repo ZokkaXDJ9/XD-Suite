@@ -19,7 +19,7 @@ internal static class IconChecks
     public static void VerifyWindowAndExe(Window window, string outputDirectory)
     {
         if (window.Icon == null) throw new InvalidOperationException("Window icon missing.");
-        var decoder = BitmapDecoder.Create(new Uri("pack://application:,,,/XDConverter.Preview;component/Assets/XDConverter.ico"), BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
+        var decoder = BitmapDecoder.Create(new Uri("pack://application:,,,/" + typeof(App).Assembly.GetName().Name + ";component/Assets/XDConverter.ico"), BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
         foreach (int size in new[] { 16, 20, 24, 32, 40, 48, 64, 128, 256 })
             if (!decoder.Frames.Any(frame => frame.PixelWidth == size && frame.PixelHeight == size)) throw new InvalidOperationException("Icon size missing: " + size);
         var icons = new IntPtr[1];

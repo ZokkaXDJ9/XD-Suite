@@ -2,7 +2,7 @@
 param()
 $ErrorActionPreference = 'Stop'
 $previewRoot = Split-Path -Parent $PSScriptRoot
-$projectRoot = Split-Path -Parent (Split-Path -Parent $previewRoot)
+$projectRoot = Split-Path -Parent $previewRoot
 $testGuid = [Guid]::NewGuid().ToString().ToUpperInvariant()
 $id = '{' + $testGuid + '}_is1'
 $testName = 'XD Converter Preview Test ' + $testGuid.Substring(0,8)

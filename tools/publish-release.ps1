@@ -1,46 +1,54 @@
 [CmdletBinding()]
-param(
-    [string]$Repository = 'ZokkaXDJ9/XD-Suite',
-    [switch]$CreateRepository,
-    [switch]$Publish
-)
+param([string]$Repository = 'ZokkaXDJ9/XD-Suite', [switch]$Publish)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$tag = 'v0.4.1'
 if ($Repository -notmatch '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$') { throw 'Invalid repository.' }
 Push-Location $projectRoot
 try {
-    $assets = @('dist\XD-Suite-Setup-0.4.1.exe','dist\XD-Brenner-Setup-0.4.1.exe','dist\catalog.json','dist\SHA256SUMS.txt')
-    foreach ($asset in $assets) { if (-not (Test-Path -LiteralPath $asset)) { throw "Missing release asset: $asset" } }
-    $catalog = [System.IO.File]::ReadAllText((Join-Path $projectRoot 'dist\catalog.json')) | ConvertFrom-Json
-    $burner = $catalog.apps | Where-Object id -eq 'xd-burner'
-    if ($burner.installerSha256 -ne (Get-FileHash -LiteralPath 'dist\XD-Brenner-Setup-0.4.1.exe').Hash -or $burner.installerUrl -notlike "https://github.com/$Repository/releases/download/$tag/*") { throw 'Catalog does not match the release assets or target repository.' }
-    if ($CreateRepository) {
-        if (Test-Path -LiteralPath '.git') { throw 'A repository already exists. Refusing to initialize or switch branches.' }
-        & gh repo create $Repository --public --description 'Windows CD burner and application launcher with German and English interfaces.'
-        if ($LASTEXITCODE -ne 0) { throw 'Repository creation failed.' }
-        & git init -b main
-        if ($LASTEXITCODE -ne 0) { throw 'Git initialization failed.' }
-        & git remote add origin "https://github.com/$Repository.git"
-        if ($LASTEXITCODE -ne 0) { throw 'Remote configuration failed.' }
+    $version = ([xml][IO.File]::ReadAllText((Join-Path $projectRoot 'XDSuite\XDSuite.csproj'))).Project.PropertyGroup.Version | Where-Object { $_ }
+    $tag = 'v' + $version
+    if ((& git branch --show-current).Trim() -ne 'main') { throw 'Publish suite releases only from main.' }
+    if ((& git remote get-url origin).Trim() -notin @("https://github.com/$Repository.git", "git@github.com:$Repository.git")) { throw 'Origin does not match target repository.' }
+    if (@(& git status --porcelain).Count -ne 0) { throw 'Commit the tested release before publishing.' }
+    $catalog = [IO.File]::ReadAllText((Join-Path $projectRoot 'dist\catalog.json')) | ConvertFrom-Json
+    $assets = [Collections.Generic.List[string]]::new()
+    foreach ($name in @("XD-Suite-Setup-$version.exe", 'catalog.json', 'SHA256SUMS.txt')) { $assets.Add('dist\' + $name) }
+    foreach ($app in $catalog.apps) {
+        if ([version]$app.version -gt [version]$version) { throw 'An application version exceeds the suite.' }
+        $name = [IO.Path]::GetFileName(([uri]$app.installerUrl).AbsolutePath)
+        $path = Join-Path $projectRoot ('dist\' + $name)
+        if (-not (Test-Path -LiteralPath $path) -or (Get-FileHash -LiteralPath $path).Hash -ne $app.installerSha256 -or (Get-Item -LiteralPath $path).Length -ne $app.installerSizeBytes) { throw "Catalog artifact mismatch: $name" }
+        if ($app.installerUrl.StartsWith("https://github.com/$Repository/releases/download/$tag/")) { $assets.Add('dist\' + $name) }
     }
-    if (-not (Test-Path -LiteralPath '.git')) { throw 'No local repository. Use -CreateRepository only after approving a new public repository.' }
-    $remote = (& git remote get-url origin).Trim()
-    if ($LASTEXITCODE -ne 0 -or $remote -notin @("https://github.com/$Repository.git","git@github.com:$Repository.git")) { throw 'Origin does not match target repository.' }
-    $branch = (& git branch --show-current).Trim()
-    if ($LASTEXITCODE -ne 0 -or $branch -ne 'main') { throw 'Suite releases can only be published from main. Application branches are for development and local previews.' }
-    & git add -A -- '.gitattributes' '.gitignore' 'LICENSE' 'README.md' 'build-release.ps1' 'XDBurner' 'XD.Common' 'XD.UpdateHelper' 'XDSuite' 'catalog' 'installer' 'licenses' 'tests' 'tools' 'docs'
-    if ($LASTEXITCODE -ne 0) { throw 'Staging failed.' }
-    & git diff --cached --check
-    if ($LASTEXITCODE -ne 0) { throw 'Staged diff checks failed.' }
-    & git diff --cached --quiet
-    if ($LASTEXITCODE -eq 1) { & git commit -m 'Fix updates from AppData when the old helper holds the directory open'; if ($LASTEXITCODE -ne 0) { throw 'Commit failed.' } }
-    & git push -u origin $branch
+    $sums = @{}
+    foreach ($line in [IO.File]::ReadAllLines((Join-Path $projectRoot 'dist\SHA256SUMS.txt'))) {
+        $parts = $line.Trim() -split '\s+', 2
+        if ($parts.Count -eq 2) { $sums[$parts[1].TrimStart('*')] = $parts[0] }
+    }
+    foreach ($asset in $assets) {
+        if (-not (Test-Path -LiteralPath $asset)) { throw "Missing release asset: $asset" }
+        $name = [IO.Path]::GetFileName($asset)
+        if ($name -ne 'SHA256SUMS.txt' -and (Get-FileHash -LiteralPath $asset).Hash -ne $sums[$name]) { throw "Release checksum mismatch: $name" }
+    }
+    & git push origin main
     if ($LASTEXITCODE -ne 0) { throw 'Push failed.' }
-    $releaseArgs = @('release','create',$tag,'--repo',$Repository,'--target',$branch,'--title','XD Suite & XD Burner 0.4.1','--notes-file','docs\release-notes-0.4.1.md')
-    if (-not $Publish) { $releaseArgs += '--draft' }
-    $releaseArgs += $assets
-    & gh @releaseArgs
-    if ($LASTEXITCODE -ne 0) { throw 'Release creation failed. Existing releases are not overwritten automatically.' }
+    $commit = (& git rev-parse HEAD).Trim()
+    & gh release create $tag --repo $Repository --target $commit --title "XD Suite $version" --notes-file "docs\release-notes-$version.md" --draft @assets
+    if ($LASTEXITCODE -ne 0) { throw 'Release creation failed. Existing releases are not overwritten.' }
+    $remoteJson = & gh api "repos/$Repository/releases/tags/$tag"
+    if ($LASTEXITCODE -ne 0) { throw 'Draft release verification failed.' }
+    $remote = $remoteJson | ConvertFrom-Json
+    if (-not $remote.draft) { throw 'Expected an unpublished draft.' }
+    foreach ($asset in $assets) {
+        $name = [IO.Path]::GetFileName($asset)
+        $found = @($remote.assets | Where-Object name -eq $name)
+        if ($found.Count -ne 1 -or $found[0].size -ne (Get-Item -LiteralPath $asset).Length) { throw "Uploaded release asset mismatch: $name" }
+        $digest = 'sha256:' + (Get-FileHash -LiteralPath $asset).Hash.ToLowerInvariant()
+        if ($found[0].digest -ne $digest) { throw "Uploaded release digest mismatch: $name" }
+    }
+    if ($Publish) {
+        & gh release edit $tag --repo $Repository --draft=false --latest
+        if ($LASTEXITCODE -ne 0) { throw 'Release publication failed; draft retained.' }
+    }
 }
 finally { Pop-Location }

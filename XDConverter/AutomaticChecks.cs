@@ -48,17 +48,17 @@ internal static class AutomaticChecks
         Require(new FileInfo(high).Length > new FileInfo(low).Length, "Manual V0/V9 quality overrides did not affect automatic MP3 encoding.");
         checks.Add($"PASS: {conversions} real automatic conversions across six formats, mono/8 kHz and high-resolution PCM/float sources; every lossy mode accepts automatic quality/bitrate; rate/channel/depth/VBR overrides take effect.");
 
-        var defaults = JsonSerializer.Deserialize<PreviewSettings>("{\"Format\":\"MP3\",\"Quality\":192,\"Encoders\":{\"MP3\":{\"Mode\":0,\"Bitrate\":192,\"VbrQuality\":2,\"Depth\":16,\"Compression\":5,\"Application\":0}}}")!;
+        var defaults = JsonSerializer.Deserialize<ConverterSettings>("{\"Format\":\"MP3\",\"Quality\":192,\"Encoders\":{\"MP3\":{\"Mode\":0,\"Bitrate\":192,\"VbrQuality\":2,\"Depth\":16,\"Compression\":5,\"Application\":0}}}")!;
         var p = defaults.ForFormat("MP3");
         Require(p.Mode == EncodingMode.Automatic && p.Bitrate == 0 && p.VbrQuality == EncodingProfile.AutomaticQuality && p.Depth == 0 && p.Compression == -1 && p.Application == -1, "Old fixed defaults were not upgraded to Automatic.");
         p.Mode = EncodingMode.Cbr; p.Bitrate = 192;
-        var saved = JsonSerializer.Deserialize<PreviewSettings>(JsonSerializer.Serialize(defaults))!;
+        var saved = JsonSerializer.Deserialize<ConverterSettings>(JsonSerializer.Serialize(defaults))!;
         Require(saved.ForFormat("MP3").Mode == EncodingMode.Cbr && saved.ForFormat("MP3").Bitrate == 192, "Explicit settings were reset again after the one-time upgrade.");
         saved.UseAutomatic("MP3");
         Require(saved.ForFormat("MP3").Mode == EncodingMode.Automatic && saved.ForFormat("MP3").VbrQuality == EncodingProfile.AutomaticQuality, "Reset did not restore automatic preferences.");
-        var custom = JsonSerializer.Deserialize<PreviewSettings>("{\"Encoders\":{\"MP3\":{\"Mode\":0,\"Bitrate\":320,\"VbrQuality\":2}}}")!;
+        var custom = JsonSerializer.Deserialize<ConverterSettings>("{\"Encoders\":{\"MP3\":{\"Mode\":0,\"Bitrate\":320,\"VbrQuality\":2}}}")!;
         Require(custom.ForFormat("MP3").Mode == EncodingMode.Cbr && custom.ForFormat("MP3").Bitrate == 320, "Migration changed the encoding mode needed by a non-default manual bitrate.");
-        var legacy = JsonSerializer.Deserialize<PreviewSettings>("{\"Format\":\"MP3\",\"Quality\":320}")!;
+        var legacy = JsonSerializer.Deserialize<ConverterSettings>("{\"Format\":\"MP3\",\"Quality\":320}")!;
         Require(legacy.ForFormat("MP3").Mode == EncodingMode.Cbr && legacy.ForFormat("MP3").Bitrate == 320, "Legacy bitrate override lost its encoding mode.");
         checks.Add("PASS: old fixed defaults migrate once to Automatic; new explicit overrides survive save/load; reset restores automatic preferences.");
     }

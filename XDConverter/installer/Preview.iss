@@ -1,4 +1,4 @@
-#define Root AddBackslash(SourcePath) + "..\..\..\"
+#define Root AddBackslash(SourcePath) + "..\..\"
 #define SuiteVersion RemoveFileExt(GetFileVersion(Root + "artifacts\converter-preview\app\XDConverter.Preview.exe"))
 [Setup]
 AppId={{D22B76B3-3CED-4977-9E12-86CA4C4D237A}
@@ -16,7 +16,7 @@ ShowLanguageDialog=yes
 AppMutex=Local\XDConverter.Preview.App
 OutputDir={#Root}artifacts\converter-preview
 OutputBaseFilename=XD-Konverter-Vorschau-Setup-{#SuiteVersion}
-SetupIconFile={#Root}experimental\XDConverter\Assets\XDConverter.ico
+SetupIconFile={#Root}XDConverter\Assets\XDConverter.ico
 WizardStyle=modern
 Compression=lzma2/normal
 SolidCompression=yes

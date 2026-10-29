@@ -44,6 +44,50 @@
                                           "en":  "Switch between German and English"
                                       }
                                   ]
+                 },
+                 {
+                     "id":  "xd-converter",
+                     "name":  {
+                                  "de":  "XD Konverter",
+                                  "en":  "XD Converter"
+                              },
+                     "description":  {
+                                         "de":  "Audiodateien lokal in MP3, WAV, FLAC, OGG, M4A und Opus konvertieren.",
+                                         "en":  "Convert audio locally to MP3, WAV, FLAC, OGG, M4A and Opus."
+                                     },
+                     "category":  {
+                                      "de":  "Audio",
+                                      "en":  "Audio"
+                                  },
+                     "version":  "0.5.0",
+                     "installerUrl":  "https://github.com/ZokkaXDJ9/XD-Suite/releases/download/v0.5.0/XD-Konverter-Setup-0.5.0.exe",
+                     "installerSha256":  "dfefef25dcf9b7a9044e2f47671924bbd9a6a70fc5fa9a71808aa22b94d16909",
+                     "installerSizeBytes":  109826835,
+                     "executable":  "XDConverter.exe",
+                     "registryId":  "{3D477D64-7020-48F0-A621-66CF2958722B}_is1",
+                     "installFolder":  "XDConverter",
+                     "features":  [
+                                      {
+                                          "de":  "Automatische Audioeinstellungen",
+                                          "en":  "Automatic audio settings"
+                                      },
+                                      {
+                                          "de":  "Optionale CBR-, ABR- und VBR-Einstellungen",
+                                          "en":  "Optional CBR, ABR and VBR settings"
+                                      },
+                                      {
+                                          "de":  "Dateien und Ordner per Drag-and-drop",
+                                          "en":  "Drag and drop files and folders"
+                                      },
+                                      {
+                                          "de":  "Originaldateien bleiben erhalten",
+                                          "en":  "Original files are retained"
+                                      },
+                                      {
+                                          "de":  "Deutsch und Englisch umschaltbar",
+                                          "en":  "Switch between German and English"
+                                      }
+                                  ]
                  }
              ]
 }

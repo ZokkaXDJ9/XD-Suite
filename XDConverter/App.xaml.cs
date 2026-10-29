@@ -19,7 +19,7 @@ public partial class App : Application
             if (e.Args.Contains("--self-test"))
             {
                 ShutdownMode = ShutdownMode.OnExplicitShutdown;
-                await SelfTest.Run(engine, Argument(e.Args, "--report") ?? "converter-preview-tests.txt"); Shutdown(0); return;
+                await SelfTest.Run(engine, Argument(e.Args, "--report") ?? "converter-tests.txt"); Shutdown(0); return;
             }
             if (e.Args.Contains("--render"))
             {
@@ -38,9 +38,9 @@ public partial class App : Application
                 }
                 Shutdown(0); return;
             }
-            mutex = new Mutex(true, @"Local\XDConverter.Preview.App", out ownsMutex);
+            mutex = new Mutex(true, BuildInfo.MutexName, out ownsMutex);
             if (!ownsMutex) { Shutdown(0); return; }
-            var settings = PreviewSettings.Load();
+            var settings = ConverterSettings.Load();
             if (e.Args.Contains("--english")) settings.English = true;
             if (e.Args.Contains("--german")) settings.English = false;
             Texts.Current.Set(settings.English);
@@ -58,7 +58,7 @@ public partial class App : Application
     private static string? Argument(string[] args, string name) { int index = Array.IndexOf(args, name); return index >= 0 && index + 1 < args.Length ? args[index + 1] : null; }
     public static void Log(Exception error)
     {
-        try { string directory = Path.Combine(PreviewSettings.DataDirectory, "Logs"); Directory.CreateDirectory(directory); File.AppendAllText(Path.Combine(directory, "preview.log"), DateTimeOffset.Now.ToString("O") + "\n" + error + "\n"); }
+        try { string directory = Path.Combine(ConverterSettings.DataDirectory, "Logs"); Directory.CreateDirectory(directory); File.AppendAllText(Path.Combine(directory, "converter.log"), DateTimeOffset.Now.ToString("O") + "\n" + error + "\n"); }
         catch (IOException) { } catch (UnauthorizedAccessException) { }
     }
 }

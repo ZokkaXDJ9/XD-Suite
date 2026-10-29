@@ -7,22 +7,27 @@ $encoding = New-Object System.Text.UTF8Encoding($false)
 $compiler = Join-Path $projectRoot '.tools\InnoSetup\ISCC.exe'
 $csc = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 New-Item -ItemType Directory -Path $fixtureRoot -Force | Out-Null
-foreach ($folder in @('installer','dist\XDBurner','dist\XDSuite','XDBurner\Assets','XDSuite\Assets')) { New-Item -ItemType Directory -Path (Join-Path $fixtureRoot $folder) -Force | Out-Null }
+foreach ($folder in @('installer','dist\XDBurner','dist\XDSuite','XDBurner\Assets','XDSuite\Assets','dist\XDConverter','XDConverter\Assets')) { New-Item -ItemType Directory -Path (Join-Path $fixtureRoot $folder) -Force | Out-Null }
 Copy-Item -LiteralPath (Join-Path $projectRoot 'LICENSE') -Destination $fixtureRoot
-foreach ($app in @('XDBurner','XDSuite')) { Copy-Item -LiteralPath (Join-Path $projectRoot ($app + '\Assets\' + $app + '.ico')) -Destination (Join-Path $fixtureRoot ($app + '\Assets')) }
+foreach ($app in @('XDBurner','XDConverter','XDSuite')) { Copy-Item -LiteralPath (Join-Path $projectRoot ($app + '\Assets\' + $app + '.ico')) -Destination (Join-Path $fixtureRoot ($app + '\Assets')) }
 $stub = Join-Path $fixtureRoot 'stub.cs'
 [System.IO.File]::WriteAllText($stub,'class Fixture { static void Main(string[] args) { if (args.Length == 2 && args[0] == "--record-uninstall") System.IO.File.WriteAllText(args[1], "uninstalled"); if (args.Length == 3 && args[0] == "--hold-directory") { System.IO.File.WriteAllText(args[1], "ready"); while (!System.IO.File.Exists(args[2])) System.Threading.Thread.Sleep(100); } } }',$encoding)
-foreach ($app in @('XDBurner','XDSuite')) {
-    & $csc /nologo /target:winexe ('/out:' + (Join-Path $fixtureRoot ('dist\' + $app + '\' + $app + '.exe'))) $stub
+foreach ($app in @('XDBurner','XDConverter','XDSuite')) {
+    $appStub = Join-Path $fixtureRoot ($app + '.cs')
+    $appVersion = if ($app -eq 'XDBurner') { '0.4.1.0' } else { '0.5.0.0' }
+    [IO.File]::WriteAllText($appStub,('[assembly: System.Reflection.AssemblyFileVersion("' + $appVersion + '")]' + [IO.File]::ReadAllText($stub)),$encoding)
+    & $csc /nologo /target:winexe ('/out:' + (Join-Path $fixtureRoot ('dist\' + $app + '\' + $app + '.exe'))) $appStub
     if ($LASTEXITCODE -ne 0) { throw 'Fixture compilation failed.' }
 }
 $ids = @{}
-foreach ($app in @('XDBurner','XDSuite')) {
+foreach ($app in @('XDBurner','XDConverter','XDSuite')) {
     $id = [Guid]::NewGuid().ToString().ToUpperInvariant()
     $ids[$app] = $id
     $source = [System.IO.File]::ReadAllText((Join-Path $projectRoot ('installer\' + $app + '.iss')))
-    $originalId = if ($app -eq 'XDBurner') { 'B5AF424C-85D1-47D4-AF62-30A5A15C5094' } else { 'F80CC53F-43F1-4E46-B7F4-61435E75303D' }
+    $originalId = switch ($app) { 'XDBurner' { 'B5AF424C-85D1-47D4-AF62-30A5A15C5094' } 'XDConverter' { '3D477D64-7020-48F0-A621-66CF2958722B' } 'XDSuite' { 'F80CC53F-43F1-4E46-B7F4-61435E75303D' } }
     $source = $source.Replace($originalId,$id).Replace('PrivilegesRequired=admin','PrivilegesRequired=lowest')
+    if ($app -eq 'XDConverter') { $source = $source.Replace('DefaultDirName={autopf}\XDConverter','DefaultDirName=' + $fixtureRoot + '\installed-XDConverter') }
+    if ($app -eq 'XDSuite') { $source = $source.Replace('B5AF424C-85D1-47D4-AF62-30A5A15C5094',$ids['XDBurner']).Replace('3D477D64-7020-48F0-A621-66CF2958722B',$ids['XDConverter']) }
     $source = [regex]::Replace($source,'(?m)^AppMutex=.*$','AppMutex=Local\XDTest.' + $id)
     # Never create, replace or delete real product shortcuts in this isolated test.
     $source = [regex]::Replace($source,'(?ms)^\[(Icons|InstallDelete)\]\r?\n.*?(?=^\[)','')
@@ -30,13 +35,14 @@ foreach ($app in @('XDBurner','XDSuite')) {
 }
 $paths = [System.IO.File]::ReadAllText((Join-Path $projectRoot 'installer\UpgradePaths.iss')).Replace('{autopf}\{#ProgramFolder}',$fixtureRoot + '\installed-{#ProgramFolder}')
 [System.IO.File]::WriteAllText((Join-Path $fixtureRoot 'installer\UpgradePaths.iss'),$paths,$encoding)
-foreach ($app in @('XDBurner','XDSuite')) {
+foreach ($app in @('XDBurner','XDConverter','XDSuite')) {
     & $compiler /Q (Join-Path $fixtureRoot ('installer\' + $app + '.iss'))
     if ($LASTEXITCODE -ne 0) { throw 'Production-script fixture compilation failed.' }
 }
-$suiteSetup = Join-Path $fixtureRoot 'dist\XD-Suite-Setup-0.4.1.exe'
+$suiteSetup = Join-Path $fixtureRoot 'dist\XD-Suite-Setup-0.5.0.exe'
 $suiteDir = Join-Path $fixtureRoot 'installed-XDSuite'
 $burnerDir = Join-Path $fixtureRoot 'installed-XDBurner'
+$converterDir = Join-Path $fixtureRoot 'installed-XDConverter'
 function Run([string]$file,[string]$arguments) {
     $p = Start-Process -FilePath $file -ArgumentList $arguments -PassThru -Wait -WindowStyle Hidden
     if ($p.ExitCode -ne 0) { throw "Fixture failed ($($p.ExitCode)): $file" }
@@ -44,18 +50,28 @@ function Run([string]$file,[string]$arguments) {
 function Check([bool]$value,[string]$message) { if (-not $value) { throw $message }; $checks.Add('PASS: ' + $message) }
 $checks = New-Object 'System.Collections.Generic.List[string]'
 Run $suiteSetup '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /LANG=english /COMPONENTS=suite /TASKS=""'
-Check ((Test-Path -LiteralPath (Join-Path $suiteDir 'XDSuite.exe')) -and -not (Test-Path -LiteralPath (Join-Path $burnerDir 'XDBurner.exe'))) 'Deselecting the burner installs only the suite.'
-Run $suiteSetup '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /LANG=german /COMPONENTS=suite,burner /TASKS=""'
+Check ((Test-Path -LiteralPath (Join-Path $suiteDir 'XDSuite.exe')) -and -not (Test-Path -LiteralPath (Join-Path $burnerDir 'XDBurner.exe'))) 'Deselecting both tools installs only the suite.'
+Check (-not (Test-Path -LiteralPath (Join-Path $converterDir 'XDConverter.exe'))) 'Converter is not installed when deselected.'
+Run $suiteSetup '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /LANG=german /COMPONENTS=suite,converter /TASKS=""'
+Check ((Test-Path -LiteralPath (Join-Path $converterDir 'XDConverter.exe')) -and -not (Test-Path -LiteralPath (Join-Path $burnerDir 'XDBurner.exe'))) 'Converter can be selected independently of the burner.'
+Run $suiteSetup '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /LANG=german /COMPONENTS=suite,burner,converter /TASKS=""'
 Check (Test-Path -LiteralPath (Join-Path $burnerDir 'XDBurner.exe')) 'Selecting the burner runs the embedded standalone setup.'
-foreach ($app in @('XDBurner','XDSuite')) {
+foreach ($app in @('XDBurner','XDConverter','XDSuite')) {
     $key = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{' + $ids[$app] + '}_is1'
     Check (Test-Path -LiteralPath $key) ($app + ' has its own installation registration.')
     Check ((Get-ItemProperty -LiteralPath $key).'Inno Setup: Language' -eq 'german') ($app + ' receives the chosen setup language.')
 }
+$burnerUninstallTime = (Get-Item -LiteralPath (Join-Path $burnerDir 'unins000.dat')).LastWriteTimeUtc
+$converterUninstallTime = (Get-Item -LiteralPath (Join-Path $converterDir 'unins000.dat')).LastWriteTimeUtc
+Run $suiteSetup '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /LANG=german /COMPONENTS=suite,burner,converter /TASKS=""'
+Check ((Get-Item -LiteralPath (Join-Path $burnerDir 'unins000.dat')).LastWriteTimeUtc -eq $burnerUninstallTime) 'Current burner is skipped without reinstalling or changing its version.'
+Check ((Get-Item -LiteralPath (Join-Path $converterDir 'unins000.dat')).LastWriteTimeUtc -eq $converterUninstallTime) 'Current converter is skipped without reinstalling.'
 Run (Join-Path $suiteDir 'unins000.exe') '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART'
 Check (Test-Path -LiteralPath (Join-Path $burnerDir 'XDBurner.exe')) 'Removing the suite leaves the independently installed burner intact.'
+Check (Test-Path -LiteralPath (Join-Path $converterDir 'XDConverter.exe')) 'Removing the suite leaves the independently installed converter intact.'
+Run (Join-Path $converterDir 'unins000.exe') '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART'
 Run (Join-Path $burnerDir 'unins000.exe') '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART'
-foreach ($app in @('XDBurner','XDSuite')) {
+foreach ($app in @('XDBurner','XDConverter','XDSuite')) {
     $key = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{' + $ids[$app] + '}_is1'
     Check (-not (Test-Path -LiteralPath $key)) ($app + ' test registration cleaned up.')
 }

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework><UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
+    <PreviewBuild Condition="'$(PreviewBuild)' == ''">false</PreviewBuild>
+    <AssemblyName>XDConverter</AssemblyName><Product>XD Konverter</Product>
+    <SuiteVersion>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)..\XDSuite\XDSuite.csproj')), '&lt;Version&gt;([^&lt;]+)&lt;/Version&gt;').Groups[1].Value)</SuiteVersion>
+    <Version>0.5.0</Version><InformationalVersion>$(Version)</InformationalVersion>
+    <AssemblyName Condition="'$(PreviewBuild)' == 'true'">XDConverter.Preview</AssemblyName>
+    <Product Condition="'$(PreviewBuild)' == 'true'">XD Konverter Vorschau</Product>
+    <DefineConstants Condition="'$(PreviewBuild)' == 'true'">$(DefineConstants);CONVERTER_PREVIEW</DefineConstants>
+    <InformationalVersion Condition="'$(PreviewBuild)' == 'true'">$(Version)-preview+automatic-defaults</InformationalVersion>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets/XDConverter.ico</ApplicationIcon>
+    <Description>Audiodateien lokal konvertieren.</Description>
+  </PropertyGroup>
+  <ItemGroup><Resource Include="Assets/XDConverter.ico"/><Resource Include="Assets/XDConverter-256.png"/></ItemGroup>
+  <Target Name="ValidateSuiteVersion" BeforeTargets="BeforeBuild">
+    <Error Condition="$([MSBuild]::VersionGreaterThan('$(Version)', '$(SuiteVersion)'))" Text="The converter version cannot exceed the current suite version." />
+  </Target>
+</Project>

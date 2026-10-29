@@ -99,10 +99,10 @@ internal static class EncodingChecks
         }
         checks.Add("PASS: actual MP3/Opus packet sizes confirm constant bitrate (padding only) and content-dependent VBR on changing audio.");
 
-        var old = JsonSerializer.Deserialize<PreviewSettings>("{\"Format\":\"WAV\",\"Quality\":24,\"Rate\":48000,\"Channels\":1,\"English\":true,\"OutputDirectory\":\"C:\\\\Audio\",\"Tags\":false}")!;
+        var old = JsonSerializer.Deserialize<ConverterSettings>("{\"Format\":\"WAV\",\"Quality\":24,\"Rate\":48000,\"Channels\":1,\"English\":true,\"OutputDirectory\":\"C:\\\\Audio\",\"Tags\":false}")!;
         Require(old.ForFormat("WAV").Depth == 24 && old.ForFormat("WAV").Rate == 48000 && old.ForFormat("WAV").Channels == 1 && !old.Tags && old.English && old.OutputDirectory == @"C:\Audio", "Legacy preferences not preserved.");
         old.ForFormat("MP3").Mode = EncodingMode.Vbr; old.ForFormat("MP3").VbrQuality = 0;
-        var restored = JsonSerializer.Deserialize<PreviewSettings>(JsonSerializer.Serialize(old))!;
+        var restored = JsonSerializer.Deserialize<ConverterSettings>(JsonSerializer.Serialize(old))!;
         Require(restored.ForFormat("MP3").Mode == EncodingMode.Vbr && restored.ForFormat("MP3").VbrQuality == 0 && restored.ForFormat("WAV").Depth == 24, "Per-format preference round trip failed.");
         checks.Add("PASS: legacy preferences imported, folder/language/tags retained and per-format encoding preferences survive serialization.");
     }

@@ -3,10 +3,10 @@ using System.Text.Json;
 
 namespace XDConverter;
 
-public sealed class PreviewSettings
+public sealed class ConverterSettings
 {
     public bool English { get; set; } = System.Globalization.CultureInfo.InstalledUICulture.TwoLetterISOLanguageName != "de";
-    public string OutputDirectory { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyMusic), "XD Konverter Vorschau");
+    public string OutputDirectory { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyMusic), BuildInfo.OutputFolder);
     public string Format { get; set; } = "MP3";
     public int Quality { get; set; }
     public int Rate { get; set; }
@@ -58,10 +58,10 @@ public sealed class PreviewSettings
     {
         UpgradeAutomaticDefaults(); Encoders ??= new(); Encoders[format] = new();
     }
-    public static string DataDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "XDConverterPreview");
-    public static PreviewSettings Load()
+    public static string DataDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), BuildInfo.DataFolder);
+    public static ConverterSettings Load()
     {
-        try { return JsonSerializer.Deserialize<PreviewSettings>(File.ReadAllText(Path.Combine(DataDirectory, "settings.json"))) ?? new(); }
+        try { return JsonSerializer.Deserialize<ConverterSettings>(File.ReadAllText(Path.Combine(DataDirectory, "settings.json"))) ?? new(); }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException) { return new(); }
     }
     public void Save()

@@ -5,7 +5,7 @@
 [Setup]
 AppId={{F80CC53F-43F1-4E46-B7F4-61435E75303D}
 AppName=XD Suite
-AppVersion=0.4.1
+AppVersion=0.5.0
 AppPublisher=XD Suite
 DefaultDirName={code:DefaultInstallDir}
 DefaultGroupName=XD Suite
@@ -19,7 +19,7 @@ MinVersion=10.0.17763
 UninstallDisplayName=XD Suite
 UninstallDisplayIcon={app}\XDSuite.exe
 OutputDir={#Root}dist
-OutputBaseFilename=XD-Suite-Setup-0.4.1
+OutputBaseFilename=XD-Suite-Setup-0.5.0
 SetupIconFile={#Root}XDSuite\Assets\XDSuite.ico
 Compression=lzma2/normal
 SolidCompression=yes
@@ -29,7 +29,7 @@ SetupLogging=yes
 CloseApplications=yes
 RestartApplications=no
 AppMutex=Local\XDSuite.App
-VersionInfoVersion=0.4.1.0
+VersionInfoVersion=0.5.0.0
 VersionInfoDescription=XD Suite Installation
 VersionInfoProductName=XD Suite
 LicenseFile={#Root}LICENSE
@@ -44,9 +44,11 @@ Name: "custom"; Description: "{cm:TypeCustom}"; Flags: iscustom
 [Components]
 Name: "suite"; Description: "XD Suite"; Types: full custom; Flags: fixed
 Name: "burner"; Description: "{cm:BurnerName}"; Types: full
+Name: "converter"; Description: "{cm:ConverterName}"; Types: full
 [Files]
 Source: "{#Root}dist\XDSuite\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#Root}dist\XD-Brenner-Setup-0.4.1.exe"; DestDir: "{tmp}"; Components: burner; Flags: deleteafterinstall
+Source: "{#Root}dist\XD-Konverter-Setup-0.5.0.exe"; DestDir: "{tmp}"; Components: converter; Flags: deleteafterinstall
 [InstallDelete]
 Type: files; Name: "{userprograms}\XD Suite.lnk"
 Type: files; Name: "{userdesktop}\XD Suite.lnk"
@@ -69,24 +71,52 @@ german.TypeCustom=Benutzerdefiniert
 english.TypeCustom=Custom installation
 german.BurnerName=XD Brenner
 english.BurnerName=XD Burner
-german.ToolInstallError=XD Brenner konnte nicht installiert werden. Fehlercode: %1
-english.ToolInstallError=XD Burner could not be installed. Error code: %1
+german.ConverterName=XD Konverter
+english.ConverterName=XD Converter
+german.ToolInstallError=%1 konnte nicht installiert werden. Fehlercode: %2
+english.ToolInstallError=%1 could not be installed. Error code: %2
 
 #include "UpgradePaths.iss"
 [Code]
+function ToolAtLeastInRoot(Root: Integer; Id, ExeName, Required: String): Boolean;
+var Path, VersionText: String; InstalledVersion, RequiredVersion: Int64;
+begin
+  Result := False;
+  if not RegQueryStringValue(Root, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\' + Id + '_is1', 'InstallLocation', Path) then Exit;
+  if not FileExists(AddBackslash(Path) + ExeName) then Exit;
+  if Pos('\appdata\local\programs\', Lowercase(Path)) > 0 then Exit;
+  if not GetPackedVersion(AddBackslash(Path) + ExeName, InstalledVersion) then
+  begin
+    if not RegQueryStringValue(Root, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\' + Id + '_is1', 'DisplayVersion', VersionText) then Exit;
+    if not StrToVersion(VersionText, InstalledVersion) then Exit;
+  end;
+  if not StrToVersion(Required, RequiredVersion) then Exit;
+  Result := ComparePackedVersion(InstalledVersion, RequiredVersion) >= 0;
+end;
+function ToolAtLeast(Id, ExeName, Required: String): Boolean;
+begin
+  Result := ToolAtLeastInRoot(HKLM64, Id, ExeName, Required) or ToolAtLeastInRoot(HKLM32, Id, ExeName, Required) or
+    ToolAtLeastInRoot(HKCU64, Id, ExeName, Required) or ToolAtLeastInRoot(HKCU32, Id, ExeName, Required);
+end;
 procedure CurStepChanged(CurStep: TSetupStep);
 var ExitCode: Integer;
 begin
   if CurStep = ssDone then MigrateRegistration;
   if CurStep = ssPostInstall then
   begin
-    if WizardIsComponentSelected('burner') then
+    if WizardIsComponentSelected('burner') and not ToolAtLeast('{B5AF424C-85D1-47D4-AF62-30A5A15C5094}', 'XDBurner.exe', '0.4.1') then
     begin
       if not Exec(ExpandConstant('{tmp}\XD-Brenner-Setup-0.4.1.exe'), '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /LANG=' + ActiveLanguage, '', SW_HIDE, ewWaitUntilTerminated, ExitCode) then
-        RaiseException(FmtMessage(CustomMessage('ToolInstallError'), [IntToStr(ExitCode)]));
+        RaiseException(FmtMessage(CustomMessage('ToolInstallError'), [CustomMessage('BurnerName'), IntToStr(ExitCode)]));
       if (ExitCode <> 0) and (ExitCode <> 3010) then
-        RaiseException(FmtMessage(CustomMessage('ToolInstallError'), [IntToStr(ExitCode)]));
+        RaiseException(FmtMessage(CustomMessage('ToolInstallError'), [CustomMessage('BurnerName'), IntToStr(ExitCode)]));
     end;
-
+    if WizardIsComponentSelected('converter') and not ToolAtLeast('{3D477D64-7020-48F0-A621-66CF2958722B}', 'XDConverter.exe', '0.5.0') then
+    begin
+      if not Exec(ExpandConstant('{tmp}\XD-Konverter-Setup-0.5.0.exe'), '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /TASKS="" /LANG=' + ActiveLanguage, '', SW_HIDE, ewWaitUntilTerminated, ExitCode) then
+        RaiseException(FmtMessage(CustomMessage('ToolInstallError'), [CustomMessage('ConverterName'), IntToStr(ExitCode)]));
+      if (ExitCode <> 0) and (ExitCode <> 3010) then
+        RaiseException(FmtMessage(CustomMessage('ToolInstallError'), [CustomMessage('ConverterName'), IntToStr(ExitCode)]));
+    end;
   end;
 end;

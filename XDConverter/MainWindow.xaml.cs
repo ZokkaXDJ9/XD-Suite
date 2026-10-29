@@ -11,7 +11,7 @@ namespace XDConverter;
 public partial class MainWindow : Window
 {
     private readonly AudioEngine engine;
-    private readonly PreviewSettings settings;
+    private readonly ConverterSettings settings;
     private readonly bool preview;
     private readonly ObservableCollection<AudioRow> rows = [];
     private CancellationTokenSource? cancellation;
@@ -28,7 +28,7 @@ public partial class MainWindow : Window
     private OutputFormat Format => FormatCombo.SelectedItem as OutputFormat ?? OutputFormat.All[0];
     private static int Value(ComboBox combo) => (combo.SelectedItem as Choice)?.Value ?? 0;
 
-    public MainWindow(AudioEngine engine, PreviewSettings settings, bool preview = false)
+    public MainWindow(AudioEngine engine, ConverterSettings settings, bool preview = false)
     {
         this.engine = engine; this.settings = settings; this.preview = preview;
         InitializeComponent();
@@ -279,10 +279,10 @@ public partial class MainWindow : Window
         }
         catch (Exception error) { ShowError(error); }
     }
-    private void Help_Click(object sender, RoutedEventArgs e) => PreviewDialog.Show(this, T["HelpText"], false);
+    private void Help_Click(object sender, RoutedEventArgs e) => ConverterDialog.Show(this, T["HelpText"], false);
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
-        if (busy) { e.Cancel = true; if (closeAfterCancel || !PreviewDialog.Show(this, T["CloseQuestion"], true)) return; closeAfterCancel = true; cancellation?.Cancel(); SetStatus("Canceling"); return; }
+        if (busy) { e.Cancel = true; if (closeAfterCancel || !ConverterDialog.Show(this, T["CloseQuestion"], true)) return; closeAfterCancel = true; cancellation?.Cancel(); SetStatus("Canceling"); return; }
         if (preview) return;
         StoreOptions();
         settings.English = T.English; settings.Format = Format.Id; settings.OutputDirectory = OutputBox.Text; settings.Quality = Value(QualityCombo); settings.Rate = Value(RateCombo); settings.Channels = Value(ChannelCombo); settings.Tags = TagsCheck.IsChecked == true;
@@ -296,7 +296,7 @@ public partial class MainWindow : Window
     }
 }
 
-internal static class PreviewDialog
+internal static class ConverterDialog
 {
     public static bool Show(Window owner, string message, bool question)
     {
