@@ -9,7 +9,7 @@ using Preview;
 
 namespace XDTagEditor;
 
-public sealed class MainWindow : Window
+public sealed partial class MainWindow : Window
 {
     readonly Ui ui;
     readonly ObservableCollection<TagInfo> rows = new();
@@ -26,11 +26,11 @@ public sealed class MainWindow : Window
     public MainWindow(string[] args)
     {
         ui = new("XDTagEditorBeta", args); Ui.Style(this);
-        ui.Local(() => Title = ui.T("XD Tag-Editor · 0.5.2-Beta / Build 1", "XD Tag Editor · 0.5.2-Beta / Build 1"));
-        var root = new DockPanel { Margin = new(25) }; Content = root;
+        ui.Local(() => Title = ui.T("XD Tag-Editor Beta", "XD Tag Editor Beta"));
+        var root = new DockPanel { Margin = new(25, 0, 25, 20) }; Content = root;
         var heading = new DockPanel(); var language = ui.Language(); DockPanel.SetDock(language, Dock.Right); heading.Children.Add(language);
-        heading.Children.Add(ui.Text("XD Tag-Editor", "XD Tag Editor", 26, true)); DockPanel.SetDock(heading, Dock.Top); root.Children.Add(heading);
-        var hint = ui.Text("Tags und Cover bearbeiten · 0.5.2-Beta · Änderungen erst beim Speichern.", "Edit tags and covers · 0.5.2-Beta · Changes are applied only when saved."); DockPanel.SetDock(hint, Dock.Top); root.Children.Add(hint);
+        heading.Children.Add(ui.Text("XD Tag-Editor", "XD Tag Editor", 26, true)); DockPanel.SetDock(heading, Dock.Top); root.Children.Add(heading); heading.Visibility = Visibility.Collapsed;
+        var hint = ui.Text("Tags und Cover bearbeiten · Änderungen erst beim Speichern.", "Edit tags and covers · Changes are applied only when saved."); DockPanel.SetDock(hint, Dock.Top); root.Children.Add(hint);
         var toolbar = new WrapPanel();
         AddButton(toolbar, "Dateien hinzufügen", "Add files", AddFilesDialog);
         AddButton(toolbar, "Ordner hinzufügen", "Add folder", AddFolder);
@@ -62,6 +62,15 @@ public sealed class MainWindow : Window
         var coverTools = new WrapPanel(); AddButton(coverTools, "Cover wählen", "Choose cover", ChooseCover); AddButton(coverTools, "Entfernen", "Remove", () => { coverBytes = null; cover.Source = null; coverApply.IsChecked = true; }); editor.Children.Add(coverTools);
         AddButton(editor, "Aus Dateinamen übernehmen", "Import from filenames", ImportFilenames);
         var editCard = Ui.Card(new ScrollViewer { Content = editor, VerticalScrollBarVisibility = ScrollBarVisibility.Auto }); Grid.SetColumn(editCard, 1); workspace.Children.Add(editCard);
+        XD.Design.BetaChrome.Attach(this, () => ui.English, english => language.SelectedIndex = english ? 1 : 0);
+        var fileMenu = XD.Design.BetaChrome.Group(this, "_Datei", "_File");
+        foreach (Button button in toolbar.Children) XD.Design.BetaChrome.Button(this, fileMenu, button);
+        XD.Design.BetaChrome.Button(this, fileMenu, save);
+        XD.Design.BetaChrome.Add(this, fileMenu, "Beenden", "Exit", Close);
+        var editMenu = XD.Design.BetaChrome.Group(this, "_Bearbeiten", "_Edit");
+        XD.Design.BetaChrome.Button(this, editMenu, renameButton);
+        foreach (Button button in coverTools.Children) XD.Design.BetaChrome.Button(this, editMenu, button);
+        ui.Local(() => XD.Design.BetaChrome.Refresh(this));
         Closing += (_, e) => { if (busy || (Dirty && !ui.Confirm(this, "Ungespeicherte Eingaben verwerfen?", "Discard unsaved input?"))) e.Cancel = true; };
     }
     bool Dirty => coverApply.IsChecked == true || fields.Values.Any(v => v.Apply.IsChecked == true);

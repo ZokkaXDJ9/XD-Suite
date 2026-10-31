@@ -1,5 +1,7 @@
 #define Root AddBackslash(SourcePath) + "..\..\"
-#define Version "0.5.2"
+#ifndef Version
+#define Version "0.5.4"
+#endif
 [Setup]
 AppId={{180FF9A1-26B7-4B1B-A501-9ACD282923F0}
 AppName={cm:ProgramName}
@@ -15,13 +17,16 @@ ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0.17763
 ShowLanguageDialog=yes
 OutputDir={#Root}artifacts\beta
-OutputBaseFilename=XD-Tag-Editor-Setup-{#Version}-Beta
-SetupIconFile={#Root}XDTagEditor\Assets\App.ico
+#ifndef BetaOutputFilename
+#define BetaOutputFilename "XD-Tag-Editor-Setup-{#Version}-Beta"
+#endif
+OutputBaseFilename={#BetaOutputFilename}
+SetupIconFile={#Root}XDTagEditor\Assets\Beta.ico
 UninstallDisplayIcon={app}\XDTagEditor.Beta.exe
 AppMutex=Local\XDTagEditor.Beta.App
-VersionInfoVersion=0.5.2.0
-VersionInfoProductVersion=0.5.2.0
-VersionInfoProductTextVersion=0.5.2-Beta
+VersionInfoVersion={#Version}.0
+VersionInfoProductVersion={#Version}.0
+VersionInfoProductTextVersion={#Version}-Beta
 Compression=lzma2/normal
 SolidCompression=yes
 WizardStyle=modern

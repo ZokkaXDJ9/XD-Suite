@@ -2,7 +2,7 @@
   "id": "xd-tag-editor-beta", "nameDe": "XD Tag-Editor Beta", "nameEn": "XD Tag Editor Beta",
   "descriptionDe": "Tags und Cover bearbeiten, Dateinamen prüfen und stapelweise ändern.",
   "descriptionEn": "Edit tags and covers, preview filenames and apply batch changes.",
-  "branch": "app/xd-tag-editor", "build": "tag-editor.1", "releaseTag": "xd-tag-editor-0.5.2-Beta",
+  "branch": "app/xd-tag-editor", "build": "tag-editor.1", "releaseTag": "xd-tag-editor-0.5.4-Beta",
   "program": "XDTagEditor", "folder": "XDTagEditorBeta", "registryId": "{180FF9A1-26B7-4B1B-A501-9ACD282923F0}_is1",
-  "setup": "XD-Tag-Editor-Setup-0.5.2-Beta.exe", "includeEngine": false
+  "setup": "XD-Tag-Editor-Setup-0.5.4-Beta.exe", "includeEngine": false
 }
