@@ -14,7 +14,7 @@ $stub = Join-Path $fixtureRoot 'stub.cs'
 [System.IO.File]::WriteAllText($stub,'class Fixture { static void Main(string[] args) { if (args.Length == 2 && args[0] == "--record-uninstall") System.IO.File.WriteAllText(args[1], "uninstalled"); if (args.Length == 3 && args[0] == "--hold-directory") { System.IO.File.WriteAllText(args[1], "ready"); while (!System.IO.File.Exists(args[2])) System.Threading.Thread.Sleep(100); } } }',$encoding)
 foreach ($app in @('XDBurner','XDConverter','XDSuite')) {
     $appStub = Join-Path $fixtureRoot ($app + '.cs')
-    $appVersion = if ($app -eq 'XDBurner') { '0.4.1.0' } elseif ($app -eq 'XDConverter') { '0.5.0.0' } else { '0.5.1.0' }
+    $appVersion = if ($app -eq 'XDBurner') { '0.5.2.0' } elseif ($app -eq 'XDConverter') { '0.5.2.0' } else { '0.5.2.0' }
     [IO.File]::WriteAllText($appStub,('[assembly: System.Reflection.AssemblyFileVersion("' + $appVersion + '")]' + [IO.File]::ReadAllText($stub)),$encoding)
     & $csc /nologo /target:winexe ('/out:' + (Join-Path $fixtureRoot ('dist\' + $app + '\' + $app + '.exe'))) $appStub
     if ($LASTEXITCODE -ne 0) { throw 'Fixture compilation failed.' }
@@ -26,20 +26,20 @@ foreach ($app in @('XDBurner','XDConverter','XDSuite')) {
     $source = [System.IO.File]::ReadAllText((Join-Path $projectRoot ('installer\' + $app + '.iss')))
     $originalId = switch ($app) { 'XDBurner' { 'B5AF424C-85D1-47D4-AF62-30A5A15C5094' } 'XDConverter' { '3D477D64-7020-48F0-A621-66CF2958722B' } 'XDSuite' { 'F80CC53F-43F1-4E46-B7F4-61435E75303D' } }
     $source = $source.Replace($originalId,$id).Replace('PrivilegesRequired=admin','PrivilegesRequired=lowest')
-    if ($app -eq 'XDConverter') { $source = $source.Replace('DefaultDirName={autopf}\XDConverter','DefaultDirName=' + $fixtureRoot + '\installed-XDConverter') }
-    if ($app -eq 'XDSuite') { $source = $source.Replace('B5AF424C-85D1-47D4-AF62-30A5A15C5094',$ids['XDBurner']).Replace('3D477D64-7020-48F0-A621-66CF2958722B',$ids['XDConverter']) }
+
+    if ($app -eq 'XDSuite') { $source = $source.Replace('B5AF424C-85D1-47D4-AF62-30A5A15C5094',$ids['XDBurner']).Replace('3D477D64-7020-48F0-A621-66CF2958722B',$ids['XDConverter']).Replace('{autopf}\XD Suite',$fixtureRoot).Replace('{autopf}\',$fixtureRoot + '\legacy-flat\') }
     $source = [regex]::Replace($source,'(?m)^AppMutex=.*$','AppMutex=Local\XDTest.' + $id)
     # Never create, replace or delete real product shortcuts in this isolated test.
     $source = [regex]::Replace($source,'(?ms)^\[(Icons|InstallDelete)\]\r?\n.*?(?=^\[)','')
     [System.IO.File]::WriteAllText((Join-Path $fixtureRoot ('installer\' + $app + '.iss')),$source,$encoding)
 }
-$paths = [System.IO.File]::ReadAllText((Join-Path $projectRoot 'installer\UpgradePaths.iss')).Replace('{autopf}\{#ProgramFolder}',$fixtureRoot + '\installed-{#ProgramFolder}')
+$paths = [System.IO.File]::ReadAllText((Join-Path $projectRoot 'installer\UpgradePaths.iss')).Replace('{autopf}\XD Suite\{#ProgramFolder}',$fixtureRoot + '\installed-{#ProgramFolder}').Replace('{autopf}\{#LegacyProgramFolder}',$fixtureRoot + '\legacy-flat\{#ProgramFolder}')
 [System.IO.File]::WriteAllText((Join-Path $fixtureRoot 'installer\UpgradePaths.iss'),$paths,$encoding)
 foreach ($app in @('XDBurner','XDConverter','XDSuite')) {
     & $compiler /Q (Join-Path $fixtureRoot ('installer\' + $app + '.iss'))
     if ($LASTEXITCODE -ne 0) { throw 'Production-script fixture compilation failed.' }
 }
-$suiteSetup = Join-Path $fixtureRoot 'dist\XD-Suite-Setup-0.5.1.exe'
+$suiteSetup = Join-Path $fixtureRoot 'dist\XD-Suite-Setup-0.5.2.exe'
 $suiteDir = Join-Path $fixtureRoot 'installed-XDSuite'
 $burnerDir = Join-Path $fixtureRoot 'installed-XDBurner'
 $converterDir = Join-Path $fixtureRoot 'installed-XDConverter'
@@ -138,5 +138,44 @@ $key = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{' + $ids['XDS
 Check (((Get-ItemProperty -LiteralPath $key).InstallLocation).TrimEnd('\') -eq $suiteDir) 'Installation registration points to the new directory.'
 Run (Join-Path $suiteDir 'unins000.exe') '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART'
 $checks.Add('Fixture: ' + $fixtureRoot)
+foreach ($app in @('XDBurner','XDConverter','XDSuite')) {
+    $flat = Join-Path $fixtureRoot ('legacy-flat\' + $app)
+    $target = Join-Path $fixtureRoot ('installed-' + $app)
+    $legacyScript = @"
+[Setup]
+AppId={{$($ids[$app])}
+AppName=XD isolated flat-directory migration $app
+AppVersion=0.1.0
+DefaultDirName=$flat
+PrivilegesRequired=lowest
+DisableProgramGroupPage=yes
+OutputDir=$fixtureRoot
+OutputBaseFilename=flat-$app
+[Files]
+Source: $fixtureRoot\dist\$app\$app.exe; DestDir: {app}; Flags: ignoreversion
+"@
+    [IO.File]::WriteAllText((Join-Path $fixtureRoot 'flat.iss'),$legacyScript,$encoding)
+    & $compiler /Q (Join-Path $fixtureRoot 'flat.iss')
+    if ($LASTEXITCODE -ne 0) { throw 'Flat-directory legacy fixture compilation failed.' }
+    Run (Join-Path $fixtureRoot ('flat-' + $app + '.exe')) '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-'
+    [IO.File]::WriteAllText((Join-Path $flat 'personal-retained.txt'),'preserve personal data')
+    $setupName = switch($app) { 'XDBurner' { 'XD-Brenner-Setup-0.5.2.exe' } 'XDConverter' { 'XD-Konverter-Setup-0.5.2.exe' } 'XDSuite' { 'XD-Suite-Setup-0.5.2.exe' } }
+    $extra = if($app -eq 'XDSuite'){ ' /COMPONENTS=suite' }else{ '' }
+    Run (Join-Path $fixtureRoot ('dist\' + $setupName)) ('/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /TASKS="" /DIR="' + $flat + '"' + $extra)
+    $key = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{' + $ids[$app] + '}_is1'
+    Check (((Get-ItemProperty -LiteralPath $key).InstallLocation).TrimEnd('\') -eq $target) ($app + ' flat Program Files location redirects to the grouped directory even with old /DIR.')
+    Check ((Test-Path -LiteralPath (Join-Path $target ($app+'.exe'))) -and [IO.File]::ReadAllText((Join-Path $target 'personal-retained.txt')) -eq 'preserve personal data') ($app + ' migration preserves application and personal data.')
+    Check (-not (Test-Path -LiteralPath (Join-Path $flat ($app+'.exe')))) ($app + ' old owned executable removed only after successful migration.')
+    Check ([IO.File]::ReadAllText((Join-Path $flat 'personal-retained.txt')) -eq 'preserve personal data') ($app + ' cleanup leaves unrelated source files intact.')
+    Run (Join-Path $target 'unins000.exe') '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART'
+}
+Run (Join-Path $fixtureRoot 'flat-XDBurner.exe') '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-'
+Run (Join-Path $fixtureRoot 'flat-XDConverter.exe') '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-'
+Run $suiteSetup '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /COMPONENTS=suite /TASKS=""'
+Check ((Test-Path -LiteralPath (Join-Path $burnerDir 'XDBurner.exe')) -and (Test-Path -LiteralPath (Join-Path $converterDir 'XDConverter.exe'))) 'Suite-only update migrates already installed legacy tools through their own installers.'
+foreach($app in @('XDBurner','XDConverter','XDSuite')) {
+    $target=Join-Path $fixtureRoot ('installed-'+$app)
+    Run (Join-Path $target 'unins000.exe') '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART'
+}
 [System.IO.File]::WriteAllLines((Join-Path $projectRoot 'artifacts\setup-components-test.txt'),$checks,$encoding)
 $checks

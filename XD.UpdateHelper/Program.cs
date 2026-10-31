@@ -23,7 +23,7 @@ internal static class Program
             using (var root = Microsoft.Win32.RegistryKey.OpenBaseKey(Microsoft.Win32.RegistryHive.LocalMachine, Microsoft.Win32.RegistryView.Registry64))
             using (var key = root.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\{F80CC53F-43F1-4E46-B7F4-61435E75303D}_is1"))
             {
-                string folder = key?.GetValue("InstallLocation") as string ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "XDSuite");
+                string folder = key?.GetValue("InstallLocation") as string ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "XD Suite", "XDSuite");
                 string target = Path.Combine(folder, "XDSuite.exe");
                 if (File.Exists(target) && !target.Equals(Application.ExecutablePath, StringComparison.OrdinalIgnoreCase))
                     Process.Start(new ProcessStartInfo(target, string.Join(" ", args.Select(a => "\"" + a.Replace("\"", "\\\"") + "\""))) { UseShellExecute = true, WorkingDirectory = folder });
@@ -43,7 +43,7 @@ internal sealed class Options
     public string Setup = "", Target = "", Sha256 = "", Language = "german";
     public bool English => Language == "english";
     public string Executable => Path.Combine(Target, "XDSuite.exe");
-    public string InstallTarget => Target.Equals(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "XDSuite"), StringComparison.OrdinalIgnoreCase) ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "XDSuite") : Target;
+    public string InstallTarget => Target.Equals(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "XDSuite"), StringComparison.OrdinalIgnoreCase) || Target.Equals(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "XDSuite"), StringComparison.OrdinalIgnoreCase) ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "XD Suite", "XDSuite") : Target;
     public static Options Parse(string[] args)
     {
         var values = new Dictionary<string, string>(StringComparer.Ordinal);

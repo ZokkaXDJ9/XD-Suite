@@ -20,15 +20,25 @@ public partial class MainWindow : Window
     private CancellationTokenSource? cancellation;
     private readonly CancellationTokenSource lifetime = new();
     private AppCard? Selected => AppList.SelectedItem as AppCard;
+    private Catalog betaCatalog = new(1, []);
+    private bool betaFetched;
+    private readonly bool localPreview;
+    private string BetaCachePath => Path.Combine(SuiteSettings.DataDirectory, "beta-catalog.json");
 
     public MainWindow(bool preview = false, bool skipUpdateCheck = false, bool updateCompleted = false)
     {
+        localPreview = preview;
         InitializeComponent();
         L10n.Attach(this);
         L10n.Changed += LanguageChanged;
         Closed += (_, _) => { lifetime.Cancel(); L10n.Changed -= LanguageChanged; transport.Dispose(); lifetime.Dispose(); };
         AllNav.IsChecked = true;
         ReadLocalCatalog(preview);
+        if (!preview)
+        {
+            try { betaCatalog = ReadBetaCache(File.ReadAllText(BetaCachePath)); }
+            catch (Exception e) when (e is IOException or JsonException or InvalidDataException or UnauthorizedAccessException) { App.Log(e); }
+        }
         LanguageChanged(null, EventArgs.Empty);
         Loaded += async (_, _) =>
         {
@@ -88,12 +98,16 @@ public partial class MainWindow : Window
     {
         string? previous = Selected?.Package.Id;
         string search = SearchBox.Text.Trim();
-        var cards = catalog.Apps.Select(p => new AppCard(p, InstallationDiscovery.Find(p))).Where(c => filter != "installed" || c.Installed != null).Where(c => filter != "updates" || c.HasUpdate).Where(c => search.Length == 0 || (c.Name + " " + c.Description + " " + c.Category).Contains(search, StringComparison.CurrentCultureIgnoreCase)).ToList();
+        var source = filter == "beta" ? betaCatalog : catalog;
+        var cards = source.Apps.Select(p => new AppCard(p, InstallationDiscovery.Find(p))).Where(c => filter != "installed" || c.Installed != null).Where(c => filter != "updates" || c.HasUpdate).Where(c => search.Length == 0 || (c.Name + " " + c.Description + " " + c.Category).Contains(search, StringComparison.CurrentCultureIgnoreCase)).ToList();
         AppList.ItemsSource = cards;
         AppList.SelectedItem = cards.FirstOrDefault(c => c.Package.Id == previous) ?? cards.FirstOrDefault();
         EmptyText.Visibility = cards.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         CountText.Text = $"{cards.Count} " + (cards.Count == 1 ? "Programm" : "Programme");
-        ListHeading.Text = filter switch { "installed" => "Installierte Programme", "updates" => "Verfügbare Updates", _ => "Alle Programme" };
+        ListHeading.Text = filter == "beta" ? BetaText("Beta-Releases", "Beta releases") : L10n.T(filter switch { "installed" => "Installierte Programme", "updates" => "Verfügbare Updates", _ => "Alle Programme" });
+        BetaNav.Content = BetaText("Beta-Releases", "Beta releases");
+        BetaBanner.Visibility = filter == "beta" ? Visibility.Visible : Visibility.Collapsed;
+        BetaNotice.Text = BetaText("Vorläufige Branch-Versionen zum manuellen Testen. Beta-Programme werden getrennt installiert und ersetzen keine stabilen Programme.", "Preliminary branch builds for manual testing. Beta applications install separately and do not replace stable applications.");
         RefreshSelection();
     }
     private void RefreshSelection()
@@ -111,10 +125,39 @@ public partial class MainWindow : Window
         UninstallButton.ToolTip = selected?.Installed?.Uninstaller == null ? SuiteText.NoUninstaller.ToString() : null;
         PackageSizeText.Text = selected == null || selected.Installed != null && !selected.HasUpdate ? "" : "Setup · " + selected.Size;
     }
-    private void Filter_Checked(object sender, RoutedEventArgs e) { if (AppList == null) return; filter = (string)((RadioButton)sender).Tag; Rebuild(); }
+    private async void Filter_Checked(object sender, RoutedEventArgs e) { if (AppList == null) return; filter = (string)((RadioButton)sender).Tag; Rebuild(); if (filter == "beta" && !betaFetched && !localPreview) await RefreshBeta(); }
     private void Search_Changed(object sender, TextChangedEventArgs e) { if (AppList != null) Rebuild(); }
     private void App_Selected(object sender, SelectionChangedEventArgs e) => RefreshSelection();
-    private async void Refresh_Click(object sender, RoutedEventArgs e) => await RefreshCatalog();
+    private async void Refresh_Click(object sender, RoutedEventArgs e) { if (filter == "beta") await RefreshBeta(); else await RefreshCatalog(); }
+    private static string BetaText(string de, string en) => new LocalText(de, en).ToString();
+    private static Catalog ReadBetaCache(string json)
+    {
+        var cached = PackageValidation.Parse(json);
+        foreach (var app in cached.Apps)
+        {
+            var parts = new Uri(app.InstallerUrl).AbsolutePath.Split('/');
+            if (parts.Length != 7) throw new InvalidDataException("Invalid beta cache.");
+            BetaReleases.Parse(JsonSerializer.Serialize(new Catalog(1, [app]), PackageValidation.JsonOptions), SuiteSettings.Repository, Uri.UnescapeDataString(parts[5]));
+        }
+        return cached;
+    }
+    internal void ShowBetaPreview(Catalog packages) { betaCatalog = packages; betaFetched = true; BetaNav.IsChecked = true; }
+    private async Task RefreshBeta()
+    {
+        if (busy) return; SetBusy(true);
+        SetOperationStatus(new("Beta-Releases werden geladen …", "Loading beta releases …"), new("GitHub-Vorabversionen werden geprüft.", "Checking GitHub prereleases."));
+        try
+        {
+            var updated = await BetaReleases.Fetch(transport, SuiteSettings.Repository, cancellation!.Token);
+            Directory.CreateDirectory(SuiteSettings.DataDirectory); string temporary = BetaCachePath + ".tmp";
+            File.WriteAllText(temporary, JsonSerializer.Serialize(updated, PackageValidation.JsonOptions)); File.Move(temporary, BetaCachePath, true);
+            betaCatalog = updated; betaFetched = true;
+            SetOperationStatus(new("Beta-Releases aktualisiert.", "Beta releases updated."), updated.Apps.Count == 0 ? new("Noch keine veröffentlichten Beta-Programme verfügbar.", "No published beta applications available yet.") : new("Programm zum Testen auswählen.", "Select an application to test."));
+        }
+        catch (OperationCanceledException) { SetOperationStatus(new("Aktualisierung abgebrochen.", "Refresh cancelled."), new("Der bisherige Beta-Katalog bleibt verfügbar.", "The previous beta catalog remains available.")); }
+        catch (Exception e) { App.Log(e); SetOperationStatus(new("Beta-Quelle nicht erreichbar.", "Beta source unavailable."), new("Gespeicherte Beta-Programme bleiben verfügbar. Erneut aktualisieren, um neue Versionen zu laden.", "Cached beta applications remain available. Refresh again to load new versions.")); }
+        finally { SetBusy(false); Rebuild(); }
+    }
     private async Task RefreshCatalog()
     {
         if (busy) return;
@@ -223,6 +266,7 @@ public partial class MainWindow : Window
         if (value) { operationStatus = null; cancellation = new CancellationTokenSource(); }
         else { cancellation?.Dispose(); cancellation = null; }
         RefreshButton.IsEnabled = !value;
+        AllNav.IsEnabled = InstalledNav.IsEnabled = UpdatesNav.IsEnabled = BetaNav.IsEnabled = !value;
         CancelButton.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
         CancelButton.IsEnabled = !installing;
         RefreshSelection();

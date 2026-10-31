@@ -12,6 +12,8 @@ function Publish-App([string]$project, [string]$name, [scriptblock]$prepare = {}
     Copy-Item -LiteralPath 'LICENSE','README.md' -Destination $output -Force
     Copy-Item -LiteralPath 'licenses' -Destination $output -Recurse -Force
     & $prepare $output
+    $manifest = @(Get-ChildItem -LiteralPath $output -File -Recurse | Where-Object Name -ne 'payload-files.txt' | ForEach-Object { $_.FullName.Substring($output.Length + 1) }) + @('payload-files.txt')
+    [IO.File]::WriteAllLines((Join-Path $output 'payload-files.txt'),$manifest,(New-Object Text.UTF8Encoding($false)))
     $report = Join-Path $projectRoot ('artifacts\' + $name + '-release-tests.txt')
     $test = Start-Process -FilePath (Join-Path $output ($name + '.exe')) -ArgumentList @('--self-test','--report',('"' + $report + '"')) -PassThru -Wait -WindowStyle Hidden
     if ($test.ExitCode -ne 0) { throw "Integration tests failed: $report" }
@@ -33,9 +35,19 @@ try {
     $catalog = [IO.File]::ReadAllText((Join-Path $projectRoot 'catalog\catalog.json')) | ConvertFrom-Json
     $burner = $catalog.apps | Where-Object id -eq 'xd-burner'
     $burnerVersion = ([xml][IO.File]::ReadAllText((Join-Path $projectRoot 'XDBurner\XDBurner.csproj'))).Project.PropertyGroup.Version | Where-Object { $_ }
-    if ($burner.version -ne $burnerVersion) { throw 'A burner version change requires a deliberate burner release. This build reuses its already released setup.' }
     $burnerFilename = "XD-Brenner-Setup-$burnerVersion.exe"
     $burnerSetup = Join-Path $projectRoot ('dist\' + $burnerFilename)
+    if ([version]$burnerVersion -gt [version]$version) { throw 'Burner version exceeds the suite.' }
+    if ($burnerVersion -eq $version) {
+        Publish-App '.\XDBurner\XDBurner.csproj' 'XDBurner'
+        Build-Setup '.\installer\XDBurner.iss' $burnerFilename
+        $burner.version = $burnerVersion
+        $burner.installerUrl = "https://github.com/$Repository/releases/download/v$version/$burnerFilename"
+        $burner.installerSha256 = (Get-FileHash -LiteralPath $burnerSetup).Hash.ToLowerInvariant()
+        $burner.installerSizeBytes = (Get-Item -LiteralPath $burnerSetup).Length
+    }
+    else {
+    if ($burner.version -ne $burnerVersion) { throw 'Unchanged burner must retain its catalog version.' }
     if (-not (Test-Path -LiteralPath $burnerSetup) -or (Get-FileHash -LiteralPath $burnerSetup).Hash -ne $burner.installerSha256) {
         $ProgressPreference = 'SilentlyContinue'
         Invoke-WebRequest -UseBasicParsing -Uri $burner.installerUrl -OutFile ($burnerSetup + '.partial')
@@ -44,6 +56,7 @@ try {
     }
     if ((Get-Item -LiteralPath $burnerSetup).Length -ne $burner.installerSizeBytes) { throw 'Released burner setup size mismatch.' }
     Write-Host "Reusing unchanged XD Burner $burnerVersion with its original SHA-256."
+    }
     $converter = $catalog.apps | Where-Object id -eq 'xd-converter'
     $converterVersion = ([xml][IO.File]::ReadAllText((Join-Path $projectRoot 'XDConverter\XDConverter.csproj'))).Project.PropertyGroup.Version | Where-Object { $_ }
     if ([version]$converterVersion -gt [version]$version) { throw 'Converter version exceeds the suite working version.' }
@@ -86,9 +99,12 @@ try {
     & dotnet build '.\XD.UpdateHelper\XD.UpdateHelper.csproj' -c Release --nologo
     if ($LASTEXITCODE -ne 0) { throw 'Update helper build failed.' }
     Copy-Item -LiteralPath '.\XD.UpdateHelper\bin\Release\net472\XDUpdateHelper.exe','.\XD.UpdateHelper\bin\Release\net472\XDUpdateHelper.exe.config' -Destination '.\dist\XDSuite' -Force
+    $suiteOutput = Join-Path $projectRoot 'dist\XDSuite'
+    $manifest = @(Get-ChildItem -LiteralPath $suiteOutput -File -Recurse | Where-Object Name -ne 'payload-files.txt' | ForEach-Object { $_.FullName.Substring($suiteOutput.Length + 1) }) + @('payload-files.txt')
+    [IO.File]::WriteAllLines((Join-Path $suiteOutput 'payload-files.txt'),$manifest,(New-Object Text.UTF8Encoding($false)))
     Build-Setup '.\installer\XDSuite.iss' "XD-Suite-Setup-$version.exe"
     $sums = foreach ($file in @($burnerFilename,$converterFilename,"XD-Suite-Setup-$version.exe",'catalog.json')) { (Get-FileHash -LiteralPath (Join-Path $projectRoot ('dist\' + $file)) -Algorithm SHA256).Hash.ToLowerInvariant() + '  ' + $file }
     [System.IO.File]::WriteAllLines((Join-Path $projectRoot 'dist\SHA256SUMS.txt'), $sums)
-    Write-Host 'Fertig: XD Suite und XD Konverter Setups; unverändertes Brenner-Setup wiederverwendet.'
+    Write-Host 'Fertig: Setups und Katalog entsprechend den tatsächlichen Programmversionen erstellt.'
 }
 finally { Pop-Location }

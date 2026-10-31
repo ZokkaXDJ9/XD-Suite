@@ -4,11 +4,11 @@ XD Brenner ist ein Windows-Programm zum Brennen von CDs. XD Suite verwaltet und 
 
 ## Installation und Sprache
 
-- **`dist/XD-Konverter-Setup-0.5.0.exe`** installiert nur XD Konverter.
-- **`dist/XD-Brenner-Setup-0.4.1.exe`** installiert nur XD Brenner.
-- **`dist/XD-Suite-Setup-0.5.1.exe`** installiert XD Suite und die im Setup ausgewählten Programme. XD Brenner 0.4.1 und XD Konverter 0.5.0 sind enthalten und einzeln abwählbar.
+- **`dist/XD-Konverter-Setup-0.5.2.exe`** installiert nur XD Konverter.
+- **`dist/XD-Brenner-Setup-0.5.2.exe`** installiert nur XD Brenner.
+- **`dist/XD-Suite-Setup-0.5.2.exe`** installiert XD Suite und die im Setup ausgewählten Programme. XD Brenner 0.5.2 und XD Konverter 0.5.2 sind enthalten und einzeln abwählbar.
 
-Alle Setups fordern Administratorrechte an und zeigen eine Sprachauswahl für Deutsch und Englisch. Frische Installationen verwenden `%ProgramFiles%\XDBurner` bzw. `XDSuite`. Ältere Installationen unter AppData werden ohne Deinstaller nach Programme übernommen und dort aktualisiert. Auch wenn ein alter Updatehelfer den bisherigen Ordner offen hält, werden vorhandene Dateien übernommen. Die alte Installation bleibt bis zum erfolgreichen Abschluss erhalten; eigene Dateien werden nicht gelöscht. Die benötigte .NET-Laufzeit ist enthalten; auch das auswählbare Brenner-Setup benötigt keinen weiteren Download.
+Alle Setups fordern Administratorrechte an und zeigen eine Sprachauswahl für Deutsch und Englisch. Frische Installationen verwenden `%ProgramFiles%\XD Suite\XDBurner`, `XD Suite\XDConverter` bzw. `XD Suite\XDSuite`. Ältere Installationen unter AppData werden ohne Deinstaller nach Programme übernommen und dort aktualisiert. Auch wenn ein alter Updatehelfer den bisherigen Ordner offen hält, werden vorhandene Dateien übernommen. Die alte Installation bleibt bis zum erfolgreichen Abschluss erhalten; eigene Dateien werden nicht gelöscht. Die benötigte .NET-Laufzeit ist enthalten; auch das auswählbare Brenner-Setup benötigt keinen weiteren Download.
 
 In den Apps wechselt **Sprache / Language → Deutsch / English** die Oberfläche direkt. Die Auswahl wird gespeichert. Die Suite und der Brenner teilen ihre Sprachpräferenz; beim Start des Konverters aus der Suite wird deren aktuelle Sprache übernommen. Dateinamen und eigene Eingaben bleiben erhalten. Windows-Dateiauswahldialoge folgen der Betriebssystemsprache.
 
@@ -32,13 +32,17 @@ https://github.com/ZokkaXDJ9/XD-Suite/releases/latest/download/catalog.json
 
 Die Suite löst die konkrete Katalogdatei über die GitHub-Release-Schnittstelle auf. Ohne Verbindung bleibt der gebündelte oder zuletzt gültige Katalog verfügbar. Installierte Apps lassen sich weiterhin starten. Der Katalog enthält Sprachtexte, Version, HTTPS-URL, Größe, SHA-256 und Installationskennung, aber keine Shell-Befehle oder Setup-Argumente. Weiterleitungen zu HTTP werden abgewiesen.
 
+Der Tab **Beta-Releases** lädt getrennte `beta-catalog.json`-Dateien aus veröffentlichten GitHub-Vorabversionen. Er zeigt die neueste veröffentlichte Beta je Programm mit Versionsstand und Quell-Branch. Beta-Programme tragen `X.X.X-Beta`, werden getrennt unter `%ProgramFiles%\XD Suite\<Programm>Beta` installiert und erscheinen weder im stabilen Katalog noch als Suite-Setup-Komponente. Die Beta-Suche erfolgt erst beim Öffnen des Tabs; ein eigener Cache ermöglicht die Offline-Anzeige. Details zu Entwicklung und Veröffentlichung stehen in [docs/development.md](docs/development.md).
+
+Das Suite-Update übernimmt auch bereits installierte Brenner und Konverter. Suite und Einzelprogramme werden von ihren bisherigen Standardordnern in eigene Unterordner unter `Programme\XD Suite` übernommen. AppData-Einstellungen bleiben an ihrem bisherigen Ort. Persönliche Dateien werden übernommen und bei der Bereinigung des alten Ordners erhalten.
+
 ## XD Konverter
 
 Eigenständig oder über die Suite verwendbar. Ausgabe als MP3, WAV, FLAC, OGG/Vorbis, M4A/AAC und Opus. Dateien oder Ordner hinzufügen, Zielformat wählen und konvertieren. Alle Audiooptionen stehen auf Automatisch; Detailwerte unter „Weitere Einstellungen“ sind freiwillige Ausnahmen. Originaldateien werden nicht überschrieben. Deutsch und Englisch sind im Menü wählbar.
 
-Das eigene Setup heißt `XD-Konverter-Setup-0.5.0.exe`. Binärdateien liegen unter `Programme\XDConverter`, Einstellungen unter `%LOCALAPPDATA%\XDConverter`. Die lokale Vorschau bleibt getrennt. Die Konvertierung verwendet den in `XDConverter/engine.lock.json` festgelegten LGPL-Build von FFmpeg mit mitgelieferten Lizenz- und Quellhinweisen.
+Das eigene Setup heißt `XD-Konverter-Setup-0.5.2.exe`. Binärdateien liegen unter `Programme\XD Suite\XDConverter`, Einstellungen unter `%LOCALAPPDATA%\XDConverter`. Die lokale Vorschau bleibt getrennt. Die Konvertierung verwendet den in `XDConverter/engine.lock.json` festgelegten LGPL-Build von FFmpeg mit mitgelieferten Lizenz- und Quellhinweisen.
 
-Die Suite legt den aktuellen Arbeitsstand fest. Nur geänderte Programme erhalten dessen Versionsnummer. Der Brenner ist in diesem Release unverändert auf 0.4.1; sein bestehendes Setup wird mit identischer Prüfsumme übernommen und bei einer aktuellen Installation übersprungen.
+Die Suite legt den aktuellen Arbeitsstand fest. Nur geänderte Programme erhalten dessen Versionsnummer. Brenner und Konverter erhalten in diesem Release 0.5.2, weil ihre Installer die neue Ordner-Migration umsetzen. Andere unveränderte Programme behalten ihre Version und ihr bereits veröffentlichtes Setup.
 
 ## XD Brenner
 
