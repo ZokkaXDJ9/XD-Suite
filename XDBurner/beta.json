@@ -1,0 +1,15 @@
+{
+    "id":  "xd-burner-beta",
+    "branch":  "app/xd-burner",
+    "program":  "XDBurner",
+    "registryId":  "{E5E8A34F-0A7B-4563-9CA7-2F6F3A19AD12}_is1",
+    "descriptionEn":  "CD burner on the beta channel. Installed independently of the stable version.",
+    "nameEn":  "XD Burner Beta",
+    "build":  "burner.1",
+    "setup":  "XD-Brenner-Setup-0.5.3-Beta.exe",
+    "descriptionDe":  "CD-Brenner auf dem Beta-Kanal. Getrennt zur stabilen Version installiert.",
+    "includeEngine":  false,
+    "nameDe":  "XD Brenner Beta",
+    "folder":  "XDBurnerBeta",
+    "releaseTag":  "xd-burner-0.5.3-Beta"
+}

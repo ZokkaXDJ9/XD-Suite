@@ -13,7 +13,7 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        L10n.Initialize();
+        BuildInfo.InitializeLanguage();
         if (e.Args.Contains("--english")) L10n.Set(UiLanguage.English, false);
         if (e.Args.Contains("--german")) L10n.Set(UiLanguage.German, false);
         DispatcherUnhandledException += (_, args) =>
@@ -30,6 +30,20 @@ public partial class App : Application
                 string report = GetArgument(e.Args, "--report") ?? Path.GetFullPath("self-test.txt");
                 await Task.Run(() => SelfTest.Run(report));
                 LocalizationChecks.Run();
+                if (BuildInfo.IsBeta)
+                {
+                    var previousLanguage = L10n.Current; var window = new MainWindow(true);
+                    try
+                    {
+                        if (BuildInfo.DataFolder != "XDBurnerBeta" || BuildInfo.MutexName != @"Local\XDBurner.Beta.App" || typeof(App).Assembly.GetName().Name != "XDBurner.Beta") throw new InvalidOperationException("Beta isolation failed.");
+                        L10n.Set(UiLanguage.English, false);
+                        if (window.Title != "XD Burner Beta" || !((System.Windows.Controls.TextBlock)window.FindName("VersionLabel")).Text.Contains("-Beta")) throw new InvalidOperationException("English beta identity missing.");
+                        L10n.Set(UiLanguage.German, false);
+                        if (window.Title != "XD Brenner Beta") throw new InvalidOperationException("German beta identity missing.");
+                    }
+                    finally { window.Close(); L10n.Set(previousLanguage, false); }
+                    File.AppendAllText(report, "PASS: separate beta executable, mutex, data folder and German/English beta version labels\n");
+                }
                 File.AppendAllText(report, "PASS: live German/English UI switching, progress translation and user-data protection\n");
                 Shutdown(0);
                 return;
@@ -58,7 +72,7 @@ public partial class App : Application
                 Shutdown(0);
                 return;
             }
-            instanceMutex = new Mutex(true, @"Local\XDBurner.App", out ownsMutex);
+            instanceMutex = new Mutex(true, BuildInfo.MutexName, out ownsMutex);
             if (!ownsMutex)
             {
                 LocalizedDialog.Show("XD Brenner ist bereits geöffnet. Bitte das vorhandene Fenster verwenden.", "XD Brenner");
@@ -94,7 +108,7 @@ public partial class App : Application
     {
         try
         {
-            string directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "XDBurner", "Logs");
+            string directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), BuildInfo.DataFolder, "Logs");
             Directory.CreateDirectory(directory);
             File.AppendAllText(Path.Combine(directory, DateTime.Today.ToString("yyyy-MM-dd") + ".log"), DateTimeOffset.Now.ToString("O") + "\n" + exception + "\n\n");
         }

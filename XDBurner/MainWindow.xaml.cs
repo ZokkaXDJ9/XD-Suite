@@ -43,6 +43,7 @@ public partial class MainWindow : Window
         DataNav.IsChecked = true;
         GermanMenu.IsChecked = L10n.Current == UiLanguage.German;
         EnglishMenu.IsChecked = L10n.Current == UiLanguage.English;
+        RefreshVersion();
         Loaded += async (_, _) => { if (!preview) await RefreshDrives(); };
     }
 
@@ -50,15 +51,22 @@ public partial class MainWindow : Window
     private void English_Click(object sender, RoutedEventArgs e) => ChangeLanguage(UiLanguage.English);
     private void ChangeLanguage(UiLanguage language)
     {
-        try { L10n.Set(language); } catch (Exception ex) { ShowError(ex); }
+        try { BuildInfo.SetLanguage(language); } catch (Exception ex) { ShowError(ex); }
     }
     private void LanguageChanged(object? sender, EventArgs e)
     {
         GermanMenu.IsChecked = L10n.Current == UiLanguage.German;
         EnglishMenu.IsChecked = L10n.Current == UiLanguage.English;
+        RefreshVersion();
         FileGrid.Items.Refresh();
         DriveCombo.Items.Refresh();
         UpdateProject();
+    }
+
+    private void RefreshVersion()
+    {
+        Title = BuildInfo.Name;
+        VersionLabel.Text = "VERSION " + BuildInfo.Version + " · XD SUITE";
     }
 
     private void Mode_Checked(object sender, RoutedEventArgs e)
@@ -422,7 +430,7 @@ public partial class MainWindow : Window
     }
 
     private void Help_Click(object sender, RoutedEventArgs e) => LocalizedDialog.Show(this,
-        "XD Brenner 0.5.2\n\nDaten-CD: Dateien und Ordner hinzufügen und brennen. „Als ISO speichern“ funktioniert auch ohne Brenner.\n\nAudio-CD: MP3/WAV/OGG hinzufügen, Titel per Ziehen oder mit ↑/↓ ordnen. Pause zwischen Titeln auswählbar, auch 0 Sekunden. Kein CD-Text.\n\nISO brennen: Daten-ISO auswählen und brennen.\n\nCD-RW löschen: Schnell oder vollständig löschen. CD-Rs sind nicht löschbar.\n\nNach dem Einlegen einer CD „Aktualisieren“ wählen. Es werden leere CD-R/CD-RW verwendet und abgeschlossene CDs erstellt. Kein Multisession.\n\nLizenz: MIT. Audioumwandlung: NAudio und NVorbis (MIT).\nFehlerprotokolle: %LOCALAPPDATA%\\XDBurner\\Logs.", "Über XD Brenner", MessageBoxButton.OK, MessageBoxImage.Information);
+        L10n.T("XD Brenner 0.5.2\n\nDaten-CD: Dateien und Ordner hinzufügen und brennen. „Als ISO speichern“ funktioniert auch ohne Brenner.\n\nAudio-CD: MP3/WAV/OGG hinzufügen, Titel per Ziehen oder mit ↑/↓ ordnen. Pause zwischen Titeln auswählbar, auch 0 Sekunden. Kein CD-Text.\n\nISO brennen: Daten-ISO auswählen und brennen.\n\nCD-RW löschen: Schnell oder vollständig löschen. CD-Rs sind nicht löschbar.\n\nNach dem Einlegen einer CD „Aktualisieren“ wählen. Es werden leere CD-R/CD-RW verwendet und abgeschlossene CDs erstellt. Kein Multisession.\n\nLizenz: MIT. Audioumwandlung: NAudio und NVorbis (MIT).\nFehlerprotokolle: %LOCALAPPDATA%\\XDBurner\\Logs.").Replace("XD Brenner 0.5.2", BuildInfo.Name + " " + BuildInfo.Version).Replace("XD Burner 0.5.2", BuildInfo.Name + " " + BuildInfo.Version).Replace("XDBurner\\\\Logs", BuildInfo.DataFolder + "\\\\Logs"), "Über XD Brenner", MessageBoxButton.OK, MessageBoxImage.Information);
 
     private void Window_Closing(object? sender, CancelEventArgs e)
     {

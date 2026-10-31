@@ -31,7 +31,7 @@
         <StackPanel Grid.Row="3">
           <Button Content="Hilfe &amp; Über XD Brenner" Click="Help_Click" Padding="4,8" Background="Transparent" BorderThickness="0" FontSize="12"/>
           <Menu Background="Transparent" HorizontalAlignment="Center" Margin="0,6,0,0"><MenuItem Header="Sprache / Language"><MenuItem x:Name="GermanMenu" Header="Deutsch" IsCheckable="True" Click="German_Click"/><MenuItem x:Name="EnglishMenu" Header="English" IsCheckable="True" Click="English_Click"/></MenuItem></Menu>
-          <TextBlock Text="VERSION 0.5.2 · XD SUITE" FontSize="9" Foreground="#7A8672" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+          <TextBlock x:Name="VersionLabel" Text="VERSION 0.5.2 · XD SUITE" FontSize="9" Foreground="#7A8672" HorizontalAlignment="Center" Margin="0,8,0,0"/>
         </StackPanel>
       </Grid>
     </Border>

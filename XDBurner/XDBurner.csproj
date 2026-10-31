@@ -12,6 +12,14 @@
     <Product>XD Brenner</Product>
     <Description>Daten-CDs und Audio-CDs brennen, ISO-Dateien erstellen und CD-RWs löschen.</Description>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <BetaBuild Condition="'$(BetaBuild)' == ''">false</BetaBuild>
+    <SuiteVersion>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)..\XDSuite\XDSuite.csproj')), '&lt;Version&gt;([^&lt;]+)&lt;/Version&gt;').Groups[1].Value)</SuiteVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(BetaBuild)' == 'true'">
+    <Version>$(SuiteVersion)</Version><InformationalVersion>$(Version)-Beta+burner.1</InformationalVersion>
+    <AssemblyName>XDBurner.Beta</AssemblyName><Product>XD Burner Beta</Product>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <DefineConstants>$(DefineConstants);BURNER_BETA</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../XD.Common/XD.Common.csproj" />
