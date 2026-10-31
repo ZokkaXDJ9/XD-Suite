@@ -27,8 +27,8 @@ $checks=New-Object 'Collections.Generic.List[string]'
 try {
     $exe=Join-Path $target ($config.program+'.Beta.exe')
     if((Get-FileHash -LiteralPath $exe).Hash -ne (Get-FileHash -LiteralPath (Join-Path $root ('artifacts\beta\app\'+$config.program+'.Beta.exe'))).Hash){ throw 'Installed beta differs from tested build.' }
-    if((Get-ItemProperty -LiteralPath $key).DisplayVersion -ne '0.5.3-Beta'){ throw 'Installer must display the Beta suffix.' }
-    $checks.Add('PASS: real beta payload installed with independent registration and visible 0.5.3-Beta version.')
+    if((Get-ItemProperty -LiteralPath $key).DisplayVersion -ne '0.5.4-Beta'){ throw 'Installer must display the Beta suffix.' }
+    $checks.Add('PASS: real beta payload installed with independent registration and visible 0.5.4-Beta version.')
     $engine=(Get-ChildItem -LiteralPath (Join-Path $root '.tools\beta-engine') -Filter ffmpeg.exe -File -Recurse | Select-Object -First 1)
     $engineArgument=if($config.program -in @('XDWaveEditor','XDConverter')){$engine.DirectoryName}else{$engine.FullName}
     $report=Join-Path $fixture 'installed-tests.txt'

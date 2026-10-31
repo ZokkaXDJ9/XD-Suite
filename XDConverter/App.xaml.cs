@@ -12,6 +12,8 @@ public partial class App : Application
     private bool ownsMutex;
     protected override async void OnStartup(StartupEventArgs e)
     {
+        if (e.Args.Contains("--self-test") || e.Args.Contains("--render"))
+            DispatcherUnhandledException += (_, failure) => { File.AppendAllText(Argument(e.Args, "--report") ?? "beta-errors.txt", "FAIL: " + failure.Exception); failure.Handled = true; Shutdown(1); };
         base.OnStartup(e); Resources["Strings"] = Texts.Current;
         try
         {

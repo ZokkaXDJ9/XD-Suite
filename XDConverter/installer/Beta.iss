@@ -1,5 +1,7 @@
 #define Root AddBackslash(SourcePath) + "..\..\"
-#define Version "0.5.3"
+#ifndef Version
+#define Version "0.5.4"
+#endif
 [Setup]
 AppId={{2A0CA07B-E61C-49EE-BDC2-18AEEAD30C88}
 AppName={cm:ProgramName}
@@ -15,13 +17,16 @@ ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0.17763
 ShowLanguageDialog=yes
 OutputDir={#Root}artifacts\beta
-OutputBaseFilename=XD-Konverter-Setup-{#Version}-Beta
-SetupIconFile={#Root}XDConverter\Assets\XDConverter.ico
+#ifndef BetaOutputFilename
+#define BetaOutputFilename "XD-Konverter-Setup-{#Version}-Beta"
+#endif
+OutputBaseFilename={#BetaOutputFilename}
+SetupIconFile={#Root}XDConverter\Assets\Beta.ico
 UninstallDisplayIcon={app}\XDConverter.Beta.exe
 AppMutex=Local\XDConverter.Beta.App
-VersionInfoVersion=0.5.3.0
-VersionInfoProductVersion=0.5.3.0
-VersionInfoProductTextVersion=0.5.3-Beta
+VersionInfoVersion={#Version}.0
+VersionInfoProductVersion={#Version}.0
+VersionInfoProductTextVersion={#Version}-Beta
 Compression=lzma2/normal
 SolidCompression=yes
 WizardStyle=modern

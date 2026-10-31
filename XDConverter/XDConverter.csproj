@@ -25,4 +25,6 @@
   <Target Name="ValidateSuiteVersion" BeforeTargets="BeforeBuild">
     <Error Condition="$([MSBuild]::VersionGreaterThan('$(Version)', '$(SuiteVersion)'))" Text="The converter version cannot exceed the current suite version." />
   </Target>
+  <ItemGroup><Compile Include="../design/BetaChrome.cs" Link="BetaChrome.cs" /><Resource Include="Assets/Beta.ico" /></ItemGroup>
+  <PropertyGroup Condition="'$(BetaBuild)' == 'true'"><ApplicationIcon>Assets/Beta.ico</ApplicationIcon></PropertyGroup>
 </Project>

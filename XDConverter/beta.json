@@ -6,10 +6,10 @@
     "descriptionEn":  "Audio converter on the beta channel. Installed independently of the stable version.",
     "nameEn":  "XD Converter Beta",
     "build":  "converter.1",
-    "setup":  "XD-Konverter-Setup-0.5.3-Beta.exe",
+    "setup":  "XD-Konverter-Setup-0.5.4-Beta.exe",
     "descriptionDe":  "Audiokonverter auf dem Beta-Kanal. Getrennt zur stabilen Version installiert.",
     "includeEngine":  true,
     "nameDe":  "XD Konverter Beta",
     "folder":  "XDConverterBeta",
-    "releaseTag":  "xd-converter-0.5.3-Beta"
+    "releaseTag":  "xd-converter-0.5.4-Beta"
 }

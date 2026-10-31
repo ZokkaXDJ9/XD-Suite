@@ -33,6 +33,7 @@ public partial class MainWindow : Window
         this.engine = engine; this.settings = settings; this.preview = preview;
         InitializeComponent();
         if (preview) { ShowActivated = false; ShowInTaskbar = false; }
+        if (BuildInfo.IsBeta) SetupBetaLayout();
         FilesGrid.ItemsSource = rows;
         FormatCombo.ItemsSource = OutputFormat.All;
         FormatCombo.SelectedItem = OutputFormat.All.FirstOrDefault(f => f.Id == settings.Format) ?? OutputFormat.All[0];
@@ -61,6 +62,7 @@ public partial class MainWindow : Window
         RefreshOptions();
         foreach (var row in rows) row.Refresh();
         RefreshRows(); RefreshStatus();
+        XD.Design.BetaChrome.Refresh(this);
     }
     private static void SetChoices(ComboBox combo, Choice[] choices, int selected)
     {
