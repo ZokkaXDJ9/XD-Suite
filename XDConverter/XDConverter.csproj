@@ -5,7 +5,7 @@
     <PreviewBuild Condition="'$(PreviewBuild)' == ''">false</PreviewBuild>
     <AssemblyName>XDConverter</AssemblyName><Product>XD Konverter</Product>
     <SuiteVersion>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)..\XDSuite\XDSuite.csproj')), '&lt;Version&gt;([^&lt;]+)&lt;/Version&gt;').Groups[1].Value)</SuiteVersion>
-    <Version>0.5.0</Version><InformationalVersion>$(Version)</InformationalVersion>
+    <Version>0.5.2</Version><InformationalVersion>$(Version)</InformationalVersion>
     <AssemblyName Condition="'$(PreviewBuild)' == 'true'">XDConverter.Preview</AssemblyName>
     <Product Condition="'$(PreviewBuild)' == 'true'">XD Konverter Vorschau</Product>
     <DefineConstants Condition="'$(PreviewBuild)' == 'true'">$(DefineConstants);CONVERTER_PREVIEW</DefineConstants>
