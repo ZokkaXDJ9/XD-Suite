@@ -56,7 +56,7 @@ public static class BetaChrome
             DockPanel.SetDock(image, Dock.Left); identity.Children.Add(image);
         }
         var title = new TextBlock { FontSize = 23, FontWeight = FontWeights.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis };
-        var version = new TextBlock { Text = Version(window), FontSize = 11, FontFamily = new FontFamily("Consolas"), Foreground = Brush(beta ? Muted : Color.FromRgb(104, 118, 138)), Margin = new Thickness(0, 5, 0, 0) };
+        var version = new TextBlock { Text = beta ? Version(window) : window.GetType().Assembly.GetName().Version!.ToString(3), FontSize = 11, FontFamily = new FontFamily("Consolas"), Foreground = Brush(beta ? Muted : Color.FromRgb(104, 118, 138)), Margin = new Thickness(0, 5, 0, 0) };
         state.Labels.Add(() => title.Text = window.Title);
         var names = new StackPanel(); names.Children.Add(title); names.Children.Add(version); identity.Children.Add(names);
         DockPanel.SetDock(identity, Dock.Top); shell.Children.Add(identity);
