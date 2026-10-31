@@ -1,11 +1,15 @@
 #define Root AddBackslash(SourcePath) + "..\"
 #define AppVersion RemoveFileExt(GetFileVersion(Root + "dist\XDConverter\XDConverter.exe"))
+#define ProgramId "{3D477D64-7020-48F0-A621-66CF2958722B}"
+#define ProgramFolder "XDConverter"
+#define ProgramExe "XDConverter.exe"
 [Setup]
 AppId={{3D477D64-7020-48F0-A621-66CF2958722B}
 AppName={cm:ConverterName}
 AppVersion={#AppVersion}
 AppPublisher=XD Suite
-DefaultDirName={autopf}\XDConverter
+DefaultDirName={code:DefaultInstallDir}
+UsePreviousAppDir=no
 DefaultGroupName=XD Suite
 DisableProgramGroupPage=yes
 PrivilegesRequired=admin
@@ -33,6 +37,10 @@ Name: desktopicon; Description: {cm:CreateDesktopIcon}; GroupDescription: {cm:Ad
 [CustomMessages]
 german.ConverterName=XD Konverter
 english.ConverterName=XD Converter
+german.CopyInstallError=Die vorhandene Installation konnte nicht übernommen werden.%nPfad: %1%n%2%nDie bisherige Installation bleibt erhalten.
+english.CopyInstallError=The existing installation could not be transferred.%nPath: %1%n%2%nThe previous installation has been retained.
+german.MoveInstallError=Der bisherige Programmordner konnte nicht verschoben werden. Bitte das Programm schließen und erneut versuchen.
+english.MoveInstallError=The previous application folder could not be moved. Close the application and try again.
 [Files]
 Source: "{#Root}dist\XDConverter\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 [Icons]
@@ -40,6 +48,7 @@ Name: "{autoprograms}\{cm:ConverterName}"; Filename: "{app}\XDConverter.exe"; Wo
 Name: "{autodesktop}\{cm:ConverterName}"; Filename: "{app}\XDConverter.exe"; WorkingDir: "{app}"; Tasks: desktopicon; IconFilename: "{app}\XDConverter.exe"; IconIndex: 0
 [Run]
 Filename: "{app}\XDConverter.exe"; Parameters: "{code:ApplicationLanguage}"; Description: "{cm:LaunchProgram,{cm:ConverterName}}"; Flags: nowait postinstall skipifsilent
+#include "UpgradePaths.iss"
 [Code]
 procedure NotifyShellItem(EventId: Integer; Flags: Cardinal; const Path: String; Unused: NativeInt);
 external 'SHChangeNotify@shell32.dll stdcall';
@@ -51,6 +60,7 @@ procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssDone then
   begin
+    MigrateRegistration;
     NotifyShellItem($2000, $0005, ExpandConstant('{app}\XDConverter.exe'), 0);
     NotifyShellItem($2000, $0005, ExpandConstant('{autoprograms}\{cm:ConverterName}.lnk'), 0);
   end;
