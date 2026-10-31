@@ -58,6 +58,7 @@ public partial class App : Application
                 ShutdownMode = ShutdownMode.OnExplicitShutdown;
                 string report = Argument(e.Args, "--report") ?? "suite-self-test.txt";
                 await SelfTest.Run(report);
+                await BetaChecks.Run(report);
                 LocalizationChecks.Run();
                 await UninstallChecks.Run(report);
                 File.AppendAllText(report, "PASS: live German/English UI switching, dynamic messages, menu text and user-data protection\n");
@@ -72,6 +73,7 @@ public partial class App : Application
                 {
                     L10n.Set(language, false);
                     var window = new MainWindow(true); MainWindow = window; window.Show();
+                    if (e.Args.Contains("--beta")) window.ShowBetaPreview(new(1, [BetaChecks.Example()]));
                     if (e.Args.Contains("--compact")) { window.Width = 1050; window.Height = 760; }
                     await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
                     window.UpdateLayout();
@@ -105,7 +107,10 @@ public partial class App : Application
     }
     private static async Task RemoveLegacyForwarder()
     {
-        string oldFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "XDSuite");
+        foreach (string oldFolder in new[] { Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "XDSuite"), Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "XDSuite") }) await RemoveForwarderAt(oldFolder);
+    }
+    private static async Task RemoveForwarderAt(string oldFolder)
+    {
         if (Path.GetFullPath(AppContext.BaseDirectory).TrimEnd('\\').Equals(oldFolder, StringComparison.OrdinalIgnoreCase)) return;
         string oldExe = Path.Combine(oldFolder, "XDSuite.exe"), helper = Path.Combine(AppContext.BaseDirectory, "XDUpdateHelper.exe");
         for (int attempt = 0; attempt < 3; attempt++)

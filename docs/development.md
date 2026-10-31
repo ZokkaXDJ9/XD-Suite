@@ -2,7 +2,7 @@
 
 Die Hauptsuite legt den Versionsstand fest, an dem gearbeitet wird. Nur tatsächlich geänderte Programme übernehmen diesen Stand. Unveränderte Programme behalten ihre Version und ihr bereits veröffentlichtes Setup. Eine Suite-Version löst keinen automatischen Versionssprung anderer Programme aus. Lokale Teststände werden über Build-Kennungen unterschieden.
 
-Aktuell: Suite 0.5.0, Konverter 0.5.0, Brenner unverändert 0.4.1. Der Build verwendet das originale Brenner-Setup samt bisheriger Prüfsumme und Downloadadresse. Bereits aktuelle Tools werden vom Suite-Setup übersprungen.
+Aktuell: Suite 0.5.2. Brenner und Konverter erhalten wegen ihrer tatsächlich geänderten Installer ebenfalls 0.5.2. Andere unveränderte Programme behalten ihre Version und ihr ursprüngliches Setup.
 
 | Branch | Zuständigkeit |
 | --- | --- |
@@ -17,3 +17,11 @@ Jeder Programm-Branch enthält das Repository als Arbeitsgrundlage. Änderungen 
 Der Audiokonverter liegt unter `XDConverter/` und ist seit Suite 0.5.0 für Katalog und Suite-Setup freigegeben. Er besitzt ein eigenes Setup, Programmsymbol und Einstellungsverzeichnis. Tests auf `app/xd-converter` können weiterhin mit `XDConverter/tools/build-preview.ps1` erfolgen. `PreviewBuild=true` verwendet eine getrennte EXE, Installationskennung, Mutex und Einstellungen; Vorschau-Builds sind kein Teil des veröffentlichten Katalogs.
 
 Branch-Wechsel nur mit geklärtem Arbeitsstand durchführen. Änderungen an der Suite und an gemeinsamen Komponenten werden auf `main` gepflegt; Programm-Branches können diesen freigegebenen Stand anschließend übernehmen.
+
+## Beta-Programme
+
+`app/xd-tag-editor`, `app/xd-cd-ripper` und `app/xd-wave-editor` entwickeln die eigenständigen Beta-Programme. Sie bleiben außerhalb des stabilen Katalogs und Suite-Setups. Versionen entsprechen dem Arbeitsstand der Suite und tragen sichtbar `-Beta`; einzelne Teststände unterscheiden sich zusätzlich durch Build-Metadaten. Eigene EXE, AppId, Mutex und Programmordner verhindern das Ersetzen stabiler Programme.
+
+Im jeweiligen Worktree `tools/build-beta.ps1` unter dem Programmordner ausführen; anschließend `tools/publish-beta.ps1 -Publish`. Der Build prüft die Anwendung, erstellt zweisprachige Ansichten, ein unabhängiges Setup und `artifacts/beta/beta-catalog.json`. Die Veröffentlichung verwendet den jeweiligen Branch-Commit, ein eigenes Tag und ausschließlich eine GitHub-Vorabversion (`prerelease=true`, `make_latest=false`). Nachfolgende Builds erhalten neue Tags und Build-Kennungen. Vorhandene Releases werden nicht überschrieben.
+
+Der Suite-Tab wertet nur veröffentlichte Vorabversionen mit Beta-Katalog aus. Er validiert Branch, Beta-Kennung, getrennte Installationskennung, Größe, SHA-256 und Zugehörigkeit des Setups zum Release. Der stabile Updatekanal verwendet weiterhin ausschließlich die neueste stabile Suite-Version.

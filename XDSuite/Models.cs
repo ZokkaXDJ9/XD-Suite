@@ -13,7 +13,7 @@ public sealed record LocalText(string De, string En)
 }
 public sealed record AppPackage(string Id, LocalText Name, LocalText Description, LocalText Category, string Version,
     string InstallerUrl, string InstallerSha256, long InstallerSizeBytes, string Executable, string RegistryId,
-    string InstallFolder, List<LocalText> Features);
+    string InstallFolder, List<LocalText> Features, string? Build = null, string? Branch = null, string? Channel = null);
 public sealed record Catalog(int SchemaVersion, List<AppPackage> Apps);
 public sealed record InstalledApp(string Executable, string Version, string? Uninstaller = null);
 public sealed record DownloadProgress(long Bytes, long Total, string Message)
@@ -25,13 +25,14 @@ public sealed class AppCard(AppPackage package, InstalledApp? installed)
     public AppPackage Package { get; } = package;
     public InstalledApp? Installed { get; } = installed;
     public string Name => Package.Name.ToString();
-    public string Icon => "pack://application:,,,/XDSuite;component/Assets/" + (Package.Id == "xd-converter" ? "XDConverter.ico" : "XDBurner.ico");
+    public string Icon => "pack://application:,,,/XDSuite;component/Assets/" + (Package.Id.Contains("wave-editor") ? "XDWaveEditor.ico" : Package.Id.Contains("tag-editor") ? "XDTagEditor.ico" : Package.Id.Contains("cd-ripper") ? "XDCDRipper.ico" : Package.Id.Contains("converter") ? "XDConverter.ico" : "XDBurner.ico");
     public string Description => Package.Description.ToString();
     public string Category => Package.Category.ToString();
     public string Features => string.Join("\n", Package.Features.Select(f => "✓  " + f));
-    public string VersionText => L10n.T("Version") + " " + Package.Version + " · Windows 10/11 · 64 Bit";
+    public bool IsBeta => Package.Channel == "beta";
+    public string VersionText => L10n.T("Version") + " " + Package.Version + (IsBeta ? "-Beta\n" + Package.Branch + "\n" + Package.Build : "") + " · Windows 10/11 · 64 Bit";
     public string Size => (Package.InstallerSizeBytes / 1048576d).ToString("0.0", L10n.Culture) + " MB";
-    public bool HasUpdate => Installed != null && System.Version.TryParse(Installed.Version.Split('+')[0], out var current) && System.Version.TryParse(Package.Version, out var latest) && latest > current;
+    public bool HasUpdate => Installed != null && (IsBeta ? !string.Equals(Installed.Version, Package.Build, StringComparison.OrdinalIgnoreCase) : System.Version.TryParse(Installed.Version.Split('+')[0], out var current) && System.Version.TryParse(Package.Version, out var latest) && latest > current);
     public string Status => L10n.T(Installed == null ? "Noch nicht installiert" : HasUpdate ? "Update verfügbar" : "Installiert");
     public string Action => L10n.T(Installed == null ? "Herunterladen & installieren" : HasUpdate ? "Update installieren" : "Programm starten");
 }
@@ -50,7 +51,7 @@ public static class PackageValidation
             if (!System.Version.TryParse(app.Version, out _) || app.Name == null || app.Description == null || app.Category == null || app.Features == null || app.Features.Count > 20 || string.IsNullOrWhiteSpace(app.Name.De) || string.IsNullOrWhiteSpace(app.Name.En)) throw new InvalidDataException("Der Programmkatalog enthält unvollständige Angaben.");
             if (!Uri.TryCreate(app.InstallerUrl, UriKind.Absolute, out var uri) || uri.Scheme != "https" || !string.IsNullOrEmpty(uri.UserInfo)) throw new InvalidDataException("Setup-Downloads müssen eine gültige HTTPS-Adresse verwenden.");
             if (!Regex.IsMatch(app.InstallerSha256 ?? "", "^[a-fA-F0-9]{64}$") || app.InstallerSizeBytes is < 1 or > 1_073_741_824) throw new InvalidDataException("Prüfsumme oder Setup-Größe im Katalog ist ungültig.");
-            if (!Regex.IsMatch(app.Executable ?? "", "^[A-Za-z0-9_-]+\\.exe$") || !Regex.IsMatch(app.InstallFolder ?? "", "^[A-Za-z0-9_-]+$") || !Regex.IsMatch(app.RegistryId ?? "", "^\\{[A-Fa-f0-9-]{36}\\}_is1$")) throw new InvalidDataException("Ungültiger Installationspfad im Programmkatalog.");
+            if (!Regex.IsMatch(app.Executable ?? "", "^[A-Za-z0-9_-]+(?:\\.Beta)?\\.exe$") || !Regex.IsMatch(app.InstallFolder ?? "", "^[A-Za-z0-9_-]+$") || !Regex.IsMatch(app.RegistryId ?? "", "^\\{[A-Fa-f0-9-]{36}\\}_is1$")) throw new InvalidDataException("Ungültiger Installationspfad im Programmkatalog.");
         }
         return catalog;
     }
@@ -69,7 +70,9 @@ public static class InstallationDiscovery
             if (path != null && TryAt(Path.Combine(path, app.Executable)) is { } found)
                 return found with { Uninstaller = PackageUninstaller.Resolve(key?.GetValue("UninstallString") as string, found.Executable) };
         }
-        return TryAt(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", app.InstallFolder, app.Executable));
+        return TryAt(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "XD Suite", app.InstallFolder, app.Executable))
+            ?? TryAt(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), app.InstallFolder, app.Executable))
+            ?? TryAt(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", app.InstallFolder, app.Executable));
     }
     private static InstalledApp? TryAt(string path)
     {
@@ -80,7 +83,7 @@ public static class InstallationDiscovery
     public static Process Launch(InstalledApp app)
     {
         var start = new ProcessStartInfo(app.Executable) { UseShellExecute = true, WorkingDirectory = Path.GetDirectoryName(app.Executable)! };
-        if (Path.GetFileName(app.Executable).Equals("XDConverter.exe", StringComparison.OrdinalIgnoreCase)) start.ArgumentList.Add(L10n.Current == UiLanguage.German ? "--german" : "--english");
+        if (Path.GetFileName(app.Executable).Equals("XDConverter.exe", StringComparison.OrdinalIgnoreCase) || app.Executable.EndsWith(".Beta.exe", StringComparison.OrdinalIgnoreCase)) start.ArgumentList.Add(L10n.Current == UiLanguage.German ? "--german" : "--english");
         return Process.Start(start) ?? throw new IOException("Das Programm wurde nicht gefunden. Bitte neu installieren.");
     }
 }

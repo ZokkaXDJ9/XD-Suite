@@ -1,3 +1,9 @@
+#ifndef LegacyProgramFolder
+#define LegacyProgramFolder ProgramFolder
+#endif
+#ifndef LegacyProgramExe
+#define LegacyProgramExe ProgramExe
+#endif
 [Code]
 var LegacyPaths: TArrayOfString;
 
@@ -19,14 +25,15 @@ end;
 function IsLegacyDir(Path: String): Boolean;
 begin
   Path := RemoveBackslashUnlessRoot(Path);
-  Result := (CompareText(ExtractFileName(Path), '{#ProgramFolder}') = 0) and
-    (Pos('\appdata\local\programs\', Lowercase(Path)) > 0) and
+  Result := (CompareText(ExtractFileName(Path), '{#LegacyProgramFolder}') = 0) and
+    ((Pos('\appdata\local\programs\', Lowercase(Path)) > 0) or
+     (CompareText(Path, ExpandConstant('{autopf}\{#LegacyProgramFolder}')) = 0)) and
     (Pos('..', Path) = 0);
 end;
 
 function DefaultInstallDir(Param: String): String;
 begin
-  Result := ExpandConstant('{autopf}\{#ProgramFolder}');
+  Result := ExpandConstant('{autopf}\XD Suite\{#ProgramFolder}');
 end;
 
 procedure RememberLegacy(Root: Integer);
@@ -129,11 +136,35 @@ begin
     end;
 end;
 
+procedure RemoveManifestFiles(Path: String);
+var Files: TArrayOfString; I: Integer; Relative, Parent: String;
+begin
+  if not LoadStringsFromFile(ExpandConstant('{app}\payload-files.txt'), Files) then Exit;
+  for I := 0 to GetArrayLength(Files) - 1 do
+  begin
+    Relative := Files[I];
+    if (Relative <> '') and (Pos('..', Relative) = 0) and
+       (Pos(':', Relative) = 0) and (Copy(Relative, 1, 1) <> '\') and
+       (Copy(Relative, 1, 1) <> '/') then
+    begin
+      DeleteFile(AddBackslash(Path) + Relative);
+      Parent := ExtractFileDir(Relative);
+      while Parent <> '' do
+      begin
+        RemoveDir(AddBackslash(Path) + Parent);
+        Parent := ExtractFileDir(Parent);
+      end;
+    end;
+  end;
+end;
+
 procedure RemoveOwnedLegacyFiles(Path: String);
 var Search: TFindRec;
 begin
   if not IsLegacyDir(Path) then Exit;
+  RemoveManifestFiles(Path);
   DeleteFile(AddBackslash(Path) + '{#ProgramExe}');
+  DeleteFile(AddBackslash(Path) + '{#LegacyProgramExe}');
   DeleteFile(AddBackslash(Path) + 'XDUpdateHelper.exe');
   DeleteFile(AddBackslash(Path) + 'XDUpdateHelper.exe.config');
   DeleteFile(AddBackslash(Path) + 'catalog.json');
