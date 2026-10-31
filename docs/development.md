@@ -2,7 +2,7 @@
 
 Die Hauptsuite legt den Versionsstand fest, an dem gearbeitet wird. Nur tatsächlich geänderte Programme übernehmen diesen Stand. Unveränderte Programme behalten ihre Version und ihr bereits veröffentlichtes Setup. Eine Suite-Version löst keinen automatischen Versionssprung anderer Programme aus. Lokale Teststände werden über Build-Kennungen unterschieden.
 
-Aktuell: Suite 0.5.2. Brenner und Konverter erhalten wegen ihrer tatsächlich geänderten Installer ebenfalls 0.5.2. Andere unveränderte Programme behalten ihre Version und ihr ursprüngliches Setup.
+Aktuell: Suite 0.5.3. Brenner und Konverter erhalten wegen ihrer tatsächlich geänderten Installer ebenfalls 0.5.2. Andere unveränderte Programme behalten ihre Version und ihr ursprüngliches Setup.
 
 | Branch | Zuständigkeit |
 | --- | --- |
@@ -20,8 +20,10 @@ Branch-Wechsel nur mit geklärtem Arbeitsstand durchführen. Änderungen an der 
 
 ## Beta-Programme
 
-`app/xd-tag-editor`, `app/xd-cd-ripper` und `app/xd-wave-editor` entwickeln die eigenständigen Beta-Programme. Sie bleiben außerhalb des stabilen Katalogs und Suite-Setups. Versionen entsprechen dem Arbeitsstand der Suite und tragen sichtbar `-Beta`; einzelne Teststände unterscheiden sich zusätzlich durch Build-Metadaten. Eigene EXE, AppId, Mutex und Programmordner verhindern das Ersetzen stabiler Programme.
+`app/xd-burner`, `app/xd-converter`, `app/xd-tag-editor`, `app/xd-cd-ripper` und `app/xd-wave-editor` entwickeln die eigenständigen Beta-Programme. Sie bleiben außerhalb des stabilen Katalogs und Suite-Setups. Versionen entsprechen dem Arbeitsstand der Suite und tragen sichtbar `-Beta`; einzelne Teststände unterscheiden sich zusätzlich durch Build-Metadaten. Eigene EXE, AppId, Mutex und Programmordner verhindern das Ersetzen stabiler Programme.
 
 Im jeweiligen Worktree `tools/build-beta.ps1` unter dem Programmordner ausführen; anschließend `tools/publish-beta.ps1 -Publish`. Der Build prüft die Anwendung, erstellt zweisprachige Ansichten, ein unabhängiges Setup und `artifacts/beta/beta-catalog.json`. Die Veröffentlichung verwendet den jeweiligen Branch-Commit, ein eigenes Tag und ausschließlich eine GitHub-Vorabversion (`prerelease=true`, `make_latest=false`). Nachfolgende Builds erhalten neue Tags und Build-Kennungen. Vorhandene Releases werden nicht überschrieben.
 
 Der Suite-Tab wertet nur veröffentlichte Vorabversionen mit Beta-Katalog aus. Er validiert Branch, Beta-Kennung, getrennte Installationskennung, Größe, SHA-256 und Zugehörigkeit des Setups zum Release. Der stabile Updatekanal verwendet weiterhin ausschließlich die neueste stabile Suite-Version.
+
+Die Ansicht Installiert kombiniert stabile Katalogeinträge, bekannte Beta-Einträge und lokal registrierte Beta-Installationen. Die lokale Erkennung benötigt weder einen Cache noch eine Internetverbindung. Stable und Beta werden über getrennte Installationskennungen unterschieden; gleiche numerische Versionsstände verhindern keine zusätzliche Beta-Installation.

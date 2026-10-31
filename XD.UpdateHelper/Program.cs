@@ -17,6 +17,11 @@ internal static class Program
     private static void Main(string[] args)
     {
         Environment.CurrentDirectory = Path.GetTempPath();
+        if (args.Length == 2 && args[0] == "--cleanup-forwarder")
+        {
+            CleanupForwarder(args[1]);
+            return;
+        }
         if (Path.GetFileName(Application.ExecutablePath).Equals("XDSuite.exe", StringComparison.OrdinalIgnoreCase))
         {
             // Compatibility forwarder for the first update out of the old per-user directory.
@@ -34,6 +39,37 @@ internal static class Program
         Application.SetCompatibleTextRenderingDefault(false);
         try { Application.Run(new UpdateWindow(Options.Parse(args))); }
         catch (Exception error) { MessageBox.Show(error.Message, "XD Suite Update", MessageBoxButtons.OK, MessageBoxIcon.Error); Environment.ExitCode = 1; }
+    }
+    private static void CleanupForwarder(string path)
+    {
+        try
+        {
+            path = Path.GetFullPath(path);
+            string flat = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "XDSuite", "XDSuite.exe");
+            string perUser = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "XDSuite", "XDSuite.exe");
+            if (!path.Equals(flat, StringComparison.OrdinalIgnoreCase) && !path.Equals(perUser, StringComparison.OrdinalIgnoreCase)) return;
+            string target = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "XD Suite", "XDSuite", "XDSuite.exe");
+            byte[] own = File.ReadAllBytes(Application.ExecutablePath);
+            for (int attempt = 0; attempt < 120; attempt++)
+            {
+                System.Threading.Thread.Sleep(1000);
+                bool started = false;
+                foreach (var process in Process.GetProcessesByName("XDSuite"))
+                    using (process) { try { if (process.MainModule.FileName.Equals(target, StringComparison.OrdinalIgnoreCase)) started = true; } catch (System.ComponentModel.Win32Exception) { } catch (InvalidOperationException) { } }
+                if (!started) continue;
+                if (!File.Exists(path) || !File.ReadAllBytes(path).SequenceEqual(own)) return;
+                try
+                {
+                    File.Delete(path);
+                    if (File.Exists(path + ".config") && File.Exists(Application.ExecutablePath + ".config") && File.ReadAllBytes(path + ".config").SequenceEqual(File.ReadAllBytes(Application.ExecutablePath + ".config"))) File.Delete(path + ".config");
+                    string folder = Path.GetDirectoryName(path);
+                    if (!Directory.EnumerateFileSystemEntries(folder).Any()) Directory.Delete(folder, false);
+                    return;
+                }
+                catch (IOException) { }
+            }
+        }
+        catch (IOException) { } catch (UnauthorizedAccessException) { }
     }
 }
 

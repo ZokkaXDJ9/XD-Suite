@@ -31,12 +31,23 @@ internal static class BetaChecks
         {
             var list = (ListBox)window.FindName("AppList"); Check(list.Items.Cast<AppCard>().All(c => !c.IsBeta), "Stable tab excludes beta packages");
             window.ShowBetaPreview(fetched); Check(list.Items.Count == 1 && ((AppCard)list.Items[0]).IsBeta, "Beta tab is separate");
+            ((RadioButton)window.FindName("InstalledNav")).IsChecked = true;
+            var localBetas = InstallationDiscovery.FindInstalledBetas();
+            foreach (var local in localBetas) Check(list.Items.Cast<AppCard>().Any(c => c.IsBeta && c.Package.RegistryId.Equals(local.RegistryId, StringComparison.OrdinalIgnoreCase) && c.Installed != null), "Installed view includes local beta without requiring its online catalog: " + local.Name);
+            Check(list.Items.Cast<AppCard>().Select(c => c.Package.RegistryId).Distinct(StringComparer.OrdinalIgnoreCase).Count() == list.Items.Count, "Installed variants are not duplicated");
+            Check(list.Items.Cast<AppCard>().Where(c => c.IsBeta).All(c => c.Action == L10n.T(c.HasUpdate ? "Update installieren" : "Programm starten")), "Installed betas can be launched independently");
+            var stable = package with { Id = "xd-tag-editor", Channel = null, Build = null, RegistryId = "{00000000-0000-0000-0000-000000000001}_is1", Executable = "XDTagEditor.exe", InstallFolder = "XDTagEditor" };
+            Check(InstallationDiscovery.Find(package with { RegistryId = "{00000000-0000-0000-0000-000000000002}_is1", InstallFolder = "NoInstalledBeta" }) == null, "Equal stable version cannot satisfy a beta installation identity");
+            Check(!new AppCard(stable, new("stable.exe", package.Version)).IsBeta && new AppCard(package, null).Action == L10n.T("Herunterladen & installieren"), "Equal version numbers retain separate stable and beta actions");
+            ((RadioButton)window.FindName("AllNav")).IsChecked = true;
+            Check(list.Items.Cast<AppCard>().All(c => !c.IsBeta), "Stable catalog remains separate after visiting installed betas");
+            ((RadioButton)window.FindName("BetaNav")).IsChecked = true;
             var search = (TextBox)window.FindName("SearchBox"); search.Text = "Tag";
             L10n.Set(UiLanguage.English, false); Check(((RadioButton)window.FindName("BetaNav")).Content.ToString() == "Beta releases" && search.Text == "Tag", "English beta UI preserves input");
             L10n.Set(UiLanguage.German, false); Check(((RadioButton)window.FindName("BetaNav")).Content.ToString() == "Beta-Releases" && search.Text == "Tag", "German beta UI preserves input");
         }
         finally { window.Close(); }
-        File.AppendAllText(report, "PASS: prerelease-only discovery, beta identity/version/branch validation, stable registration protection, separate beta tab, German/English and input preservation\n");
+        File.AppendAllText(report, "PASS: prerelease-only discovery, separate beta identities at equal versions, installed local/offline beta inventory and launch actions, deduplication, separate stable catalog, German/English and input preservation\n");
     }
     static void Check(bool condition, string text) { if (!condition) throw new InvalidOperationException(text); }
     static void Reject(Action action) { try { action(); } catch (InvalidDataException) { return; } throw new Exception("Invalid beta was accepted"); }

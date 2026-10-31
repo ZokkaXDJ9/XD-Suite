@@ -59,6 +59,41 @@ public static class PackageValidation
 
 public static class InstallationDiscovery
 {
+    public static IReadOnlyList<AppPackage> FindInstalledBetas()
+    {
+        var packages = new Dictionary<string, AppPackage>(StringComparer.OrdinalIgnoreCase);
+        foreach (var hive in new[] { RegistryHive.CurrentUser, RegistryHive.LocalMachine })
+        foreach (var view in new[] { RegistryView.Registry64, RegistryView.Registry32 })
+        {
+            using var root = RegistryKey.OpenBaseKey(hive, view);
+            using var uninstall = root.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall");
+            if (uninstall == null) continue;
+            foreach (string id in uninstall.GetSubKeyNames().Where(id => Regex.IsMatch(id, @"^\{[A-Fa-f0-9-]{36}\}_is1$")))
+            {
+                try
+                {
+                    using var key = uninstall.OpenSubKey(id);
+                    string name = key?.GetValue("DisplayName") as string ?? "";
+                    string path = key?.GetValue("InstallLocation") as string ?? "";
+                    if (!name.StartsWith("XD ", StringComparison.OrdinalIgnoreCase) || !Directory.Exists(path)) continue;
+                    foreach (string exe in Directory.EnumerateFiles(path, "XD*.Beta.exe", SearchOption.TopDirectoryOnly))
+                    {
+                        var info = FileVersionInfo.GetVersionInfo(exe);
+                        var match = Regex.Match(info.ProductVersion ?? "", @"^(?<version>\d+\.\d+\.\d+)-Beta\+(?<stem>[a-z0-9-]+)\.(?<build>\d+)$");
+                        if (!match.Success || !(info.ProductName ?? "").StartsWith("XD ", StringComparison.OrdinalIgnoreCase)) continue;
+                        string stem = match.Groups["stem"].Value, version = match.Groups["version"].Value;
+                        string display = Regex.Replace(name, @"\s+\d+\.\d+\.\d+-Beta$", "");
+                        packages.TryAdd(id, new("xd-" + stem + "-beta", new(display, info.ProductName!),
+                            new("Installierte Beta-Version. Eigenständig nutzbar.", "Installed beta build. Usable independently."), new("Beta", "Beta"),
+                            version, "", "", 0, Path.GetFileName(exe), id, Path.GetFileName(Path.TrimEndingDirectorySeparator(path)),
+                            [new("Getrennte Beta-Installation", "Separate beta installation")], info.ProductVersion, "app/xd-" + stem, "beta"));
+                    }
+                }
+                catch (Exception e) when (e is IOException or UnauthorizedAccessException or System.Security.SecurityException) { App.Log(e); }
+            }
+        }
+        return packages.Values.ToList();
+    }
     public static InstalledApp? Find(AppPackage app)
     {
         foreach (var hive in new[] { RegistryHive.CurrentUser, RegistryHive.LocalMachine })
