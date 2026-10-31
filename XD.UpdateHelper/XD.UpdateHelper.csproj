@@ -3,6 +3,7 @@
     <OutputType>WinExe</OutputType><TargetFramework>net472</TargetFramework><UseWindowsForms>true</UseWindowsForms>
     <LangVersion>latest</LangVersion><Nullable>enable</Nullable><Version>0.5.2</Version>
     <AssemblyName>XDUpdateHelper</AssemblyName><Product>XD Suite Update</Product>
+    <PlatformTarget>x64</PlatformTarget><Prefer32Bit>false</Prefer32Bit>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 </Project>
