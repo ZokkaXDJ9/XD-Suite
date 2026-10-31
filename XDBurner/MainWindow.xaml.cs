@@ -44,6 +44,7 @@ public partial class MainWindow : Window
         GermanMenu.IsChecked = L10n.Current == UiLanguage.German;
         EnglishMenu.IsChecked = L10n.Current == UiLanguage.English;
         RefreshVersion();
+        if (BuildInfo.IsBeta) SetupBetaLayout();
         Loaded += async (_, _) => { if (!preview) await RefreshDrives(); };
     }
 
@@ -61,6 +62,7 @@ public partial class MainWindow : Window
         FileGrid.Items.Refresh();
         DriveCombo.Items.Refresh();
         UpdateProject();
+        XD.Design.BetaChrome.Refresh(this);
     }
 
     private void RefreshVersion()

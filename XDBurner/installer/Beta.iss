@@ -1,5 +1,7 @@
 #define Root AddBackslash(SourcePath) + "..\..\"
-#define Version "0.5.3"
+#ifndef Version
+#define Version "0.5.4"
+#endif
 [Setup]
 AppId={{E5E8A34F-0A7B-4563-9CA7-2F6F3A19AD12}
 AppName={cm:ProgramName}
@@ -15,13 +17,16 @@ ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0.17763
 ShowLanguageDialog=yes
 OutputDir={#Root}artifacts\beta
-OutputBaseFilename=XD-Brenner-Setup-{#Version}-Beta
-SetupIconFile={#Root}XDBurner\Assets\XDBurner.ico
+#ifndef BetaOutputFilename
+#define BetaOutputFilename "XD-Brenner-Setup-{#Version}-Beta"
+#endif
+OutputBaseFilename={#BetaOutputFilename}
+SetupIconFile={#Root}XDBurner\Assets\Beta.ico
 UninstallDisplayIcon={app}\XDBurner.Beta.exe
 AppMutex=Local\XDBurner.Beta.App
-VersionInfoVersion=0.5.3.0
-VersionInfoProductVersion=0.5.3.0
-VersionInfoProductTextVersion=0.5.3-Beta
+VersionInfoVersion={#Version}.0
+VersionInfoProductVersion={#Version}.0
+VersionInfoProductTextVersion={#Version}-Beta
 Compression=lzma2/normal
 SolidCompression=yes
 WizardStyle=modern

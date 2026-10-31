@@ -6,10 +6,10 @@
     "descriptionEn":  "CD burner on the beta channel. Installed independently of the stable version.",
     "nameEn":  "XD Burner Beta",
     "build":  "burner.1",
-    "setup":  "XD-Brenner-Setup-0.5.3-Beta.exe",
+    "setup":  "XD-Brenner-Setup-0.5.4-Beta.exe",
     "descriptionDe":  "CD-Brenner auf dem Beta-Kanal. Getrennt zur stabilen Version installiert.",
     "includeEngine":  false,
     "nameDe":  "XD Brenner Beta",
     "folder":  "XDBurnerBeta",
-    "releaseTag":  "xd-burner-0.5.3-Beta"
+    "releaseTag":  "xd-burner-0.5.4-Beta"
 }

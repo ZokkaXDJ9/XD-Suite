@@ -1,4 +1,3 @@
 [CmdletBinding()]
 param()
-$ErrorActionPreference = 'Stop'
-if (-not (Test-Path -LiteralPath (Join-Path (Split-Path -Parent $PSScriptRoot) 'Assets\XDBurner.ico'))) { throw 'Application icon missing.' }
+& (Join-Path (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)) 'design\build-beta-icon.ps1') -AppSource (Split-Path -Parent $PSScriptRoot) -Artwork (Join-Path (Split-Path -Parent $PSScriptRoot) 'Assets\XDBurner.svg') -SymbolColor '#AF431F'

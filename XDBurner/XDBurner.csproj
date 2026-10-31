@@ -29,4 +29,6 @@
     <EmbeddedResource Include="../tests/fixtures/tone.ogg" LogicalName="XDBurner.TestTone.ogg" />
     <Resource Include="Assets/XDBurner.ico" />
   </ItemGroup>
+  <ItemGroup><Compile Include="../design/BetaChrome.cs" Link="BetaChrome.cs" /><Resource Include="Assets/Beta.ico" /></ItemGroup>
+  <PropertyGroup Condition="'$(BetaBuild)' == 'true'"><ApplicationIcon>Assets/Beta.ico</ApplicationIcon></PropertyGroup>
 </Project>
