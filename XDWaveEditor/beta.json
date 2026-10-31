@@ -6,10 +6,10 @@
     "descriptionEn":  "Edit audio, apply effects and export to a new file.",
     "nameEn":  "XD Wave Editor Beta",
     "build":  "wave-editor.3",
-    "setup":  "XD-Wave-Editor-Setup-0.5.2-Beta.exe",
+    "setup":  "XD-Wave-Editor-Setup-0.5.4-Beta.exe",
     "descriptionDe":  "Audiodateien schneiden, Effekte anwenden und als neue Datei exportieren.",
     "includeEngine":  true,
     "nameDe":  "XD Wave Editor Beta",
     "folder":  "XDWaveEditorBeta",
-    "releaseTag":  "xd-wave-editor-0.5.2-Beta"
+    "releaseTag":  "xd-wave-editor-0.5.4-Beta"
 }

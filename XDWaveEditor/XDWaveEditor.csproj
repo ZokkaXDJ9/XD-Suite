@@ -2,10 +2,10 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework><UseWPF>true</UseWPF>
     <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
-    <Version>0.5.2</Version><InformationalVersion>$(Version)-Beta+wave-editor.3</InformationalVersion>
+    <Version>0.5.4</Version><InformationalVersion>$(Version)-Beta+wave-editor.3</InformationalVersion>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion><AssemblyName>XDWaveEditor.Beta</AssemblyName><RootNamespace>XDWaveEditor</RootNamespace>
     <Product>XD Wave Editor Beta</Product><Description>Audiodateien bearbeiten und Stille entfernen.</Description>
-    <ApplicationManifest>app.manifest</ApplicationManifest><ApplicationIcon>Assets/XDWaveEditor.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest><ApplicationIcon>Assets/Beta.ico</ApplicationIcon>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
   <ItemGroup><Resource Include="Assets/XDWaveEditor.ico"/></ItemGroup>
@@ -13,4 +13,5 @@
     <PropertyGroup><SuiteVersion>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)..\XDSuite\XDSuite.csproj')), '&lt;Version&gt;([^&lt;]+)&lt;/Version&gt;').Groups[1].Value)</SuiteVersion></PropertyGroup>
     <Error Condition="'$(Version)' != '$(SuiteVersion)'" Text="A new editor version must match the current suite working version."/>
   </Target>
+  <ItemGroup><Compile Include="../design/BetaChrome.cs" Link="BetaChrome.cs" /><Resource Include="Assets/Beta.ico" /></ItemGroup>
 </Project>

@@ -1,16 +1,24 @@
 [CmdletBinding()]
-param([string]$ToolsRoot, [switch]$SkipInstaller)
+param([string]$ToolsRoot, [switch]$SkipInstaller, [string]$BuildNumber)
 $ErrorActionPreference = 'Stop'
 $appSource = Split-Path -Parent $PSScriptRoot
 $root = Split-Path -Parent $appSource
 $config = [IO.File]::ReadAllText((Join-Path $appSource 'beta.json')) | ConvertFrom-Json
-if ((& git -C $root branch --show-current).Trim() -ne $config.branch) { throw 'Build beta only on its application branch.' }
+$sourceBranch = (& git -C $root branch --show-current).Trim()
+if ($env:GITHUB_ACTIONS -eq 'true' -and -not $sourceBranch) { $sourceBranch = $env:GITHUB_REF_NAME }
+if ($sourceBranch -ne $config.branch) { throw 'Build beta only on its application branch.' }
 if (-not $ToolsRoot) {
     $commonGit = (& git -C $root rev-parse --path-format=absolute --git-common-dir).Trim()
     if ($commonGit.StartsWith('/')) { $cygpath = Join-Path (Split-Path -Parent (Get-Command git).Source) 'cygpath.exe'; $commonGit = (& $cygpath -w $commonGit).Trim() }
     $ToolsRoot = Join-Path (Split-Path -Parent $commonGit) '.tools'
 }
 $version = ([xml][IO.File]::ReadAllText((Join-Path $root 'XDSuite\XDSuite.csproj'))).Project.PropertyGroup.Version | Where-Object { $_ }
+if ($BuildNumber) {
+    if ($BuildNumber -notmatch '^[1-9][0-9]{0,15}$') { throw 'Invalid beta build number.' }
+    $config.build = ($config.build -replace '\.[0-9]+$','.') + $BuildNumber
+    $config.setup = [IO.Path]::GetFileNameWithoutExtension($config.setup) + '-build-' + $BuildNumber + '.exe'
+    $config.releaseTag = ($config.id -replace '-beta$','') + '-' + $version + '-Beta-ci-' + $BuildNumber
+}
 $output = Join-Path $root 'artifacts\beta'
 $app = Join-Path $output 'app'
 New-Item -ItemType Directory -Force $app | Out-Null
@@ -25,8 +33,8 @@ function Snapshot {
     $files
 }
 $before = Snapshot
-& (Join-Path $PSScriptRoot 'build-icon.ps1')
-& dotnet publish (Join-Path $appSource ($config.program + '.csproj')) -c Release -r win-x64 --self-contained true -o $app '-p:RuntimeFrameworkVersion=8.0.33' '-p:DebugType=embedded'
+& (Join-Path $PSScriptRoot 'build-beta-icon.ps1')
+& dotnet publish (Join-Path $appSource ($config.program + '.csproj')) -c Release -r win-x64 --self-contained true -o $app '-p:RuntimeFrameworkVersion=8.0.33' '-p:DebugType=embedded' ('-p:InformationalVersion='+$version+'-Beta+'+$config.build) '-p:IncludeSourceRevisionInInformationalVersion=false'
 if($LASTEXITCODE -ne 0){ throw 'Beta build failed.' }
 $exe = Join-Path $app ($config.program + '.Beta.exe')
 $info = [Diagnostics.FileVersionInfo]::GetVersionInfo($exe)
@@ -55,11 +63,11 @@ $report = Join-Path $output 'tests.txt'
 $test = Start-Process -FilePath $exe -ArgumentList @('--self-test','--engine',('"'+$binary.DirectoryName+'"'),'--report',('"'+$report+'"')) -PassThru -Wait -WindowStyle Hidden
 if($test.ExitCode -ne 0){ throw ('Beta tests failed: '+$report) }
 foreach($language in @('--german','--english')) {
-    $render = Start-Process -FilePath $exe -ArgumentList @('--render',('"'+$output+'"'),$language) -PassThru -Wait -WindowStyle Hidden
+    $render = Start-Process -FilePath $exe -ArgumentList @('--render',('"'+$output+'"'),$language,'--report',('"'+$output+'\render-errors.txt"')) -PassThru -Wait -WindowStyle Hidden
     if($render.ExitCode -ne 0){ throw 'Beta UI render failed.' }
 }
 if(-not $SkipInstaller){
-    & (Join-Path $ToolsRoot 'InnoSetup\ISCC.exe') /Q (Join-Path $appSource 'installer\Beta.iss')
+    & (Join-Path $ToolsRoot 'InnoSetup\ISCC.exe') /Q ('/DVersion='+$version) ('/DBetaOutputFilename='+[IO.Path]::GetFileNameWithoutExtension($config.setup)) (Join-Path $appSource 'installer\Beta.iss')
     if($LASTEXITCODE -ne 0){ throw 'Beta setup failed.' }
     $setup = Get-Item -LiteralPath (Join-Path $output $config.setup)
     $setupVersion=[Diagnostics.FileVersionInfo]::GetVersionInfo($setup.FullName)

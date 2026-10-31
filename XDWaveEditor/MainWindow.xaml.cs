@@ -26,7 +26,7 @@ public partial class MainWindow : Window
     internal AudioDocument? Document => document;
     public MainWindow(AudioEngine engine, MediaPlayer? playback = null)
     {
-        this.engine = engine; player = playback ?? new(); InitializeComponent();
+        this.engine = engine; player = playback ?? new(); InitializeComponent(); SetupBetaLayout();
         Wave.ViewChanged += RefreshScroll;
         T.PropertyChanged += LanguageChanged;
         timer.Tick += (_, _) =>
@@ -78,6 +78,7 @@ public partial class MainWindow : Window
     {
         GermanMenu.IsChecked = !T.English; EnglishMenu.IsChecked = T.English;
         RefreshInfo(); StatusText.Text = T[statusKey] + statusDetail;
+        XD.Design.BetaChrome.Refresh(this);
     }
     private void LanguageChanged(object? sender, PropertyChangedEventArgs e) => RefreshLanguage();
     private void RefreshInfo()

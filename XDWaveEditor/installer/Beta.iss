@@ -4,7 +4,9 @@
 #define LegacyProgramFolder "XDWaveEditorPreview"
 #define LegacyProgramExe "XDWaveEditor.Preview.exe"
 #define Root AddBackslash(SourcePath) + "..\..\"
-#define Version "0.5.2"
+#ifndef Version
+#define Version "0.5.4"
+#endif
 [Setup]
 AppId={{A17BCC67-3916-4833-ABF1-91A9658AF359}
 AppName={cm:ProgramName}
@@ -20,13 +22,16 @@ ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0.17763
 ShowLanguageDialog=yes
 OutputDir={#Root}artifacts\beta
-OutputBaseFilename=XD-Wave-Editor-Setup-{#Version}-Beta
-SetupIconFile={#Root}XDWaveEditor\Assets\XDWaveEditor.ico
+#ifndef BetaOutputFilename
+#define BetaOutputFilename "XD-Wave-Editor-Setup-{#Version}-Beta"
+#endif
+OutputBaseFilename={#BetaOutputFilename}
+SetupIconFile={#Root}XDWaveEditor\Assets\Beta.ico
 UninstallDisplayIcon={app}\XDWaveEditor.Beta.exe
 AppMutex=Local\XDWaveEditor.Beta.App
-VersionInfoVersion=0.5.2.0
-VersionInfoProductVersion=0.5.2.0
-VersionInfoProductTextVersion=0.5.2-Beta
+VersionInfoVersion={#Version}.0
+VersionInfoProductVersion={#Version}.0
+VersionInfoProductTextVersion={#Version}-Beta
 Compression=lzma2/normal
 SolidCompression=yes
 WizardStyle=modern
