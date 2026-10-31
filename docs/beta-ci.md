@@ -16,10 +16,10 @@ Die Build-Nummer ist `1000000000 + GITHUB_RUN_NUMBER * 1000 + GITHUB_RUN_ATTEMPT
 Jeder Lauf erhält einen eigenen Release-Tag und Setup-Dateinamen. Stable-Releases
 werden dadurch nicht überschrieben. Die Suite wählt die höchste Version und Build-Nummer.
 
-Beta-Oberflächen verwenden Dunkelgrün, Code-Grün (`#39FF14`) und das farbige
+Nur die Beta-Icons verwenden Code-Grün (`#39FF14`) als Hintergrund und das farbige
 Programmsymbol: Brenner Orange, Konverter Blau, Tag-Editor Violett, CD-Ripper Gelb
 und Wave-Editor Türkis. Die Menüleiste liegt immer oben. Die Stable-Artworks bleiben
-eigenständig; dieses Layout wird zunächst auf den Beta-Kanälen getestet.
+eigenständig. Fenster, Menüs und Bedienelemente behalten die normalen App-Farben.
 
 Optische Laufwerke, echte Datenträger und hörbare Wiedergabe müssen manuell geprüft werden.
 
@@ -33,6 +33,7 @@ The visible `X.X.X-Beta` version has an additional numeric build identity so upd
 also work without increasing the base version. Parallel runs do not cancel each other.
 The suite selects version/build order rather than completion order.
 
-Betas share a dark green surface, code green accents and a distinct colored app glyph.
+Only beta icons use a code green background with a distinct colored app glyph.
+Windows, menus and controls retain the normal application colors.
 Menus are horizontal at the top. Stable installers remain separate and unchanged.
 Physical media, optical drives and audible playback require manual testing.
