@@ -140,7 +140,8 @@ internal static class AdvancedChecks
         }
         lines.Add("PASS: audio insertion with sample-rate/channel adaptation, protection of every imported original, composite export/reimport and insertion undo");
         await CheckWindows(engine, samples);
-        lines.Add("PASS: German/English effect names and dialog defaults, real WPF effect Apply and cancellation, precise time selection with validation, effect menu/button state and actual muted loop playback");
+        lines.Add("PASS: German/English effect names and dialog defaults, real WPF effect Apply and cancellation, precise time selection with validation and effect menu/button state");
+        lines.Add(SelfTest.NoCiAudioDevice ? "SKIP: muted loop playback: GitHub Actions has no audio output device." : "PASS: actual muted loop playback");
     }
     private static async Task CheckWindows(AudioEngine engine, float[] samples)
     {
@@ -179,6 +180,7 @@ internal static class AdvancedChecks
         await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
         Check(((Button)window.FindName("ToolsButton")).IsEnabled, "effects enabled with document");
         document.MarkSaved(); window.Close();
+        if (SelfTest.NoCiAudioDevice) return;
         var player = new MediaPlayer { Volume = 0 };
         var looping = new MainWindow(engine, player); looping.Show();
         var loopDoc = Make(Tone(1)); looping.LoadDocument(loopDoc); loopDoc.Select(12000, 24000);

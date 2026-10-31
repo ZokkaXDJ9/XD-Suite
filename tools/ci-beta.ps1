@@ -4,6 +4,7 @@ param([ValidateSet('Build','Publish','Plan')][string]$Action='Build',
       [long]$RunNumber=$env:GITHUB_RUN_NUMBER,
       [int]$RunAttempt=$env:GITHUB_RUN_ATTEMPT)
 $ErrorActionPreference='Stop'
+$ProgressPreference='SilentlyContinue'
 $root=Split-Path -Parent $PSScriptRoot
 $repository='ZokkaXDJ9/XD-Suite'
 if($Branch -notmatch '^app/[a-z0-9-]+$' -or $RunNumber -lt 1 -or $RunAttempt -lt 1 -or $RunAttempt -gt 999){throw 'Invalid branch or workflow run identity.'}
