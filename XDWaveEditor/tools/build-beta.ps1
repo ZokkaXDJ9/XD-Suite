@@ -63,7 +63,7 @@ if(-not $SkipInstaller){
     if($LASTEXITCODE -ne 0){ throw 'Beta setup failed.' }
     $setup = Get-Item -LiteralPath (Join-Path $output $config.setup)
     $setupVersion=[Diagnostics.FileVersionInfo]::GetVersionInfo($setup.FullName)
-    if($setupVersion.FileVersion -ne ($version+'.0') -or $setupVersion.ProductVersion -ne ($version+'-Beta')){ throw 'Installer version differs from its beta application.' }
+    if($setupVersion.FileVersion.Trim() -ne ($version+'.0') -or $setupVersion.ProductVersion.Trim() -ne ($version+'-Beta')){ throw 'Installer version differs from its beta application.' }
     $package = @{ id=$config.id; name=@{de=$config.nameDe;en=$config.nameEn}; description=@{de=$config.descriptionDe;en=$config.descriptionEn}; category=@{de='Audio / Beta';en='Audio / Beta'}; version=$version; build=$info.ProductVersion; branch=$config.branch; channel='beta'; installerUrl=('https://github.com/ZokkaXDJ9/XD-Suite/releases/download/'+$config.releaseTag+'/'+$config.setup); installerSha256=(Get-FileHash -LiteralPath $setup.FullName).Hash.ToLowerInvariant(); installerSizeBytes=$setup.Length; executable=($config.program+'.Beta.exe'); registryId=$config.registryId; installFolder=$config.folder; features=@(@{de='Getrennte Beta-Installation';en='Separate beta installation'},@{de='Deutsch und Englisch';en='German and English'}) }
     [IO.File]::WriteAllText((Join-Path $output 'beta-catalog.json'),(@{schemaVersion=1;apps=@($package)} | ConvertTo-Json -Depth 10),(New-Object Text.UTF8Encoding($false)))
 }
