@@ -21,6 +21,8 @@ internal static class BetaChecks
         Reject(() => BetaReleases.Parse(Json(package with { InstallerUrl = "https://example.test/setup.exe" }), SuiteSettings.Repository, "beta-test"));
         Check(!new AppCard(package, new("unused", package.Build!)).HasUpdate, "Same beta build is current");
         Check(new AppCard(package, new("unused", "0.5.2-Beta+tag-editor.0")).HasUpdate, "New beta build detected independently of stable version");
+        Check(!new AppCard(package, new("unused", "0.5.2-Beta+tag-editor.2")).HasUpdate, "Older beta build is not offered as an update");
+        Check(!new AppCard(package, new("unused", "0.5.3-Beta+tag-editor.1")).HasUpdate, "Older beta version is not offered as an update");
         string Release(bool draft, bool beta, string tag, string manifest, string date) => JsonSerializer.Serialize(new { draft, prerelease = beta, tag_name = tag, published_at = date, assets = new object[] { new { name = "beta-catalog.json", browser_download_url = manifest, size = 100 }, new { name = "setup.exe", browser_download_url = package.InstallerUrl, size = 16, digest = "sha256:" + package.InstallerSha256 } } });
         string releases = "[" + string.Join(',', Release(false, false, "stable", "https://example.test/never", "2026-10-31T12:00:00Z"), Release(true, true, "draft", "https://example.test/never", "2026-10-31T12:00:00Z"), Release(false, true, "beta-test", "https://example.test/beta-catalog.json", "2026-10-31T10:00:00Z")) + "]";
         using var transport = new PackageTransport(new Handler(request => request.RequestUri!.Host == "api.github.com" ? releases : request.RequestUri.AbsolutePath == "/beta-catalog.json" ? Json(package) : throw new Exception("Stable or draft release was fetched")));

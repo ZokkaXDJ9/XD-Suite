@@ -98,7 +98,7 @@ public partial class MainWindow : Window
     {
         string? previous = Selected?.Package.Id;
         string search = SearchBox.Text.Trim();
-        var source = filter == "beta" ? betaCatalog.Apps : filter == "installed"
+        var source = filter == "beta" ? betaCatalog.Apps : filter is "installed" or "updates"
             ? catalog.Apps.Concat(betaCatalog.Apps).Concat(InstallationDiscovery.FindInstalledBetas()).DistinctBy(p => p.RegistryId, StringComparer.OrdinalIgnoreCase)
             : catalog.Apps.AsEnumerable();
         var cards = source.Select(p => new AppCard(p, InstallationDiscovery.Find(p))).Where(c => filter != "installed" || c.Installed != null).Where(c => filter != "updates" || c.HasUpdate).Where(c => search.Length == 0 || (c.Name + " " + c.Description + " " + c.Category).Contains(search, StringComparison.CurrentCultureIgnoreCase)).ToList();
@@ -127,10 +127,10 @@ public partial class MainWindow : Window
         UninstallButton.ToolTip = selected?.Installed?.Uninstaller == null ? SuiteText.NoUninstaller.ToString() : null;
         PackageSizeText.Text = selected == null || selected.Installed != null && !selected.HasUpdate ? "" : "Setup · " + selected.Size;
     }
-    private async void Filter_Checked(object sender, RoutedEventArgs e) { if (AppList == null) return; filter = (string)((RadioButton)sender).Tag; Rebuild(); if (filter == "beta" && !betaFetched && !localPreview) await RefreshBeta(); }
+    private async void Filter_Checked(object sender, RoutedEventArgs e) { if (AppList == null) return; filter = (string)((RadioButton)sender).Tag; Rebuild(); if (!betaFetched && !localPreview && (filter == "beta" || filter == "updates" && InstallationDiscovery.FindInstalledBetas().Count > 0)) await RefreshBeta(); }
     private void Search_Changed(object sender, TextChangedEventArgs e) { if (AppList != null) Rebuild(); }
     private void App_Selected(object sender, SelectionChangedEventArgs e) => RefreshSelection();
-    private async void Refresh_Click(object sender, RoutedEventArgs e) { if (filter == "beta") await RefreshBeta(); else await RefreshCatalog(); }
+    private async void Refresh_Click(object sender, RoutedEventArgs e) { if (filter == "beta") await RefreshBeta(); else { await RefreshCatalog(); if (filter is "installed" or "updates" && InstallationDiscovery.FindInstalledBetas().Count > 0) await RefreshBeta(); } }
     private static string BetaText(string de, string en) => new LocalText(de, en).ToString();
     private static Catalog ReadBetaCache(string json)
     {

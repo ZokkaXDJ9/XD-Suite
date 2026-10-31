@@ -32,7 +32,16 @@ public sealed class AppCard(AppPackage package, InstalledApp? installed)
     public bool IsBeta => Package.Channel == "beta";
     public string VersionText => L10n.T("Version") + " " + Package.Version + (IsBeta ? "-Beta\n" + Package.Branch + "\n" + Package.Build : "") + " · Windows 10/11 · 64 Bit";
     public string Size => (Package.InstallerSizeBytes / 1048576d).ToString("0.0", L10n.Culture) + " MB";
-    public bool HasUpdate => Installed != null && (IsBeta ? !string.Equals(Installed.Version, Package.Build, StringComparison.OrdinalIgnoreCase) : System.Version.TryParse(Installed.Version.Split('+')[0], out var current) && System.Version.TryParse(Package.Version, out var latest) && latest > current);
+    public bool HasUpdate => Installed != null && (IsBeta ? HasBetaUpdate() : System.Version.TryParse(Installed.Version.Split('+')[0], out var current) && System.Version.TryParse(Package.Version, out var latest) && latest > current);
+    private bool HasBetaUpdate()
+    {
+        var installed = Regex.Match(Installed!.Version, @"^(?<version>\d+\.\d+\.\d+)-Beta\+(?<stem>[a-z0-9-]+)\.(?<build>\d+)$");
+        var available = Regex.Match(Package.Build ?? "", @"^(?<version>\d+\.\d+\.\d+)-Beta\+(?<stem>[a-z0-9-]+)\.(?<build>\d+)$");
+        if (!installed.Success || !available.Success) return !string.Equals(Installed.Version, Package.Build, StringComparison.OrdinalIgnoreCase);
+        int comparison = Version.Parse(available.Groups["version"].Value).CompareTo(Version.Parse(installed.Groups["version"].Value));
+        if (comparison != 0) return comparison > 0;
+        return available.Groups["stem"].Value == installed.Groups["stem"].Value && System.Numerics.BigInteger.Parse(available.Groups["build"].Value) > System.Numerics.BigInteger.Parse(installed.Groups["build"].Value);
+    }
     public string Status => L10n.T(Installed == null ? "Noch nicht installiert" : HasUpdate ? "Update verfügbar" : "Installiert");
     public string Action => L10n.T(Installed == null ? "Herunterladen & installieren" : HasUpdate ? "Update installieren" : "Programm starten");
 }
