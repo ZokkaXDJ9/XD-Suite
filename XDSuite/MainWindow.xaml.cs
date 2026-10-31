@@ -130,7 +130,7 @@ public partial class MainWindow : Window
     private async void Filter_Checked(object sender, RoutedEventArgs e) { if (AppList == null) return; filter = (string)((RadioButton)sender).Tag; Rebuild(); if (!betaFetched && !localPreview && (filter == "beta" || filter == "updates" && InstallationDiscovery.FindInstalledBetas().Count > 0)) await RefreshBeta(); }
     private void Search_Changed(object sender, TextChangedEventArgs e) { if (AppList != null) Rebuild(); }
     private void App_Selected(object sender, SelectionChangedEventArgs e) => RefreshSelection();
-    private async void Refresh_Click(object sender, RoutedEventArgs e) { if (filter == "beta") await RefreshBeta(); else { await RefreshCatalog(); if (filter is "installed" or "updates" && InstallationDiscovery.FindInstalledBetas().Count > 0) await RefreshBeta(); } }
+    private async void Refresh_Click(object sender, RoutedEventArgs e) { if (filter == "beta") await RefreshBeta(); else if (await RefreshCatalog() && filter is "installed" or "updates" && InstallationDiscovery.FindInstalledBetas().Count > 0) await RefreshBeta(); }
     private static string BetaText(string de, string en) => new LocalText(de, en).ToString();
     private static Catalog ReadBetaCache(string json)
     {
@@ -160,9 +160,10 @@ public partial class MainWindow : Window
         catch (Exception e) { App.Log(e); SetOperationStatus(new("Beta-Quelle nicht erreichbar.", "Beta source unavailable."), new("Gespeicherte Beta-Programme bleiben verfügbar. Erneut aktualisieren, um neue Versionen zu laden.", "Cached beta applications remain available. Refresh again to load new versions.")); }
         finally { SetBusy(false); Rebuild(); }
     }
-    private async Task RefreshCatalog()
+    private async Task<bool> RefreshCatalog()
     {
-        if (busy) return;
+        if (busy) return false;
+        bool completed = false;
         SetBusy(true);
         ProgressBar.Visibility = Visibility.Collapsed;
         StatusTitle.Text = "Programmkatalog wird aktualisiert …";
@@ -177,6 +178,7 @@ public partial class MainWindow : Window
             catalog = updated;
             StatusTitle.Text = "Programmkatalog aktualisiert.";
             StatusText.Text = "Programmkatalog von GitHub Releases geladen.";
+            completed = true;
         }
         catch (OperationCanceledException) when (cancellation!.IsCancellationRequested) { StatusTitle.Text = "Aktualisierung abgebrochen."; StatusText.Text = "Der bisherige Programmkatalog bleibt verfügbar."; }
         catch (Exception ex)
@@ -186,6 +188,7 @@ public partial class MainWindow : Window
             StatusText.Text = "Die Onlinequelle ist gerade nicht erreichbar. Vorhandene Programme kannst du weiterhin starten.";
         }
         finally { SetBusy(false); Rebuild(); }
+        return completed;
     }
     private async void Action_Click(object sender, RoutedEventArgs e)
     {
