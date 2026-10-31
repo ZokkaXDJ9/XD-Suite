@@ -12,7 +12,14 @@
     <InformationalVersion Condition="'$(PreviewBuild)' == 'true'">$(Version)-preview+automatic-defaults</InformationalVersion>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets/XDConverter.ico</ApplicationIcon>
+    <BetaBuild Condition="'$(BetaBuild)' == ''">false</BetaBuild>
     <Description>Audiodateien lokal konvertieren.</Description>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(BetaBuild)' == 'true'">
+    <Version>$(SuiteVersion)</Version><InformationalVersion>$(Version)-Beta+converter.1</InformationalVersion>
+    <AssemblyName>XDConverter.Beta</AssemblyName><Product>XD Converter Beta</Product>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <DefineConstants>$(DefineConstants);CONVERTER_BETA</DefineConstants>
   </PropertyGroup>
   <ItemGroup><Resource Include="Assets/XDConverter.ico"/><Resource Include="Assets/XDConverter-256.png"/></ItemGroup>
   <Target Name="ValidateSuiteVersion" BeforeTargets="BeforeBuild">

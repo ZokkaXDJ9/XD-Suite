@@ -88,10 +88,11 @@ internal static class SelfTest
             checks.Add("PASS: embedded EXE icon, all nine ICO resolutions and native window/taskbar icon match the converter artwork.");
             var grid = (DataGrid)window.FindName("FilesGrid"); string filename = ((AudioRow)grid.Items[0]).Name;
             Texts.Current.Set(true); await window.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
-            Check(window.Title == "XD Converter" && ((Button)window.FindName("StartButton")).Content.ToString() == "Convert", "English UI");
+            Check(window.Title == "XD Converter" + (BuildInfo.IsBeta ? " Beta" : "") && ((Button)window.FindName("StartButton")).Content.ToString() == "Convert", "English UI");
             Check(((AudioRow)grid.Items[0]).Name == filename, "Filename not translated");
             Texts.Current.Set(false); await window.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
-            Check(window.Title == "XD Konverter" && ((Button)window.FindName("StartButton")).Content.ToString() == "Konvertieren", "German UI");
+            Check(window.Title == "XD Konverter" + (BuildInfo.IsBeta ? " Beta" : "") && ((Button)window.FindName("StartButton")).Content.ToString() == "Konvertieren", "German UI");
+            if (BuildInfo.IsBeta) Check(Texts.Current["Preview"].Contains("-Beta") && BuildInfo.DataFolder == "XDConverterBeta" && BuildInfo.MutexName == @"Local\XDConverter.Beta.App" && typeof(App).Assembly.GetName().Name == "XDConverter.Beta", "Beta version label, settings, mutex and executable identity are separate");
             var formats = (ComboBox)window.FindName("FormatCombo");
             var modes = (ComboBox)window.FindName("ModeCombo");
             var qualityControl = (ComboBox)window.FindName("QualityCombo");

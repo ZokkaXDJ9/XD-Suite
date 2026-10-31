@@ -66,6 +66,8 @@ public sealed class Texts : INotifyPropertyChanged
         get
         {
             string value = values.TryGetValue(key, out var text) ? English ? text.En : text.De : key;
+            if (BuildInfo.IsBeta && key == "Title") return value + " Beta";
+            if (BuildInfo.IsBeta && key == "Preview") return "Beta · " + typeof(App).Assembly.GetName().Version!.ToString(3) + "-Beta";
             if (key == "Preview") return BuildInfo.IsPreview ? string.Format(value, typeof(App).Assembly.GetName().Version!.ToString(3)) : "Audio · " + typeof(App).Assembly.GetName().Version!.ToString(3);
             return value;
         }
