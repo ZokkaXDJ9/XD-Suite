@@ -28,6 +28,23 @@ internal static class BetaChecks
         using var transport = new PackageTransport(new Handler(request => request.RequestUri!.Host == "api.github.com" ? releases : request.RequestUri.AbsolutePath == "/beta-catalog.json" ? Json(package) : throw new Exception("Stable or draft release was fetched")));
         var fetched = await BetaReleases.Fetch(transport, SuiteSettings.Repository, CancellationToken.None);
         Check(fetched.Apps.Count == 1 && fetched.Apps[0].Build == package.Build, "Only published prerelease is listed");
+        var ciPackages = new Dictionary<string, AppPackage>();
+        object CiRelease(int build, string date)
+        {
+            string tag = "xd-tag-editor-0.5.2-Beta-ci-" + build;
+            var item = package with { Build = "0.5.2-Beta+tag-editor." + build, InstallerUrl = "https://github.com/" + SuiteSettings.Repository + "/releases/download/" + tag + "/setup.exe" };
+            string manifest = "https://example.test/ci-" + build + ".json"; ciPackages.Add(manifest, item);
+            return new { draft = false, prerelease = true, tag_name = tag, published_at = date, assets = new object[] { new { name = "beta-catalog.json", browser_download_url = manifest, size = 100 }, new { name = "setup.exe", browser_download_url = item.InstallerUrl, size = 16, digest = "sha256:" + item.InstallerSha256 } } };
+        }
+        string unordered = JsonSerializer.Serialize(new[] { CiRelease(9, "2026-10-31T13:00:00Z"), CiRelease(10, "2026-10-31T12:00:00Z") });
+        int manifests = 0;
+        using var orderedTransport = new PackageTransport(new Handler(request =>
+        {
+            if (request.RequestUri!.Host == "api.github.com") return unordered;
+            manifests++; return Json(ciPackages[request.RequestUri.AbsoluteUri]);
+        }));
+        var ordered = await BetaReleases.Fetch(orderedTransport, SuiteSettings.Repository, CancellationToken.None);
+        Check(ordered.Apps.Single().Build == "0.5.2-Beta+tag-editor.10" && manifests == 1, "Highest source build wins even if an older CI run finishes later; superseded manifests are skipped");
         var window = new MainWindow(preview: true);
         try
         {

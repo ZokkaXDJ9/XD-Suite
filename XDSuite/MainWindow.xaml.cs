@@ -40,6 +40,7 @@ public partial class MainWindow : Window
             catch (Exception e) when (e is IOException or JsonException or InvalidDataException or UnauthorizedAccessException) { App.Log(e); }
         }
         LanguageChanged(null, EventArgs.Empty);
+        SetupTopMenu();
         Loaded += async (_, _) =>
         {
             if (preview) return;
@@ -48,6 +49,27 @@ public partial class MainWindow : Window
             if (!skipUpdateCheck && IsVisible) await CheckSuiteUpdate();
         };
     }
+    private void SetupTopMenu()
+    {
+        var body = (Grid)Content;
+        ((FrameworkElement)body.Children[0]).Visibility = Visibility.Collapsed;
+        body.ColumnDefinitions[0].Width = new GridLength(0);
+        XD.Design.BetaChrome.Attach(this, () => L10n.Current == UiLanguage.English, beta: false);
+        var file = XD.Design.BetaChrome.Group(this, "_Datei", "_File");
+        XD.Design.BetaChrome.Button(this, file, "Katalog aktualisieren", "Refresh catalog", RefreshButton);
+        XD.Design.BetaChrome.Add(this, file, "Beenden", "Exit", Close);
+        var view = XD.Design.BetaChrome.Group(this, "_Ansicht", "_View");
+        foreach (var (button, de, en) in new[] { (AllNav, "Alle Programme", "All programs"), (InstalledNav, "Installierte Programme", "Installed programs"), (UpdatesNav, "Updates", "Updates"), (BetaNav, "Beta-Releases", "Beta releases") })
+        {
+            button.Foreground = (System.Windows.Media.Brush)FindResource("Ink");
+            XD.Design.BetaChrome.Add(this, view, de, en, () => button.IsChecked = true, button);
+            XD.Design.BetaChrome.Toolbar(this, button);
+        }
+        XD.Design.BetaChrome.MoveLanguages(this, GermanMenu);
+        L10n.Changed += RefreshTopMenu;
+        Closed += (_, _) => L10n.Changed -= RefreshTopMenu;
+    }
+    private void RefreshTopMenu(object? sender, EventArgs e) => XD.Design.BetaChrome.Refresh(this);
     internal MainWindow(Catalog testCatalog, Func<ProcessStartInfo, Task<int>> runner) : this(preview: true)
     {
         catalog = testCatalog;

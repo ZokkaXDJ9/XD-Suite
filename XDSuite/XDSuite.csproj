@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework><UseWPF>true</UseWPF>
-    <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><Version>0.5.3</Version>
+    <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><Version>0.5.4</Version>
     <ApplicationManifest>../XDBurner/app.manifest</ApplicationManifest>
     <AssemblyName>XDSuite</AssemblyName><Product>XD Suite</Product><Description>Programme installieren, aktualisieren und starten.</Description>
     <ApplicationIcon>Assets/XDSuite.ico</ApplicationIcon>
@@ -14,4 +14,5 @@
     <Resource Include="../XDBurner/Assets/XDBurner.ico" Link="Assets/XDBurner.ico" />
     <Content Include="../catalog/catalog.json" Link="catalog.json" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
   </ItemGroup>
+  <ItemGroup><Compile Include="../design/BetaChrome.cs" Link="BetaChrome.cs" /><Resource Include="Assets/*Beta.ico" /></ItemGroup>
 </Project>

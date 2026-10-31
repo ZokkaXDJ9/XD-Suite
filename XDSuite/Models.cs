@@ -25,7 +25,7 @@ public sealed class AppCard(AppPackage package, InstalledApp? installed)
     public AppPackage Package { get; } = package;
     public InstalledApp? Installed { get; } = installed;
     public string Name => Package.Name.ToString();
-    public string Icon => "pack://application:,,,/XDSuite;component/Assets/" + (Package.Id.Contains("wave-editor") ? "XDWaveEditor.ico" : Package.Id.Contains("tag-editor") ? "XDTagEditor.ico" : Package.Id.Contains("cd-ripper") ? "XDCDRipper.ico" : Package.Id.Contains("converter") ? "XDConverter.ico" : "XDBurner.ico");
+    public string Icon => "pack://application:,,,/XDSuite;component/Assets/" + (Package.Id.Contains("wave-editor") ? "XDWaveEditor.ico" : Package.Id.Contains("tag-editor") ? "XDTagEditor.ico" : Package.Id.Contains("cd-ripper") ? "XDCDRipper.ico" : Package.Id.Contains("converter") ? "XDConverter.ico" : "XDBurner.ico").Replace(".ico", IsBeta ? "Beta.ico" : ".ico");
     public string Description => Package.Description.ToString();
     public string Category => Package.Category.ToString();
     public string Features => string.Join("\n", Package.Features.Select(f => "✓  " + f));

@@ -5,7 +5,7 @@
 [Setup]
 AppId={{F80CC53F-43F1-4E46-B7F4-61435E75303D}
 AppName=XD Suite
-AppVersion=0.5.3
+AppVersion=0.5.4
 AppPublisher=XD Suite
 DefaultDirName={code:DefaultInstallDir}
 DefaultGroupName=XD Suite
@@ -19,7 +19,7 @@ MinVersion=10.0.17763
 UninstallDisplayName=XD Suite
 UninstallDisplayIcon={app}\XDSuite.exe
 OutputDir={#Root}dist
-OutputBaseFilename=XD-Suite-Setup-0.5.3
+OutputBaseFilename=XD-Suite-Setup-0.5.4
 SetupIconFile={#Root}XDSuite\Assets\XDSuite.ico
 Compression=lzma2/normal
 SolidCompression=yes
@@ -29,7 +29,7 @@ SetupLogging=yes
 CloseApplications=yes
 RestartApplications=no
 AppMutex=Local\XDSuite.App
-VersionInfoVersion=0.5.3.0
+VersionInfoVersion=0.5.4.0
 VersionInfoDescription=XD Suite Installation
 VersionInfoProductName=XD Suite
 LicenseFile={#Root}LICENSE
