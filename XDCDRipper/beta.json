@@ -1,0 +1,8 @@
+{
+  "id": "xd-cd-ripper-beta", "nameDe": "XD CD-Ripper Beta", "nameEn": "XD CD Ripper Beta",
+  "descriptionDe": "Audio-CDs als WAV, FLAC oder MP3 mit eigenen Titelangaben auslesen.",
+  "descriptionEn": "Rip audio CDs to WAV, FLAC or MP3 with your own track information.",
+  "branch": "app/xd-cd-ripper", "build": "cd-ripper.1", "releaseTag": "xd-cd-ripper-0.5.2-Beta",
+  "program": "XDCDRipper", "folder": "XDCDRipperBeta", "registryId": "{3B268C68-9E43-427C-84D2-8DF795A020DE}_is1",
+  "setup": "XD-CD-Ripper-Setup-0.5.2-Beta.exe", "includeEngine": true
+}
