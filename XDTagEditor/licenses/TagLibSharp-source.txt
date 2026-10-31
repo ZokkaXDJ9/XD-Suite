@@ -1,0 +1,1 @@
+TagLibSharp 2.3.0; LGPL 2.1. Separately replaceable TagLibSharp.dll. Source and modifications: https://github.com/mono/taglib-sharp . No modifications to the library. Package: https://www.nuget.org/packages/TagLibSharp/2.3.0
