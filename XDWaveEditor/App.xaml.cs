@@ -18,7 +18,7 @@ public partial class App : Application
         base.OnStartup(e); Resources["T"] = Texts.Current;
         try
         {
-            Marshal.ThrowExceptionForHR(SetCurrentProcessExplicitAppUserModelID("XDSuite.WaveEditor.Preview"));
+            Marshal.ThrowExceptionForHR(SetCurrentProcessExplicitAppUserModelID("XDSuite.WaveEditor.Beta"));
             var engine = new AudioEngine(Arg(e.Args, "--engine") ?? Path.Combine(AppContext.BaseDirectory, "engine"));
             if (e.Args.Contains("--self-test"))
             {
@@ -56,7 +56,7 @@ public partial class App : Application
                 finally { File.Delete(input); }
                 Shutdown(0); return;
             }
-            mutex = new Mutex(true, @"Local\XDWaveEditor.Preview.App", out ownsMutex);
+            mutex = new Mutex(true, @"Local\XDWaveEditor.Beta.App", out ownsMutex);
             if (!ownsMutex) { Shutdown(0); return; }
             Texts.Current.Load();
             if (e.Args.Contains("--english")) Texts.Current.Set(true);

@@ -1,6 +1,6 @@
-# XD Wave Editor – lokale Vorschau
+# XD Wave Editor 0.5.2-Beta
 
-Eigenständiger Wave-Editor für Mono und Stereo, Deutsch und Englisch. Teststand **0.5.1-preview+wave-editor.2**, passend zum aktuellen Arbeitsstand der Suite. Kein Eintrag im Live-Katalog, kein GitHub Release und keine Änderungen an Suite, Brenner oder Konverter.
+Eigenständiger Wave-Editor für Mono und Stereo, Deutsch und Englisch. Teststand **0.5.2-Beta+wave-editor.3**, passend zum aktuellen Arbeitsstand der Suite. Eigene GitHub-Vorabversion ausschließlich für den Beta-Tab. Kein Eintrag im stabilen Katalog oder Suite-Setup.
 
 - MP3, WAV, FLAC, OGG/Vorbis, M4A/AAC, Opus, WMA und AIFF öffnen, auch per Drag-and-drop.
 - Wellenform mit Cursor, Bereichsauswahl, Zoom und horizontalem Scrollen.
@@ -15,18 +15,19 @@ Die Audiodaten liegen während der Bearbeitung als temporäre PCM-Datei auf dem 
 ## Lokal bauen
 
 ```powershell
-.\XDWaveEditor\tools\build-preview.ps1
-.\XDWaveEditor\tools\test-preview-installer.ps1
+.\XDWaveEditor\tools\build-beta.ps1 -ToolsRoot <Suite-Checkout>/.tools
+.\XDWaveEditor\tools\test-beta-installer.ps1 -ToolsRoot <Suite-Checkout>/.tools
 ```
 
-Die geprüfte, festgelegte FFmpeg-Engine des Konverters wird aus dem Archiv wiederverwendet. Der Build benötigt .NET SDK 9+, Windows und den bereits vorhandenen Inno-Setup-Compiler. `-ToolsRoot` kann einen vorhandenen `.tools`-Ordner angeben. Binärdateien, Engine-Lizenzen und Quellverweise werden zusammen ausgeliefert. Vorschau-Setup unter `artifacts/wave-editor-preview-test2/`, eigenständige EXE unter `app/`. Das Setup verwendet Administratorrechte, Programme\XDWaveEditorPreview, eine eigene Installationskennung und eine deutsche/englische Sprachauswahl.
+Die geprüfte, festgelegte FFmpeg-Engine des Konverters wird aus dem Archiv wiederverwendet. Der Build benötigt .NET SDK 9+, Windows und den bereits vorhandenen Inno-Setup-Compiler. `-ToolsRoot` kann einen vorhandenen `.tools`-Ordner angeben. Binärdateien, Engine-Lizenzen und Quellverweise werden zusammen ausgeliefert. Vorschau-Setup unter `artifacts/beta/`, eigenständige EXE unter `app/`. Das Setup verwendet Administratorrechte, Programme\XD Suite\XDWaveEditorBeta, eine eigene Installationskennung und eine deutsche/englische Sprachauswahl.
 
 ## English
 
-Standalone mono/stereo wave editor preview with live German/English switching. Select, cut, copy and paste audio within the open file, delete regions, keep only a selected range, undo/redo, zoom and listen. Export to a new WAV, MP3, FLAC, OGG, M4A or Opus file. Source files are protected. Effects include gain, linked peak normalization and optional DC removal, fades, mute, reverse, invert, repeat, silence insertion, tempo, pitch, EQ, high/low-pass, FFT noise reduction and compression. Effects support undo/redo. Precise time selection, looped playback and inserting other audio files are included. Metadata, crossfades and saved editing projects are not supported yet. This preview is isolated from the stable catalog and releases.
+Standalone mono/stereo wave editor preview with live German/English switching. Select, cut, copy and paste audio within the open file, delete regions, keep only a selected range, undo/redo, zoom and listen. Export to a new WAV, MP3, FLAC, OGG, M4A or Opus file. Source files are protected. Effects include gain, linked peak normalization and optional DC removal, fades, mute, reverse, invert, repeat, silence insertion, tempo, pitch, EQ, high/low-pass, FFT noise reduction and compression. Effects support undo/redo. Precise time selection, looped playback and inserting other audio files are included. Metadata, crossfades and saved editing projects are not supported yet. This beta is distributed as a separate GitHub prerelease through the Beta releases tab; it is excluded from stable catalog and installers.
 
 ## Funktionsauswahl und Grenzen
 
 Die Auswahl orientiert sich an den üblichen Editier- und Effektwerkzeugen im [Audacity-Handbuch](https://manual.audacityteam.org/man/index_of_effects_generators_and_analyzers.html). Die verwendeten Filter sind in der [FFmpeg-Dokumentation](https://ffmpeg.org/ffmpeg-filters.html) beschrieben; der Build verwendet die bereits festgelegte Engine und ihre mitgelieferte Hilfe.
 
 Normalisieren bezieht sich auf den Spitzenpegel, nicht auf LUFS. Rauschminderung zielt auf gleichmäßiges Hintergrundrauschen; starke Eingriffe können Artefakte erzeugen. Tempo und Tonhöhe sind getrennt einstellbar, große Änderungen können den Klang beeinflussen. Importierte Originaldateien werden ebenso vor Überschreiben geschützt wie die zuerst geöffnete Datei. Effekte schreiben zunächst temporäres Material und übernehmen es erst nach erfolgreichem Abschluss; Abbruch und ungültige Werte ändern das Dokument nicht.
+Die bisherige installierte Vorschau wird mit derselben Vorschau-Installationskennung nach `Programme\XD Suite\XDWaveEditorBeta` übernommen. Die bisherige Sprachpräferenz unter `%LOCALAPPDATA%\XDWaveEditorPreview` bleibt erhalten. Die EXE heißt `XDWaveEditor.Beta.exe`. Mit der Beta-Umstellung wurden keine neuen Audiofunktionen hinzugefügt; ein zu kurzer zeitabhängiger Abbruchtest verwendet jetzt ausreichend Testmaterial.

@@ -23,7 +23,7 @@ public sealed class Texts : INotifyPropertyChanged
     public static string Time(long frames, int rate) => TimeSpan.FromSeconds(frames / (double)rate).ToString(@"hh\:mm\:ss\.fff", CultureInfo.InvariantCulture);
     private static readonly Dictionary<string, (string De, string En)> Values = new()
     {
-        ["Title"] = ("XD Wave Editor · Vorschau", "XD Wave Editor · Preview"), ["Preview"] = ("Vorschau · 0.5.1 · Teststand 2", "Preview · 0.5.1 · Build 2"),
+        ["Title"] = ("XD Wave Editor · Beta", "XD Wave Editor · Beta"), ["Preview"] = ("0.5.2-Beta · Build 3", "0.5.2-Beta · Build 3"),
         ["Tools"] = ("Effekte & Werkzeuge …", "Effects & tools …"), ["EffectsMenu"] = ("Effekte", "Effects"), ["ApplyEffect"] = ("Anwenden", "Apply"), ["Defaults"] = ("Standardwerte", "Defaults"),
         ["Processing"] = ("Audio wird bearbeitet …", "Processing audio …"), ["AllowClipping"] = ("Übersteuerung zulassen", "Allow clipping"), ["RemoveDc"] = ("Gleichspannungsanteil entfernen", "Remove DC offset"),
         ["WholeAudio"] = ("Wirkt auf die gesamte Datei.", "Applies to all audio."), ["SelectedAudio"] = ("Wirkt auf die Auswahl:", "Applies to selection:"), ["InsertAtCursor"] = ("Einfügen am Cursor:", "Insert at cursor:"),

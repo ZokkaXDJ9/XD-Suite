@@ -76,7 +76,7 @@ internal static class AdvancedChecks
             await engine.ApplyEffect(doc, new(0, doc.Frames), new(EffectKind.Gain, [12], AllowClipping: true), CancellationToken.None);
             Check(Read(doc).Max() > 1, "clipping requires explicit opt-in");
         }
-        using (var doc = Make(Tone(10)))
+        using (var doc = Make(Tone(120)))
         {
             Guid revision = doc.Revision;
             using var cancel = new CancellationTokenSource(5);
