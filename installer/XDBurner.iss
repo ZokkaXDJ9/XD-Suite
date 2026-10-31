@@ -1,4 +1,4 @@
-#define AppVersion "0.4.1"
+#define AppVersion "0.5.2"
 #define Root AddBackslash(SourcePath) + "..\"
 #define ProgramId "{B5AF424C-85D1-47D4-AF62-30A5A15C5094}"
 #define ProgramFolder "XDBurner"
@@ -32,7 +32,7 @@ SetupLogging=yes
 CloseApplications=yes
 RestartApplications=no
 AppMutex=Local\XDBurner.App,Local\KlarBrand.App
-VersionInfoVersion=0.4.1.0
+VersionInfoVersion=0.5.2.0
 VersionInfoDescription=XD Burner Installation
 VersionInfoProductName=XD Brenner / XD Burner
 VersionInfoCopyright=2026 XD Suite contributors
