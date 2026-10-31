@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets/XDBurner.ico</ApplicationIcon>
-    <Version>0.4.1</Version>
+    <Version>0.5.2</Version>
     <AssemblyName>XDBurner</AssemblyName>
     <Product>XD Brenner</Product>
     <Description>Daten-CDs und Audio-CDs brennen, ISO-Dateien erstellen und CD-RWs löschen.</Description>
