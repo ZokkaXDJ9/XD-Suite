@@ -98,8 +98,10 @@ public partial class MainWindow : Window
     {
         string? previous = Selected?.Package.Id;
         string search = SearchBox.Text.Trim();
-        var source = filter == "beta" ? betaCatalog : catalog;
-        var cards = source.Apps.Select(p => new AppCard(p, InstallationDiscovery.Find(p))).Where(c => filter != "installed" || c.Installed != null).Where(c => filter != "updates" || c.HasUpdate).Where(c => search.Length == 0 || (c.Name + " " + c.Description + " " + c.Category).Contains(search, StringComparison.CurrentCultureIgnoreCase)).ToList();
+        var source = filter == "beta" ? betaCatalog.Apps : filter == "installed"
+            ? catalog.Apps.Concat(betaCatalog.Apps).Concat(InstallationDiscovery.FindInstalledBetas()).DistinctBy(p => p.RegistryId, StringComparer.OrdinalIgnoreCase)
+            : catalog.Apps.AsEnumerable();
+        var cards = source.Select(p => new AppCard(p, InstallationDiscovery.Find(p))).Where(c => filter != "installed" || c.Installed != null).Where(c => filter != "updates" || c.HasUpdate).Where(c => search.Length == 0 || (c.Name + " " + c.Description + " " + c.Category).Contains(search, StringComparison.CurrentCultureIgnoreCase)).ToList();
         AppList.ItemsSource = cards;
         AppList.SelectedItem = cards.FirstOrDefault(c => c.Package.Id == previous) ?? cards.FirstOrDefault();
         EmptyText.Visibility = cards.Count == 0 ? Visibility.Visible : Visibility.Collapsed;

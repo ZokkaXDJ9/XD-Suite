@@ -187,7 +187,7 @@ begin
 end;
 
 procedure MigrateRegistration;
-var I: Integer; Previous, Target: String;
+var I, CleanupExit: Integer; Previous, Target: String;
 begin
   Target := RemoveBackslashUnlessRoot(ExpandConstant('{app}'));
   if not FileExists(AddBackslash(Target) + '{#ProgramExe}') then Exit;
@@ -207,6 +207,9 @@ begin
         ForceDirectories(LegacyPaths[I]);
         FileCopy(ExpandConstant('{app}\XDUpdateHelper.exe'), AddBackslash(LegacyPaths[I]) + 'XDSuite.exe', False);
         FileCopy(ExpandConstant('{app}\XDUpdateHelper.exe.config'), AddBackslash(LegacyPaths[I]) + 'XDSuite.exe.config', False);
+        { Elevated cleanup waits for the relocated suite to start, then removes only
+          the byte-identical compatibility forwarder. Personal files remain. }
+        Exec(ExpandConstant('{app}\XDUpdateHelper.exe'), '--cleanup-forwarder "' + AddBackslash(LegacyPaths[I]) + 'XDSuite.exe"', '', SW_HIDE, ewNoWait, CleanupExit);
       end;
 #endif
 end;

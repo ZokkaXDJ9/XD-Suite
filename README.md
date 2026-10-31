@@ -6,7 +6,7 @@ XD Brenner ist ein Windows-Programm zum Brennen von CDs. XD Suite verwaltet und 
 
 - **`dist/XD-Konverter-Setup-0.5.2.exe`** installiert nur XD Konverter.
 - **`dist/XD-Brenner-Setup-0.5.2.exe`** installiert nur XD Brenner.
-- **`dist/XD-Suite-Setup-0.5.2.exe`** installiert XD Suite und die im Setup ausgewählten Programme. XD Brenner 0.5.2 und XD Konverter 0.5.2 sind enthalten und einzeln abwählbar.
+- **`dist/XD-Suite-Setup-0.5.3.exe`** installiert XD Suite und die im Setup ausgewählten Programme. XD Brenner 0.5.2 und XD Konverter 0.5.2 sind enthalten und einzeln abwählbar.
 
 Alle Setups fordern Administratorrechte an und zeigen eine Sprachauswahl für Deutsch und Englisch. Frische Installationen verwenden `%ProgramFiles%\XD Suite\XDBurner`, `XD Suite\XDConverter` bzw. `XD Suite\XDSuite`. Ältere Installationen unter AppData werden ohne Deinstaller nach Programme übernommen und dort aktualisiert. Auch wenn ein alter Updatehelfer den bisherigen Ordner offen hält, werden vorhandene Dateien übernommen. Die alte Installation bleibt bis zum erfolgreichen Abschluss erhalten; eigene Dateien werden nicht gelöscht. Die benötigte .NET-Laufzeit ist enthalten; auch das auswählbare Brenner-Setup benötigt keinen weiteren Download.
 
