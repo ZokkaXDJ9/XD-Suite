@@ -2,13 +2,14 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework><UseWPF>true</UseWPF>
     <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
-    <Version>0.5.2</Version><InformationalVersion>$(Version)-Beta+cd-ripper.1</InformationalVersion>
+    <Version>0.5.4</Version><InformationalVersion>$(Version)-Beta+cd-ripper.1</InformationalVersion>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion><AssemblyName>XDCDRipper.Beta</AssemblyName><Product>XD CD Ripper Beta</Product>
-    <ApplicationIcon>Assets/App.ico</ApplicationIcon><RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <ApplicationIcon>Assets/Beta.ico</ApplicationIcon><RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
   <ItemGroup><Resource Include="Assets/App.ico"/></ItemGroup>
   <Target Name="ValidateSuiteVersion" BeforeTargets="BeforeBuild">
     <PropertyGroup><SuiteVersion>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)..\XDSuite\XDSuite.csproj')), '&lt;Version&gt;([^&lt;]+)&lt;/Version&gt;').Groups[1].Value)</SuiteVersion></PropertyGroup>
     <Error Condition="'$(Version)' != '$(SuiteVersion)'" Text="Preview version must match the suite working version."/>
   </Target>
+  <ItemGroup><Compile Include="../design/BetaChrome.cs" Link="BetaChrome.cs" /><Resource Include="Assets/Beta.ico" /></ItemGroup>
 </Project>

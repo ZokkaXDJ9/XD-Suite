@@ -35,10 +35,10 @@ public sealed class MainWindow : Window
     public MainWindow(string[] args)
     {
         ui = new("XDCDRipperBeta", args); engine = Path.Combine(AppContext.BaseDirectory, "engine", "ffmpeg.exe"); Ui.Style(this);
-        ui.Local(() => Title = "XD CD Ripper · 0.5.2-Beta / Build 1");
-        var root = new DockPanel { Margin = new(25) }; Content = root;
-        var heading = new DockPanel(); var language = ui.Language(); DockPanel.SetDock(language, Dock.Right); heading.Children.Add(language); heading.Children.Add(ui.Text("XD CD-Ripper", "XD CD Ripper", 26, true)); DockPanel.SetDock(heading, Dock.Top); root.Children.Add(heading);
-        var hint = ui.Text("Audio-CDs lokal als FLAC, WAV oder MP3 speichern · 0.5.2-Beta", "Save audio CDs locally as FLAC, WAV or MP3 · 0.5.2-Beta"); DockPanel.SetDock(hint, Dock.Top); root.Children.Add(hint);
+        ui.Local(() => Title = "XD CD Ripper Beta");
+        var root = new DockPanel { Margin = new(25, 0, 25, 20) }; Content = root;
+        var heading = new DockPanel(); var language = ui.Language(); DockPanel.SetDock(language, Dock.Right); heading.Children.Add(language); heading.Children.Add(ui.Text("XD CD-Ripper", "XD CD Ripper", 26, true)); DockPanel.SetDock(heading, Dock.Top); root.Children.Add(heading); heading.Visibility = Visibility.Collapsed;
+        var hint = ui.Text("Audio-CDs lokal als FLAC, WAV oder MP3 speichern", "Save audio CDs locally as FLAC, WAV or MP3"); DockPanel.SetDock(hint, Dock.Top); root.Children.Add(hint);
         var toolbar = new WrapPanel(); toolbar.Children.Add(drives); AddButton(toolbar, "Laufwerke suchen", "Refresh drives", RefreshDrives); AddButton(toolbar, "CD einlesen", "Read disc", LoadDisc); AddButton(toolbar, "Alle auswählen", "Select all", () => { foreach (var row in rows) row.Selected = true; grid.Items.Refresh(); }); AddButton(toolbar, "Auswahl aufheben", "Select none", () => { foreach (var row in rows) row.Selected = false; grid.Items.Refresh(); }); DockPanel.SetDock(toolbar, Dock.Top); root.Children.Add(toolbar);
         status = ui.Text("Audio-CD einlegen und CD einlesen wählen. Titel und Albumangaben können anschließend bearbeitet werden.", "Insert an audio CD and choose Read disc. You can then edit track titles and album information.");
         var footer = new StackPanel(); footer.Children.Add(status); footer.Children.Add(progress); var controls = new WrapPanel();
@@ -59,6 +59,13 @@ public sealed class MainWindow : Window
         options.Children.Add(ui.Text("Bei Lesefehlern wird erneut gelesen. Dauerhafte Fehler brechen den Titel ab. Fertige Titel bleiben erhalten.", "Read errors are retried. Persistent errors stop the current track. Completed tracks are retained."));
         options.Children.Add(ui.Text("Titelangaben werden manuell eingetragen. Keine Online-Datenbank und keine AccurateRip-Prüfung in dieser Beta.", "Enter track information manually. No online database or AccurateRip verification in this beta."));
         var optionCard = Ui.Card(new ScrollViewer { Content = options, VerticalScrollBarVisibility = ScrollBarVisibility.Auto }); Grid.SetColumn(optionCard, 1); workspace.Children.Add(optionCard);
+        XD.Design.BetaChrome.Attach(this, () => ui.English, english => language.SelectedIndex = english ? 1 : 0);
+        var discMenu = XD.Design.BetaChrome.Group(this, "_Disc", "_Disc");
+        foreach (var button in toolbar.Children.OfType<Button>()) XD.Design.BetaChrome.Button(this, discMenu, button);
+        var fileMenu = XD.Design.BetaChrome.Group(this, "_Datei", "_File");
+        foreach (var button in controls.Children.OfType<Button>()) XD.Design.BetaChrome.Button(this, fileMenu, button);
+        XD.Design.BetaChrome.Add(this, fileMenu, "Beenden", "Exit", Close);
+        ui.Local(() => XD.Design.BetaChrome.Refresh(this));
         Closing += (_, e) => { if (busy) { cancellation?.Cancel(); status.Text = ui.T("Abbruch läuft. Danach kann das Fenster geschlossen werden.", "Cancelling. Close the window after cancellation finishes."); e.Cancel = true; } };
         RefreshDrives();
         if (args.Contains("--render")) { rows.Add(new() { Track = new(1, 0, 14250), Title = "Erster Titel / First track" }); rows.Add(new() { Track = new(2, 14250, 29325), Title = "Zweiter Titel / Second track" }); artist.Text = "Interpret / Artist"; album.Text = "Album"; }

@@ -1,5 +1,7 @@
 #define Root AddBackslash(SourcePath) + "..\..\"
-#define Version "0.5.2"
+#ifndef Version
+#define Version "0.5.4"
+#endif
 [Setup]
 AppId={{3B268C68-9E43-427C-84D2-8DF795A020DE}
 AppName={cm:ProgramName}
@@ -15,13 +17,16 @@ ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0.17763
 ShowLanguageDialog=yes
 OutputDir={#Root}artifacts\beta
-OutputBaseFilename=XD-CD-Ripper-Setup-{#Version}-Beta
-SetupIconFile={#Root}XDCDRipper\Assets\App.ico
+#ifndef BetaOutputFilename
+#define BetaOutputFilename "XD-CD-Ripper-Setup-{#Version}-Beta"
+#endif
+OutputBaseFilename={#BetaOutputFilename}
+SetupIconFile={#Root}XDCDRipper\Assets\Beta.ico
 UninstallDisplayIcon={app}\XDCDRipper.Beta.exe
 AppMutex=Local\XDCDRipper.Beta.App
-VersionInfoVersion=0.5.2.0
-VersionInfoProductVersion=0.5.2.0
-VersionInfoProductTextVersion=0.5.2-Beta
+VersionInfoVersion={#Version}.0
+VersionInfoProductVersion={#Version}.0
+VersionInfoProductTextVersion={#Version}-Beta
 Compression=lzma2/normal
 SolidCompression=yes
 WizardStyle=modern
